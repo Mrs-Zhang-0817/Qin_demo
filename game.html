@@ -143,29 +143,34 @@ body {
   pointer-events: none;
 }
 #full-image-overlay .fi-close-hint {
-  position: absolute; bottom: 18%; left: 50%; transform: translateX(-50%);
-  color: var(--silk-yellow); font-size: 20px; letter-spacing: 4px;
+  position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%);
+  color: var(--verdigris); font-size: 18px; letter-spacing: 4px;
   text-shadow: 0 0 10px rgba(0,0,0,0.8); opacity: 0.7;
-  animation: fadeInOut 2s infinite;
+  animation: hintPulse 2s infinite;
+  cursor: pointer;
 }
-@keyframes fadeInOut { 0%,100%{opacity:0.5} 50%{opacity:1} }
+@keyframes hintPulse { 0%,100% { opacity: 0.5; } 50% { opacity: 1; } }
 #full-image-overlay .fi-bottom-text {
-  position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
-  max-width: 70%; text-align: center; color: var(--silk-bright);
-  font-size: 22px; letter-spacing: 3px; line-height: 1.6;
+  position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%);
+  max-width: 80%; text-align: center; color: var(--silk-bright);
+  font-size: 23px; letter-spacing: 3px; line-height: 1.6;
   text-shadow: 0 0 16px rgba(0,0,0,0.95);
+  background: rgba(11,17,24,0.9);
+  border: 2px solid var(--dark-bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+  padding: 14px 40px;
 }
 
 /* ========== 自动提示条 ========== */
 #auto-hint {
-  position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
   z-index: 2400; background: rgba(11,17,24,0.94);
   border: 2px solid var(--dark-bronze);
   outline: 1px solid var(--verdigris); outline-offset: -5px;
   box-shadow: 0 0 20px rgba(0,0,0,0.6);
-  padding: 12px 36px; text-align: center;
+  padding: 10px 60px; text-align: center;
   color: var(--silk-bright); font-size: 21px; letter-spacing: 3px;
-  max-width: 80%; display: none; opacity: 0;
+  max-width: 90%; display: none; opacity: 0;
   transition: opacity 0.35s;
   font-family: FangSong, STFangsong, SimSun, serif;
 }
@@ -187,35 +192,17 @@ body {
 /* ========== 左侧竖向面板 ========== */
 #left-panel {
   position: absolute;
-  left: 16px;
+  left: 20px;
   top: 50%;
   transform: translateY(-50%);
   z-index: 2200;
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 10px;
   pointer-events: auto;
-  width: 170px;
+  width: 220px;
 }
-/* 技能区：左侧面板中的2列网格 */
-#leftSkills {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 3px;
-  background: rgba(11,17,24,0.9);
-  border: 2px solid var(--dark-bronze);
-  outline: 1px solid var(--verdigris);
-  outline-offset: -3px;
-  padding: 6px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.5);
-}
-#leftSkills .skill-btn-small {
-  pointer-events: auto;
-  min-width: auto;
-  font-size: 14px;
-  padding: 4px 2px;
-}
-/* 左侧面板中的功能按钮 */
+/* 功能按钮（放大版） */
 .panel-entry {
   background: var(--btn-default);
   opacity: 0.92;
@@ -224,17 +211,17 @@ body {
   outline-offset: -5px;
   cursor: pointer;
   font-family: STKaiti, KaiTi, serif;
-  font-size: 20px;
+  font-size: 26px;
   color: var(--btn-text);
-  letter-spacing: 4px;
+  letter-spacing: 6px;
   transition: all 0.2s;
   box-shadow: 0 0 10px rgba(0,0,0,0.4);
   text-align: center;
-  padding: 10px 4px;
+  padding: 16px 8px;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 8px;
 }
 .panel-entry:hover {
   background: var(--btn-hover);
@@ -243,16 +230,100 @@ body {
   box-shadow: 0 0 16px rgba(154,123,69,0.2);
 }
 .panel-entry::before, .panel-entry::after {
-  content: '◆'; color: var(--bronze); font-size: 10px;
+  content: '◆'; color: var(--bronze); font-size: 12px;
   opacity: 0.6; transition: opacity 0.2s;
 }
 .panel-entry:hover::before, .panel-entry:hover::after { opacity: 1; }
-/* 左侧面板分隔线 */
+
+/* 技能入口按钮（与 panel-entry 统一纯文字风格） */
+#skillEntry {
+  background: var(--btn-default);
+  opacity: 0.92;
+  border: 2px solid var(--bronze);
+  outline: 1px solid var(--verdigris);
+  outline-offset: -5px;
+  cursor: pointer;
+  font-family: STKaiti, KaiTi, serif;
+  font-size: 26px;
+  color: var(--btn-text);
+  letter-spacing: 6px;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  text-align: center;
+  padding: 16px 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+#skillEntry:hover {
+  background: var(--btn-hover);
+  border-color: var(--bronze-bright);
+  color: var(--silk-bright);
+  box-shadow: 0 0 16px rgba(154,123,69,0.2);
+}
+#skillEntry.active-entry {
+  border-color: var(--bronze-bright);
+  box-shadow: 0 0 20px rgba(176,138,69,0.5);
+  background: var(--btn-hover);
+}
+#skillEntry::before, #skillEntry::after {
+  content: '◆'; color: var(--bronze); font-size: 12px;
+  opacity: 0.6; transition: opacity 0.2s;
+}
+#skillEntry:hover::before, #skillEntry:hover::after { opacity: 1; }
+
+/* 技能弹出列表 */
+#skillPopup {
+  display: none;
+  flex-direction: column;
+  gap: 3px;
+  background: rgba(11,17,24,0.95);
+  border: 2px solid var(--dark-bronze);
+  outline: 1px solid var(--verdigris);
+  outline-offset: -3px;
+  padding: 8px;
+  box-shadow: 0 0 16px rgba(0,0,0,0.6);
+  animation: skillSlideIn 0.2s ease-out;
+}
+#skillPopup.show { display: flex; }
+@keyframes skillSlideIn {
+  from { opacity: 0; transform: translateY(-6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+.skill-popup-btn {
+  display: block;
+  padding: 10px 14px;
+  background: rgba(17,17,17,0.7);
+  border: 1px solid var(--dark-bronze);
+  cursor: pointer;
+  transition: all 0.15s;
+  font-family: STKaiti, KaiTi, serif;
+  font-size: 22px;
+  color: var(--bronze);
+  letter-spacing: 6px;
+  text-align: center;
+}
+.skill-popup-btn:hover {
+  border-color: var(--bronze);
+  background: rgba(64,55,34,0.5);
+  color: var(--silk-bright);
+}
+.skill-popup-btn.active-skill {
+  border-color: var(--bronze-bright) !important;
+  background: rgba(64,55,34,0.8) !important;
+  box-shadow: 0 0 12px rgba(176,138,69,0.5) !important;
+  color: var(--silk-bright) !important;
+}
+.skill-popup-btn:disabled {
+  opacity: 0.3; cursor: not-allowed; filter: grayscale(1);
+}
+/* 面板分隔线 */
 #left-panel .divider {
   width: 100%;
   height: 1px;
   background: var(--dark-bronze);
-  margin: 2px 0;
+  margin: 4px 0;
   opacity: 0.5;
 }
 
@@ -276,10 +347,10 @@ body {
 
 /* ========== 对话系统 ========== */
 #dialogue {
-  position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%);
+  position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: rgba(11,17,24,0.92); border: 2px solid var(--dark-bronze);
   outline: 1px solid var(--verdigris); outline-offset: -5px;
-  padding: 16px 32px; max-width: 700px; text-align: center;
+  padding: 14px 48px; max-width: 900px; text-align: center;
   z-index: 3200; color: var(--silk-bright); font-size: 22px; line-height: 1.7;
   display: none; letter-spacing: 2px;
   box-shadow: 0 0 30px rgba(0,0,0,0.7);
@@ -529,10 +600,10 @@ body {
   <div id="scene-area"></div>
 
   <!-- 全屏图片查看器 -->
-  <div id="full-image-overlay" onclick="dismissFullImage()">
+  <div id="full-image-overlay">
     <img id="full-image-img" src="" alt="">
     <div class="fi-bottom-text" id="full-image-text"></div>
-    <div class="fi-close-hint">— 点击画面继续 —</div>
+    <div class="fi-close-hint" id="full-image-close-hint">— 点击画面继续 —</div>
   </div>
 
   <!-- 自动提示条 -->
@@ -543,11 +614,11 @@ body {
 
   <!-- 左侧面板 -->
   <div id="left-panel">
-    <div id="leftSkills"></div>
-    <div class="divider"></div>
-    <div class="panel-entry" onclick="openQinPanel('artifacts')">考古档案</div>
     <div class="panel-entry" onclick="openQinPanel('notes')">帛书笔记</div>
     <div class="panel-entry" onclick="openQinPanel('reason')">推理板</div>
+    <div class="divider"></div>
+    <div id="skillEntry" onclick="toggleSkillPanel()">技  能</div>
+    <div id="skillPopup"></div>
   </div>
 
   <!-- 底部 HUD（仅用作提示/对话容器） -->
@@ -578,6 +649,7 @@ var G = {
   hintTimer: null,
   hintQueue: [],
   fullImageCallback: null,
+  interactionLock: false,
   sceneContent: {}  // 场景内容追踪: { 'sceneId': { 'itemId': true, ... } }
 };
 
@@ -606,6 +678,7 @@ var hintEl = $('auto-hint');
 var fullImgOverlay = $('full-image-overlay');
 var fullImgImg = $('full-image-img');
 var fullImgText = $('full-image-text');
+var fullImgCloseHint = $('full-image-close-hint');
 
 function IMG(cat, name) {
   return '02_Art_Assets/' + cat + '/' + name;
@@ -674,17 +747,37 @@ function processHintQueue() {
 // ==================== 全屏图片查看器 ====================
 function showFullImage(imgSrc, bottomText, onClose) {
   clearHints();
+  G.interactionLock = true;
   fullImgImg.src = imgSrc;
   fullImgText.textContent = bottomText || '';
   fullImgText.style.display = bottomText ? 'block' : 'none';
   fullImgOverlay.style.display = 'flex';
+  fullImgOverlay.style.cursor = 'pointer';
+  fullImgOverlay.onclick = function(e) {
+    // 文字已展示 → 点击关闭
+    if (fullImgText.style.display === 'block' && fullImgText.textContent) {
+      dismissFullImage();
+      return;
+    }
+    // 只有图 → 先展示文字（如果有）
+    if (bottomText) {
+      fullImgText.style.display = 'block';
+      fullImgCloseHint.textContent = '— 点击画面继续 —';
+      return;
+    }
+    // 无文字 → 直接关闭
+    dismissFullImage();
+  };
+  fullImgCloseHint.textContent = '— 点击画面继续 —';
   G.fullImageCallback = onClose || null;
 }
 function dismissFullImage() {
   fullImgOverlay.style.display = 'none';
+  fullImgOverlay.onclick = null;
   var cb = G.fullImageCallback;
   G.fullImageCallback = null;
-  if (cb) { setTimeout(function() { cb(); }, 100); }
+  G.interactionLock = false;
+  if (cb) { cb(); }
 }
 function clearHints() {
   if (G.hintTimer) { clearTimeout(G.hintTimer); G.hintTimer = null; }
@@ -694,14 +787,16 @@ function clearHints() {
 
 // ==================== 对话系统 ====================
 function showDialogue(speaker, text, callback) {
-  // 清除提示
+  // 清除提示，获取交互锁
   clearHints();
+  G.interactionLock = true;
   G.dialogueQueue.push({s: speaker, t: text, c: callback});
   if (G.dialogueQueue.length === 1) nextDialogue();
 }
 function nextDialogue() {
   if (G.dialogueQueue.length === 0) {
     dialogueEl.style.display = 'none';
+    G.interactionLock = false;
     processHintQueue();
     return;
   }
@@ -744,29 +839,63 @@ function addReasonClue(id, text) {
   }
 }
 
-// ==================== 渲染技能栏 ====================
+// ==================== 渲染技能入口与弹出列表 ====================
+var SKILL_DEFS = [
+  {id: '观纹', img: IMG('技能标识', '观纹.png')},
+  {id: '拓印', img: IMG('技能标识', '拓印.png')},
+  {id: '听风', img: IMG('技能标识', '听风.png')},
+  {id: '探土', img: IMG('技能标识', '探土.png')},
+  {id: '辨伪', img: IMG('技能标识', '辩伪.png')},
+  {id: '牵线', img: IMG('技能标识', '牵线.png')},
+  {id: '封气', img: IMG('技能标识', '封气.png')}
+];
+
 function renderSkills() {
-  var skillDefs = [
-    {id: '观纹', img: IMG('技能标识', '观纹.png')},
-    {id: '拓印', img: IMG('技能标识', '拓印.png')},
-    {id: '听风', img: IMG('技能标识', '听风.png')},
-    {id: '探土', img: IMG('技能标识', '探土.png')},
-    {id: '辨伪', img: IMG('技能标识', '辩伪.png')},
-    {id: '牵线', img: IMG('技能标识', '牵线.png')},
-    {id: '封气', img: IMG('技能标识', '封气.png')}
-  ];
+  // 渲染弹出菜单
+  renderSkillPopup();
+}
+
+// 只渲染弹出列表内容（不改变显示/隐藏）
+function renderSkillPopup() {
+  var popup = $('skillPopup');
+  if (!popup) return;
   var h = '';
-  skillDefs.forEach(function(s) {
+  SKILL_DEFS.forEach(function(s) {
     var owned = G.skills[s.id];
     if (owned) {
-      h += '<button class="skill-btn-small owned" data-skill="' + s.id + '" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">';
-      h += '<img src="' + s.img + '" style="width:22px;height:22px">' + s.id + '</button>';
+      h += '<button class="skill-popup-btn owned" data-skill="' + s.id + '" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">' + s.id + '</button>';
     } else {
-      h += '<button class="skill-btn-small" data-skill="' + s.id + '" disabled title="未解锁">';
-      h += '<img src="' + s.img + '" style="width:22px;height:22px;opacity:0.3;filter:grayscale(1)">' + s.id + '</button>';
+      h += '<button class="skill-popup-btn" data-skill="' + s.id + '" disabled title="未解锁">' + s.id + '</button>';
     }
   });
-  $('leftSkills').innerHTML = h;
+  popup.innerHTML = h;
+  // 如果之前有激活技能，高亮对应按钮
+  if (G.activeSkill) {
+    var activeBtn = popup.querySelector('.skill-popup-btn[data-skill="' + G.activeSkill + '"]');
+    if (activeBtn) activeBtn.classList.add('active-skill');
+  }
+}
+
+// 切换技能弹出面板
+function toggleSkillPanel() {
+  var popup = $('skillPopup');
+  var entry = $('skillEntry');
+  if (!popup || !entry) return;
+  if (popup.classList.contains('show')) {
+    closeSkillPanel();
+  } else {
+    renderSkillPopup();
+    popup.classList.add('show');
+    entry.classList.add('active-entry');
+  }
+}
+
+// 关闭技能面板
+function closeSkillPanel() {
+  var popup = $('skillPopup');
+  var entry = $('skillEntry');
+  if (popup) popup.classList.remove('show');
+  if (entry) entry.classList.remove('active-entry');
 }
 
 // ==================== 使用技能 ====================
@@ -775,23 +904,25 @@ function useSkill(skillId) {
   if (G.activeSkill === skillId) {
     // 取消选中
     G.activeSkill = null;
-    var allBtns = document.querySelectorAll('.skill-btn-small');
+    var allBtns = document.querySelectorAll('.skill-popup-btn');
     for (var i = 0; i < allBtns.length; i++) allBtns[i].classList.remove('active-skill');
     var allInt = document.querySelectorAll('.interactive');
     for (var j = 0; j < allInt.length; j++) allInt[j].classList.remove('highlight');
+    closeSkillPanel();
     showHint('已取消技能选择');
     return;
   }
   // 切换技能：先清除旧状态
-  var allBtns2 = document.querySelectorAll('.skill-btn-small');
+  var allBtns2 = document.querySelectorAll('.skill-popup-btn');
   for (var k = 0; k < allBtns2.length; k++) allBtns2[k].classList.remove('active-skill');
   var allInt2 = document.querySelectorAll('.interactive');
   for (var m = 0; m < allInt2.length; m++) allInt2[m].classList.remove('highlight');
 
   G.activeSkill = skillId;
-  // 高亮当前按钮
-  var activeBtn = document.querySelector('.skill-btn-small[data-skill="' + skillId + '"]');
-  if (activeBtn) activeBtn.classList.add('active-skill');
+  // 关闭技能面板
+  closeSkillPanel();
+  // 重新渲染以高亮当前按钮
+  renderSkillPopup();
 
   showHint('已激活【' + skillId + '】，点击场景中高亮目标使用。');
   var els = document.querySelectorAll('.interactive');
@@ -808,7 +939,9 @@ function clearScene() {
   sceneArea.innerHTML = '';
   sceneBg.style.backgroundImage = '';
   G.activeSkill = null;
+  G.interactionLock = false;
   clearHints();
+  dismissFullImage();
 }
 function setBg(img) {
   if (img) sceneBg.style.backgroundImage = 'url("' + img + '")';
@@ -833,36 +966,43 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
   if (opts.skill) el.dataset.skill = opts.skill;
 
   el.onclick = function() {
+    // 交互锁：图片/文字展示期间阻止其他点击
+    if (G.interactionLock) return;
     // 技能模式：已激活正确技能 → 展现答案
     if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
       var skillName = G.activeSkill;
       if (opts.investigateImg) {
-        showFullImage(opts.investigateImg, null, function() {
+        showFullImage(opts.investigateImg, opts.investigateText || '', function() {
           if (opts.onSkill) { opts.onSkill(skillName); }
           else if (onClick) { onClick(); }
         });
-      } else if (opts.onSkill) {
-        opts.onSkill(skillName);
-      } else if (onClick) {
-        onClick();
+      } else {
+        if (opts.onSkill) { opts.onSkill(skillName); }
+        else if (onClick) { onClick(); }
       }
       G.activeSkill = null;
       var allInt = document.querySelectorAll('.interactive');
       for (var j = 0; j < allInt.length; j++) allInt[j].classList.remove('highlight');
+      var allPopupBtns = document.querySelectorAll('.skill-popup-btn');
+      for (var pj = 0; pj < allPopupBtns.length; pj++) allPopupBtns[pj].classList.remove('active-skill');
     // 技能已激活但技能不匹配 → 提示无法使用
     } else if (G.activeSkill && opts.skill) {
       showHint('【' + G.activeSkill + '】在这里没有发现什么。');
       G.activeSkill = null;
       var allInt2 = document.querySelectorAll('.interactive');
       for (var k = 0; k < allInt2.length; k++) allInt2[k].classList.remove('highlight');
+      var allPopupBtns2 = document.querySelectorAll('.skill-popup-btn');
+      for (var pk = 0; pk < allPopupBtns2.length; pk++) allPopupBtns2[pk].classList.remove('active-skill');
     }
     // 热区需要技能但未激活任何技能 → 展现引导提示词
     else if (opts.skill) {
       showHint(opts.skillHint || '这里似乎藏着什么……或许需要使用合适的技能来调查。');
     }
-    // 普通调查模式：有调查图 → 全屏展示图 + 回调
+    // 普通调查模式：有调查图 → 全屏展示图，点击后执行回调
     else if (opts.investigateImg) {
-      showFullImage(opts.investigateImg, null, onClick || null);
+      showFullImage(opts.investigateImg, opts.investigateText || '', function() {
+        if (onClick) onClick();
+      });
     } else if (onClick) {
       onClick();
     }
@@ -873,6 +1013,7 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
 
 // ==================== 秦式通用面板 ====================
 function openQinPanel(type) {
+  if (G.interactionLock) return;
   dismissFullImage();
   var existingOverlay = document.querySelector('.qin-panel-overlay');
   if (existingOverlay) existingOverlay.remove();
@@ -886,55 +1027,7 @@ function openQinPanel(type) {
   panel.className = 'qin-panel';
   var content = '';
 
-  if (type === 'artifacts') {
-    content = '<h2>考古档案</h2>';
-    var artifacts = [
-      {id: '黑水玉玦', desc: '开启水德机关', img: LV(0, '黑水玉玦-完成.png')},
-      {id: '黑玉残玦显影', desc: '可感应秦陵机关', img: LV(0, '黑玉残玦特写（单独物品图）.png')},
-      {id: '黑玉残玦', desc: '主角自幼佩戴的命运凭证', img: LV(0, '黑水残玦-残片.png')},
-      {id: '断木神斧', desc: '第一章核心秘宝，可作金属机关钥', img: null},
-      {id: '青铜虎符', desc: '控制兵俑阵列方向', img: null},
-      {id: '黑水渠令', desc: '水系机关秘宝', img: null}
-    ];
-    var hasAny = false;
-    content += '<div class="artifact-grid">';
-    artifacts.forEach(function(a) {
-      var owned = G.inventory[a.id];
-      if (owned) hasAny = true;
-      content += '<div class="artifact-card' + (owned && owned.key ? ' key-item' : '') + '" style="opacity:' + (owned ? 1 : 0.35) + '">';
-      if (a.img && owned) {
-        content += '<img src="' + a.img + '" style="width:70px;height:70px;object-fit:contain">';
-      } else if (a.img) {
-        content += '<img src="' + a.img + '" style="width:70px;height:70px;object-fit:contain;filter:grayscale(1);opacity:0.3">';
-      } else {
-        content += '<div style="font-size:36px;color:var(--dark-bronze)">◆</div>';
-      }
-      content += '<div style="font-size:20px;color:var(--silk-bright);letter-spacing:2px">' + a.id + '</div>';
-      content += '<div style="font-size:16px;color:var(--bronze)">' + (owned ? owned.desc : a.desc) + '</div></div>';
-    });
-    content += '</div>';
-    if (!hasAny) content += '<p style="color:var(--bronze);text-align:center;padding:30px;font-size:20px">尚未获取秘宝</p>';
-
-  } else if (type === 'abilities') {
-    content = '<h2>考古能力</h2>';
-    var abilities = [
-      {id: '观纹', desc: '观察隐藏纹样和机关痕迹，发现肉眼不可见的暗纹与铭文。', img: IMG('技能标识', '观纹.png'), owned: !!G.skills['观纹']},
-      {id: '拓印', desc: '记录铭文与图案，用于后续分析和推理比对。', img: IMG('技能标识', '拓印.png'), owned: !!G.skills['拓印']},
-      {id: '听风', desc: '判断墙体空腔与风道走向，感知暗室位置。', img: IMG('技能标识', '听风.png'), owned: !!G.skills['听风']},
-      {id: '探土', desc: '判断地面结构与承重，探测地下空腔。', img: IMG('技能标识', '探土.png'), owned: !!G.skills['探土']},
-      {id: '辨伪', desc: '判断六国残片与秦制标准的差异，辨识文物真伪。', img: IMG('技能标识', '辩伪.png'), owned: !!G.skills['辨伪']},
-      {id: '牵线', desc: '串联分散线索，发现隐藏关联。', img: IMG('技能标识', '牵线.png'), owned: !!G.skills['牵线']},
-      {id: '封气', desc: '临时封堵毒气和水银蒸汽，保障探索安全。', img: IMG('技能标识', '封气.png'), owned: !!G.skills['封气']}
-    ];
-    abilities.forEach(function(a) {
-      content += '<div class="note-item" style="display:flex;align-items:center;gap:18px;opacity:' + (a.owned ? 1 : 0.35) + '">';
-      content += '<img src="' + a.img + '" style="width:56px;height:56px;border:1px solid ' + (a.owned ? 'var(--dark-bronze)' : 'var(--disabled)') + '">';
-      content += '<div style="flex:1"><div class="nt">' + a.id + '</div>';
-      content += '<div class="nc">' + a.desc + '</div>';
-      content += '<div style="color:' + (a.owned ? '#60c060' : '#804040') + ';font-size:16px">' + (a.owned ? '已解锁' : '未解锁') + '</div></div></div>';
-    });
-
-  } else if (type === 'notes') {
+  if (type === 'notes') {
     content = '<h2>帛书笔记</h2>';
     if (G.notes.length === 0) {
       content += '<p style="color:var(--bronze);text-align:center;padding:30px;font-size:20px">暂无笔记记录</p>';
@@ -1033,7 +1126,8 @@ function showTitle() {
     '</div>' +
     '<div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:14px;letter-spacing:4px;opacity:0.4">' + APP_VERSION + '</div>';
   renderRisk();
-  $('leftSkills').innerHTML = '';
+  closeSkillPanel();
+  var popup = $('skillPopup'); if (popup) popup.innerHTML = '';
 }
 
 function startGame() {
@@ -1042,6 +1136,7 @@ function startGame() {
   G.chapter = 1; G.scene = 0;
   G.inventory = {}; G.risk = 0; G.notes = []; G.reasoningClues = [];
   G.completedPuzzles = {}; G.skills = {}; G.sceneContent = {};
+  G.interactionLock = false;
   selectedClues = [];
   ['火折子','蜡封','洛阳铲','墨线','绳钩','拓包','铜镜','朱砂'].forEach(function(t) { gainItem(t, t, '盗墓工具'); });
   gainItem('黑玉残玦', '黑玉残玦', '主角自幼佩戴的命运凭证', true);
@@ -1090,6 +1185,7 @@ function loadChapter(n) {
   G.chapter = n; G.scene = 0;
   G.risk = 0; G.reasoningClues = []; selectedClues = [];
   G.completedPuzzles = {}; G.notes = []; G.skills = {}; G.sceneContent = {};
+  G.interactionLock = false;
   renderRisk(); renderSkills();
   G.inventory = {};
   ['火折子','蜡封','洛阳铲','墨线','绳钩','拓包','铜镜','朱砂'].forEach(function(t) { gainItem(t, t, '盗墓工具'); });
@@ -1542,7 +1638,10 @@ function renderBlackWaterGate() {
     gatePanel.id = 'gatePanelImg';
     gatePanel.style.cssText = 'position:absolute;bottom:130px;right:24px;z-index:50;cursor:pointer';
     gatePanel.innerHTML = '<img src="' + LV(0, '五色按钮面板与方位盘.png') + '" style="max-height:160px;border:2px solid var(--dark-bronze);opacity:0.8">';
-    gatePanel.onclick = function() { showFullImage(LV(0, '五色按钮面板与方位盘.png'), null); };
+    gatePanel.onclick = function() {
+      if (G.interactionLock) return;
+      showFullImage(LV(0, '五色按钮面板与方位盘.png'));
+    };
     sceneArea.appendChild(gatePanel);
   }
 
@@ -2204,7 +2303,7 @@ function init() {
     console.log('【水德秦陵 ' + APP_VERSION + '】开始初始化...');
     // 检查关键元素
     var missing = [];
-    ['risk-panel','scene-area','full-image-overlay','auto-hint','dialogue','archive-btn','transition'].forEach(function(id) {
+    ['risk-panel','scene-area','full-image-overlay','auto-hint','dialogue','transition'].forEach(function(id) {
       if (!document.getElementById(id)) missing.push(id);
     });
     if (missing.length > 0) { console.warn('缺失元素:', missing.join(', ')); }
