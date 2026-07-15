@@ -2275,7 +2275,7 @@ function ch1Start() {
   }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……'});
 
   // 树根通道：需要先探索地砖和墙缝
-  addInteractive(80, 400, 160, 60, '', function() {
+  addInteractive(300, 250, 200, 100, '', function() {
     if (!canPullRoot()) {
       var missing = [];
       if (!(G.sceneContent[C1_SCENE] || {})['floor']) missing.push('中央的空心地砖');
