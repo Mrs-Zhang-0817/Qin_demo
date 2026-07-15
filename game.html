@@ -183,51 +183,96 @@ body {
   position: absolute; bottom: 20px; left: 0; right: 0; height: 0; z-index: 2200;
   pointer-events: none;
 }
-/* 左下：考古档案入口 */
-#archive-btn {
-  position: absolute; left: 46px; bottom: 0;
-  width: 260px; height: 72px;
-  background: var(--btn-default); opacity: 0.92;
-  border: 2px solid var(--bronze);
-  outline: 1px solid var(--verdigris); outline-offset: -7px;
-  display: flex; align-items: center; justify-content: center; gap: 10px;
-  cursor: pointer; pointer-events: auto;
-  font-family: STKaiti, KaiTi, serif; font-size: 23px; color: var(--btn-text);
-  letter-spacing: 6px; transition: all 0.2s;
-  box-shadow: 0 0 10px rgba(0,0,0,0.4);
-}
-#archive-btn:hover {
-  background: var(--btn-hover); border-color: var(--bronze-bright);
-  color: var(--silk-bright); box-shadow: 0 0 16px rgba(154,123,69,0.2);
-}
-/* 右下：功能入口 */
-#func-btns {
-  position: absolute; right: 40px; bottom: 0;
-  display: flex; flex-direction: column; gap: 8px;
+
+/* ========== 左侧竖向面板 ========== */
+#left-panel {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2200;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
   pointer-events: auto;
+  width: 170px;
 }
-.func-entry {
-  width: 300px; height: 56px;
-  background: var(--dark-bronze); opacity: 0.92;
+/* 技能区：左侧面板中的2列网格 */
+#leftSkills {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3px;
+  background: rgba(11,17,24,0.9);
+  border: 2px solid var(--dark-bronze);
+  outline: 1px solid var(--verdigris);
+  outline-offset: -3px;
+  padding: 6px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.5);
+}
+#leftSkills .skill-btn-small {
+  pointer-events: auto;
+  min-width: auto;
+  font-size: 14px;
+  padding: 4px 2px;
+}
+/* 左侧面板中的功能按钮 */
+.panel-entry {
+  background: var(--btn-default);
+  opacity: 0.92;
   border: 2px solid var(--bronze);
-  outline: 1px solid var(--verdigris); outline-offset: -5px;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  cursor: pointer; font-family: STKaiti, KaiTi, serif; font-size: 23px;
-  color: var(--btn-text); letter-spacing: 4px;
-  transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.4);
-  position: relative;
+  outline: 1px solid var(--verdigris);
+  outline-offset: -5px;
+  cursor: pointer;
+  font-family: STKaiti, KaiTi, serif;
+  font-size: 20px;
+  color: var(--btn-text);
+  letter-spacing: 4px;
+  transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  text-align: center;
+  padding: 10px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
 }
-.func-entry:hover {
-  background: var(--btn-hover); border-color: var(--bronze-bright);
-  color: var(--silk-bright); box-shadow: 0 0 16px rgba(154,123,69,0.2);
+.panel-entry:hover {
+  background: var(--btn-hover);
+  border-color: var(--bronze-bright);
+  color: var(--silk-bright);
+  box-shadow: 0 0 16px rgba(154,123,69,0.2);
 }
-.func-entry::before, .func-entry::after {
-  content: '◆'; position: absolute; color: var(--bronze); font-size: 10px;
+.panel-entry::before, .panel-entry::after {
+  content: '◆'; color: var(--bronze); font-size: 10px;
   opacity: 0.6; transition: opacity 0.2s;
 }
-.func-entry::before { left: 18px; }
-.func-entry::after { right: 18px; }
-.func-entry:hover::before, .func-entry:hover::after { opacity: 1; }
+.panel-entry:hover::before, .panel-entry:hover::after { opacity: 1; }
+/* 左侧面板分隔线 */
+#left-panel .divider {
+  width: 100%;
+  height: 1px;
+  background: var(--dark-bronze);
+  margin: 2px 0;
+  opacity: 0.5;
+}
+
+/* ========== 梦境文字 ========== */
+#dreamText {
+  position: absolute;
+  bottom: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2500;
+  color: var(--silk-bright);
+  font-size: 22px;
+  letter-spacing: 3px;
+  text-align: center;
+  max-width: 75%;
+  text-shadow: 0 0 24px rgba(0,0,0,0.95);
+  font-family: FangSong, STFangsong, serif;
+  display: none;
+  pointer-events: none;
+}
 
 /* ========== 对话系统 ========== */
 #dialogue {
@@ -496,17 +541,17 @@ body {
   <!-- 对话系统 -->
   <div id="dialogue"><div class="speaker"></div><div class="text"></div><div class="continue">— 点击继续 —</div></div>
 
-  <!-- 底部 HUD -->
-  <div id="hud-bottom">
-    <div id="archive-btn" onclick="openQinPanel('artifacts')">
-      <span style="color:var(--bronze);font-size:16px">◆</span> 考古档案 <span style="color:var(--bronze);font-size:16px">◆</span>
-    </div>
-    <div id="func-btns">
-      <div class="func-entry" onclick="openQinPanel('notes')">帛书笔记</div>
-      <div class="func-entry" onclick="openQinPanel('reason')">推理板</div>
-    </div>
-    <div class="skill-bar" id="skillBar" style="position:absolute;bottom:10px;left:340px"></div>
+  <!-- 左侧面板 -->
+  <div id="left-panel">
+    <div id="leftSkills"></div>
+    <div class="divider"></div>
+    <div class="panel-entry" onclick="openQinPanel('artifacts')">考古档案</div>
+    <div class="panel-entry" onclick="openQinPanel('notes')">帛书笔记</div>
+    <div class="panel-entry" onclick="openQinPanel('reason')">推理板</div>
   </div>
+
+  <!-- 底部 HUD（仅用作提示/对话容器） -->
+  <div id="hud-bottom"></div>
 
   <!-- 标题画面 -->
   <div id="title-screen"></div>
@@ -715,16 +760,13 @@ function renderSkills() {
     var owned = G.skills[s.id];
     if (owned) {
       h += '<button class="skill-btn-small owned" data-skill="' + s.id + '" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">';
-      h += '<img src="' + s.img + '" style="width:26px;height:26px">' + s.id + '</button>';
+      h += '<img src="' + s.img + '" style="width:22px;height:22px">' + s.id + '</button>';
     } else {
       h += '<button class="skill-btn-small" data-skill="' + s.id + '" disabled title="未解锁">';
-      h += '<img src="' + s.img + '" style="width:26px;height:26px;opacity:0.3;filter:grayscale(1)">' + s.id + '</button>';
+      h += '<img src="' + s.img + '" style="width:22px;height:22px;opacity:0.3;filter:grayscale(1)">' + s.id + '</button>';
     }
   });
-  h += '<span style="color:var(--dark-bronze);margin:0 8px;font-size:20px">│</span>';
-  h += '<button class="skill-btn-small" onclick="openQinPanel(\'abilities\')" title="能力">';
-  h += '<img src="' + IMG('功能入口图标', '能力.png') + '" style="width:22px;height:22px">能力</button>';
-  $('skillBar').innerHTML = h;
+  $('leftSkills').innerHTML = h;
 }
 
 // ==================== 使用技能 ====================
@@ -991,7 +1033,7 @@ function showTitle() {
     '</div>' +
     '<div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:14px;letter-spacing:4px;opacity:0.4">' + APP_VERSION + '</div>';
   renderRisk();
-  $('skillBar').innerHTML = '';
+  $('leftSkills').innerHTML = '';
 }
 
 function startGame() {
@@ -1105,29 +1147,50 @@ function showCredits() {
     '</div>';
 }
 
+// ==================== 梦境文字显示 ====================
+function showDreamText(text) {
+  var dt = document.getElementById('dreamText');
+  if (!dt) {
+    dt = document.createElement('div');
+    dt.id = 'dreamText';
+    dt.style.cssText = 'position:absolute;bottom:18%;left:50%;transform:translateX(-50%);z-index:2500;color:var(--silk-bright);font-size:22px;letter-spacing:3px;text-align:center;max-width:75%;text-shadow:0 0 24px rgba(0,0,0,0.95);font-family:FangSong,STFangsong,serif;pointer-events:none';
+    $('game').appendChild(dt);
+  }
+  dt.textContent = text;
+  dt.style.display = 'block';
+  dt.style.opacity = '0';
+  dt.style.transition = 'opacity 0.6s';
+  requestAnimationFrame(function() { dt.style.opacity = '1'; });
+}
+function hideDreamText() {
+  var dt = document.getElementById('dreamText');
+  if (dt) { dt.style.opacity = '0'; setTimeout(function() { dt.style.display = 'none'; }, 600); }
+}
+
 // ==================== 序章：黑水残简 ====================
 function prologueDream() {
   clearScene();
+  clearHints();
   setBg(LV(0, '梦境主背景.png'));
-
-  // 梦境自动放映：文字演示 + 缓缓黑屏切换图片，无点击交互
-  showHint('黑暗的水面下，黑色的墓门若隐若现。水下的编钟声回荡在梦里，像是在召唤什么。');
+  showDreamText('黑暗的水面下，黑色的墓门若隐若现。水下的编钟声回荡在梦里，像是在召唤什么。');
   addNote('梦境墓门', '黑暗水面下的黑色墓门，每次入梦都会出现。');
 
   setTimeout(function() {
+    hideDreamText();
     transitionScene(function() {
       setBg(LV(0, '梦境分镜1.png'));
-      showHint('这扇门……我似乎见过。');
+      showDreamText('这扇门……我似乎见过。');
 
       setTimeout(function() {
+        hideDreamText();
         transitionScene(function() {
           setBg(LV(0, '梦境分镜2.png'));
-          clearHints();
-          showHint('北斗七星在倒影中变成了秦篆……但太模糊了，读不清。');
+          showDreamText('北斗七星在倒影中变成了秦篆……但太模糊了，读不清。');
           addNote('北斗倒影', '水面倒影中北斗变为秦篆，但文字模糊无法辨认。');
           addNote('黑玉残玦震动', '靠近墓门时残玦低鸣，似乎在回应某种力量。');
 
           setTimeout(function() {
+            hideDreamText();
             transitionScene(function() {
               prologueRestoration();
               clearHints();
@@ -1135,11 +1198,11 @@ function prologueDream() {
                 showHint('修复黑水残简，寻找秦陵入口的线索');
               });
             });
-          }, 1800);
+          }, 5000);
         });
-      }, 1800);
+      }, 5000);
     });
-  }, 1800);
+  }, 5000);
 }
 
 
