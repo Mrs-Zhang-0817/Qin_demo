@@ -775,10 +775,7 @@ var G = {
   hintTimer: null,
   hintQueue: [],
   fullImageCallback: null,
-<<<<<<< HEAD
   interactionLock: false,
-  sceneContent: {}  // 场景内容追踪: { 'sceneId': { 'itemId': true, ... } }
-=======
   sceneContent: {},  // 场景内容追踪: { 'sceneId': { 'itemId': true, ... } }
   // 热区编辑器相关
   editorMode: false,          // 编辑器开关
@@ -789,7 +786,6 @@ var G = {
   hsTool: 'select',           // 编辑器工具: 'select' | 'resize'
   hsDragging: false,          // 是否正在拖拽
   hsDragData: null            // 拖拽数据
->>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
 };
 
 // 标记场景内容已发现
@@ -1435,11 +1431,8 @@ function clearScene() {
   sceneArea.innerHTML = '';
   sceneBg.style.backgroundImage = '';
   G.activeSkill = null;
-<<<<<<< HEAD
   G.interactionLock = false;
-=======
   G._hsIndex = 0;
->>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
   clearHints();
   dismissFullImage();
 }
@@ -1479,16 +1472,13 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
   if (opts.skill) el.dataset.skill = opts.skill;
 
   el.onclick = function() {
-<<<<<<< HEAD
-    // 交互锁：图片/文字展示期间阻止其他点击
-    if (G.interactionLock) return;
-=======
     // 编辑器模式下不触发游戏逻辑
     if (G.editorMode) {
       hsSelectEl(el);
       return;
     }
->>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
+    // 交互锁：图片/文字展示期间阻止其他点击
+    if (G.interactionLock) return;
     // 技能模式：已激活正确技能 → 展现答案
     if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
       var skillName = G.activeSkill;
@@ -1912,7 +1902,7 @@ function prologueRestoration() {
   }, { hsId: 'wuxing', investigateImg: LV(0, '五行图.png') });
 
   // 秦简拓本
-  addInteractive(60, 320, 140, 130, '', function() {
+  addInteractive(720, 320, 140, 130, '', function() {
     markContent(REST_SCENE, 'bamboo');
     showDialogue('沈砚', '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。', function() {
       showDialogue('沈砚', '拓本还提到："玄水在北，旧祠为门"——与养父研究的秦陵入口说法一致。', function() {
