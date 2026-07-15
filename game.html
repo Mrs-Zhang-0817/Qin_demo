@@ -5,26 +5,40 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>水德秦陵 - 解密推理冒险</title>
 <style>
+/* ========== 色彩体系 ========== */
+:root {
+  --ink-black: #0B1118;
+  --deep-ink: #050505;
+  --stone: #111111;
+  --bronze: #9A7B45;
+  --bronze-bright: #B08A45;
+  --verdigris: #5E786F;
+  --dark-bronze: #403722;
+  --silk-yellow: #C8B98A;
+  --silk-bright: #D4C29A;
+  --ink-text: #282014;
+  --cinnabar: #8B3025;
+  --disabled: #514D43;
+  --btn-default: #302A1D;
+  --btn-hover: #56482B;
+  --btn-active: #0B1118;
+  --btn-disabled-bg: #24231F;
+  --btn-text: #D4C29A;
+  --btn-disabled-text: #777064;
+}
 * { margin: 0; padding: 0; box-sizing: border-box; }
 body {
-  background: #0d0d0d;
-  color: #c8b88a;
-  font-family: SimSun, KaiTi, FangSong, serif;
+  background: var(--ink-black);
+  color: var(--silk-yellow);
+  font-family: STKaiti, KaiTi, FangSong, serif;
   overflow: hidden;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  width: 100vw; height: 100vh;
+  display: flex; align-items: center; justify-content: center;
 }
 #game {
-  width: 100vw;
-  max-width: 1280px;
-  height: 100vh;
-  max-height: 720px;
-  position: relative;
-  overflow: hidden;
-  background: #0d0d0d;
+  width: 100vw; max-width: 1920px; height: 100vh; max-height: 1080px;
+  position: relative; overflow: hidden; background: var(--ink-black);
+  font-size: 21px;
 }
 @media (max-aspect-ratio: 16/9) {
   #game { height: auto; aspect-ratio: 16/9; width: 100vw; max-height: 100vh; }
@@ -32,182 +46,467 @@ body {
 @media (min-aspect-ratio: 16/9) {
   #game { width: auto; height: 100vh; aspect-ratio: 16/9; max-width: 100vw; }
 }
+
+/* ========== 场景背景 ========== */
 .scene-bg {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
   background-size: cover; background-position: center; transition: opacity 2s;
+  z-index: 0;
 }
-#ui-top {
-  position: absolute; top: 0; left: 0; right: 0; height: 48px;
-  background: linear-gradient(180deg, rgba(10,5,0,0.95), rgba(10,5,0,0.6));
-  display: flex; align-items: center; padding: 0 16px; z-index: 100;
-  border-bottom: 1px solid #3a3020;
+
+/* ========== 常驻 HUD 上栏 ========== */
+#hud-top {
+  position: absolute; top: 26px; left: 0; right: 0; height: 0; z-index: 2100;
+  pointer-events: none;
 }
-#ui-top .chapter-name { font-size: 18px; color: #b8960c; text-shadow: 0 0 10px rgba(180,140,10,0.5); flex: 1; }
-#ui-top .risk-bar { display: flex; align-items: center; gap: 8px; font-size: 13px; color: #8a6a4a; }
-#ui-top .risk-dots { display: flex; gap: 3px; }
-.risk-dot { width: 10px; height: 10px; border-radius: 50%; border: 1px solid #4a3020; background: #1a1008; transition: all 0.3s; }
-.risk-dot.active { background: #c03020; box-shadow: 0 0 8px #c03020; border-color: #803020; }
-#ui-bottom {
-  position: absolute; bottom: 0; left: 0; right: 0; height: 56px;
-  background: linear-gradient(0deg, rgba(10,5,0,0.95), rgba(10,5,0,0.4));
-  display: flex; align-items: center; padding: 0 12px; z-index: 100;
-  border-top: 1px solid #3a3020; gap: 4px; flex-wrap: wrap;
+/* 右上：风险值（含玩家名与安全状态） */
+#risk-panel {
+  position: absolute; right: 34px; top: 0;
+  width: 440px; height: 60px;
+  background: var(--ink-black); opacity: 0.88;
+  border: 2px solid var(--bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.5);
+  padding: 8px 18px; pointer-events: auto;
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: 10px;
+  font-family: STKaiti, KaiTi, serif;
 }
-.ui-btn {
-  background: linear-gradient(180deg, #2a1a0a, #1a0a00);
-  border: 1px solid #4a3020; color: #b8960c; padding: 6px 14px;
-  cursor: pointer; font-family: inherit; font-size: 13px; border-radius: 3px;
+#risk-panel .risk-player {
+  font-size: 20px; color: var(--silk-bright); letter-spacing: 3px;
+}
+#risk-panel .risk-label {
+  font-size: 17px; color: var(--bronze); letter-spacing: 3px;
+}
+#risk-panel .risk-dots-group {
+  display: flex; gap: 5px; align-items: center;
+}
+#risk-panel .risk-dot-qin {
+  width: 10px; height: 10px; border-radius: 50%;
+  border: 1px solid var(--dark-bronze); background: var(--ink-black);
+  transition: all 0.4s;
+}
+#risk-panel .risk-dot-qin.active {
+  background: var(--cinnabar); border-color: #a04040;
+  box-shadow: 0 0 8px rgba(140,48,37,0.5);
+}
+#risk-panel .risk-num {
+  font-size: 17px; color: var(--silk-bright); min-width: 44px; text-align: right;
+}
+#risk-panel .risk-status {
+  font-size: 15px; color: #60c060; letter-spacing: 2px;
+}
+#risk-panel .risk-status.danger { color: var(--cinnabar); animation: riskPulse 2s infinite; }
+@keyframes riskPulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+
+
+/* ========== 场景区域 ========== */
+#scene-area {
+  position: absolute; top: 0; bottom: 0; left: 0; right: 0; z-index: 10;
+}
+
+/* ========== 隐藏热区 ========== */
+.interactive {
+  position: absolute; cursor: default; transition: all 0.5s; z-index: 20;
+  background: transparent;
+}
+.interactive:hover {
+  border: 1px solid rgba(154,123,69,0.34);
+  box-shadow: 0 0 20px rgba(94,120,111,0.09), inset 0 0 20px rgba(94,120,111,0.05);
+  cursor: pointer;
+}
+.interactive.highlight {
+  animation: pulseBronze 1.5s infinite;
+  border: 1px solid rgba(176,138,69,0.5);
+  box-shadow: 0 0 18px rgba(176,138,69,0.25);
+}
+@keyframes pulseBronze {
+  0%,100% { box-shadow:0 0 18px rgba(176,138,69,0.25); }
+  50% { box-shadow:0 0 30px rgba(176,138,69,0.45); }
+}
+
+/* ========== 全屏图片查看器 ========== */
+#full-image-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 3800; background: rgba(5,5,5,0.88);
+  display: none; align-items: center; justify-content: center;
+  flex-direction: column; cursor: pointer;
+}
+#full-image-overlay img {
+  max-width: 88%; max-height: 72vh;
+  border: 4px solid var(--bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -11px;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8), 0 0 30px rgba(154,123,69,0.15);
+  pointer-events: none;
+}
+#full-image-overlay .fi-close-hint {
+  position: absolute; bottom: 18%; left: 50%; transform: translateX(-50%);
+  color: var(--silk-yellow); font-size: 20px; letter-spacing: 4px;
+  text-shadow: 0 0 10px rgba(0,0,0,0.8); opacity: 0.7;
+  animation: fadeInOut 2s infinite;
+}
+@keyframes fadeInOut { 0%,100%{opacity:0.5} 50%{opacity:1} }
+#full-image-overlay .fi-bottom-text {
+  position: absolute; bottom: 12%; left: 50%; transform: translateX(-50%);
+  max-width: 70%; text-align: center; color: var(--silk-bright);
+  font-size: 22px; letter-spacing: 3px; line-height: 1.6;
+  text-shadow: 0 0 16px rgba(0,0,0,0.95);
+}
+
+/* ========== 自动提示条 ========== */
+#auto-hint {
+  position: absolute; bottom: 90px; left: 50%; transform: translateX(-50%);
+  z-index: 2400; background: rgba(11,17,24,0.94);
+  border: 2px solid var(--dark-bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.6);
+  padding: 12px 36px; text-align: center;
+  color: var(--silk-bright); font-size: 21px; letter-spacing: 3px;
+  max-width: 80%; display: none; opacity: 0;
+  transition: opacity 0.35s;
+  font-family: FangSong, STFangsong, SimSun, serif;
+}
+#auto-hint.show { display: block; opacity: 1; }
+#auto-hint.flash {
+  animation: hintFlash 0.5s ease-out;
+}
+@keyframes hintFlash {
+  0% { background: rgba(64,55,34,0.95); box-shadow: 0 0 30px rgba(154,123,69,0.3); }
+  100% { background: rgba(11,17,24,0.94); box-shadow: 0 0 20px rgba(0,0,0,0.6); }
+}
+
+/* ========== 底部 HUD ========== */
+#hud-bottom {
+  position: absolute; bottom: 20px; left: 0; right: 0; height: 0; z-index: 2200;
+  pointer-events: none;
+}
+/* 左下：考古档案入口 */
+#archive-btn {
+  position: absolute; left: 46px; bottom: 0;
+  width: 260px; height: 72px;
+  background: var(--btn-default); opacity: 0.92;
+  border: 2px solid var(--bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -7px;
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  cursor: pointer; pointer-events: auto;
+  font-family: STKaiti, KaiTi, serif; font-size: 23px; color: var(--btn-text);
+  letter-spacing: 6px; transition: all 0.2s;
+  box-shadow: 0 0 10px rgba(0,0,0,0.4);
+}
+#archive-btn:hover {
+  background: var(--btn-hover); border-color: var(--bronze-bright);
+  color: var(--silk-bright); box-shadow: 0 0 16px rgba(154,123,69,0.2);
+}
+/* 右下：功能入口 */
+#func-btns {
+  position: absolute; right: 40px; bottom: 0;
+  display: flex; flex-direction: column; gap: 8px;
+  pointer-events: auto;
+}
+.func-entry {
+  width: 300px; height: 56px;
+  background: var(--dark-bronze); opacity: 0.92;
+  border: 2px solid var(--bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  cursor: pointer; font-family: STKaiti, KaiTi, serif; font-size: 23px;
+  color: var(--btn-text); letter-spacing: 4px;
+  transition: all 0.2s; box-shadow: 0 0 10px rgba(0,0,0,0.4);
+  position: relative;
+}
+.func-entry:hover {
+  background: var(--btn-hover); border-color: var(--bronze-bright);
+  color: var(--silk-bright); box-shadow: 0 0 16px rgba(154,123,69,0.2);
+}
+.func-entry::before, .func-entry::after {
+  content: '◆'; position: absolute; color: var(--bronze); font-size: 10px;
+  opacity: 0.6; transition: opacity 0.2s;
+}
+.func-entry::before { left: 18px; }
+.func-entry::after { right: 18px; }
+.func-entry:hover::before, .func-entry:hover::after { opacity: 1; }
+
+/* ========== 对话系统 ========== */
+#dialogue {
+  position: absolute; bottom: 16%; left: 50%; transform: translateX(-50%);
+  background: rgba(11,17,24,0.92); border: 2px solid var(--dark-bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+  padding: 16px 32px; max-width: 700px; text-align: center;
+  z-index: 3200; color: var(--silk-bright); font-size: 22px; line-height: 1.7;
+  display: none; letter-spacing: 2px;
+  box-shadow: 0 0 30px rgba(0,0,0,0.7);
+  font-family: FangSong, STFangsong, SimSun, serif;
+}
+#dialogue .speaker { color: var(--bronze-bright); font-weight: bold; margin-bottom: 6px; font-size: 23px; letter-spacing: 4px; }
+#dialogue .continue { color: var(--verdigris); font-size: 18px; margin-top: 10px; animation: hintBlink 1.2s infinite; }
+@keyframes hintBlink { 0%,100%{opacity:0.5} 50%{opacity:1} }
+
+/* ========== 通用全屏面板 ========== */
+.qin-panel-overlay {
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 3500; background: rgba(5,5,5,0.72);
+  display: none; align-items: center; justify-content: center;
+}
+.qin-panel {
+  position: relative;
+  width: 1700px; max-width: 92%; height: 824px; max-height: 82%;
+  background: rgba(17,17,17,0.97);
+  border: 4px solid var(--bronze);
+  outline: 1px solid var(--verdigris); outline-offset: -11px;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  padding: 40px 48px; overflow-y: auto;
+  display: flex; flex-direction: column;
+  font-family: FangSong, STFangsong, SimSun, serif;
+}
+.qin-panel::-webkit-scrollbar { width: 6px; }
+.qin-panel::-webkit-scrollbar-track { background: rgba(17,17,17,0.3); }
+.qin-panel::-webkit-scrollbar-thumb { background: var(--dark-bronze); border-radius: 3px; }
+.qin-panel h2 {
+  font-family: STKaiti, KaiTi, serif; font-size: 38px; color: var(--silk-bright);
+  letter-spacing: 8px; margin-bottom: 30px; text-align: center;
+  border-bottom: 1px solid var(--dark-bronze); padding-bottom: 16px;
+}
+.qin-panel h2::before { content: '◆ '; color: var(--bronze); font-size: 20px; }
+.qin-panel h3 {
+  font-family: STKaiti, KaiTi, serif; font-size: 25px; color: var(--bronze-bright);
+  letter-spacing: 4px; margin: 20px 0 10px;
+}
+.qin-panel .close-btn {
+  position: absolute; top: 20px; right: 24px;
+  width: 160px; height: 48px;
+  background: var(--btn-default); border: 2px solid var(--bronze);
+  color: var(--btn-text); font-family: STKaiti, KaiTi, serif;
+  font-size: 20px; letter-spacing: 4px; cursor: pointer;
+  transition: all 0.18s; display: flex; align-items: center; justify-content: center;
+  outline: 1px solid var(--verdigris); outline-offset: -5px;
+}
+.qin-panel .close-btn:hover {
+  background: var(--btn-hover); border-color: var(--bronze-bright);
+  color: var(--silk-bright);
+}
+
+/* ========== 秦式按钮 ========== */
+.qin-btn {
+  background: var(--btn-default); border: 2px solid var(--bronze);
+  color: var(--btn-text); font-family: STKaiti, KaiTi, serif;
+  font-size: 23px; letter-spacing: 4px; padding: 10px 32px;
+  cursor: pointer; transition: all 0.18s;
+  outline: 1px solid var(--verdigris); outline-offset: -7px;
+  box-shadow: 0 0 8px rgba(0,0,0,0.4);
+  position: relative;
+}
+.qin-btn:hover { background: var(--btn-hover); border-color: var(--bronze-bright); color: var(--silk-bright); }
+.qin-btn:active { background: var(--btn-active); }
+.qin-btn.cinnabar {
+  background: #3a1510; border-color: var(--cinnabar); color: #d4a090;
+  outline-color: #6a403a;
+}
+.qin-btn.cinnabar:hover { background: #4a2018; border-color: #a04040; color: #e0b0a0; }
+.qin-btn:disabled {
+  background: var(--btn-disabled-bg); border-color: var(--disabled);
+  color: var(--btn-disabled-text); outline-color: var(--disabled); cursor: not-allowed;
+}
+
+/* ========== 笔记/物品项 ========== */
+.note-item {
+  background: rgba(17,17,17,0.6); border: 1px solid var(--dark-bronze);
+  padding: 14px 18px; margin: 8px 0; 
   transition: all 0.2s;
 }
-.ui-btn:hover { background: linear-gradient(180deg, #3a2810, #2a1808); border-color: #6a4a20; color: #d4aa30; box-shadow: 0 0 8px rgba(180,140,10,0.3); }
-.ui-btn.active { background: linear-gradient(180deg, #4a3020, #2a1808); border-color: #b8960c; color: #f0d060; }
-.ui-btn:disabled { opacity: 0.4; cursor: not-allowed; }
-#scene-area { position: absolute; top: 48px; bottom: 56px; left: 0; right: 0; z-index: 10; }
-.interactive { position: absolute; cursor: pointer; transition: all 0.2s; z-index: 20; }
-.interactive:hover { filter: brightness(1.3); transform: scale(1.05); }
-.interactive.highlight { animation: pulse 1.5s infinite; }
-@keyframes pulse {
-  0%,100% { filter: brightness(1); }
-  50% { filter: brightness(1.4); box-shadow: 0 0 15px rgba(200,160,60,0.6); }
+.note-item:hover { border-color: var(--bronze); background: rgba(17,17,17,0.8); }
+.note-item .nt { color: var(--silk-bright); font-size: 21px; letter-spacing: 3px; }
+.note-item .nc { color: var(--bronze); font-size: 18px; margin-top: 6px; line-height: 1.5; }
+
+/* ========== 秘宝网格 ========== */
+.artifact-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+@media (max-width: 900px) { .artifact-grid { grid-template-columns: repeat(2, 1fr); } }
+.artifact-card {
+  background: rgba(17,17,17,0.7); border: 1px solid var(--dark-bronze);
+  padding: 16px 10px; text-align: center; border-radius: 0;
+  cursor: default; transition: all 0.2s;
+  min-height: 110px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 8px;
+  outline: 1px solid var(--verdigris); outline-offset: -4px; outline-color: transparent;
+  transition: outline-color 0.2s;
 }
-#dialogue {
-  position: absolute; bottom: 70px; left: 50%; transform: translateX(-50%);
-  background: rgba(10,5,0,0.92); border: 1px solid #4a3820; padding: 14px 22px;
-  max-width: 700px; text-align: center; z-index: 200; border-radius: 4px;
-  color: #d4c098; font-size: 15px; line-height: 1.6; display: none;
+.artifact-card:hover { border-color: var(--bronze); background: rgba(30,25,15,0.9); }
+.artifact-card.key-item { border-color: var(--bronze); box-shadow: 0 0 12px rgba(154,123,69,0.25); }
+.artifact-card.key-item:hover { outline-color: var(--verdigris); }
+
+/* ========== 推理板 ========== */
+.reason-area {
+  position: relative; min-height: 200px; border: 1px solid var(--dark-bronze);
+  padding: 16px; margin: 12px 0;
+  background: rgba(5,3,0,0.5);
 }
-#dialogue .speaker { color: #b8960c; font-weight: bold; margin-bottom: 4px; }
-#dialogue .continue { color: #6a5a3a; font-size: 12px; margin-top: 8px; animation: blink 1s infinite; }
-@keyframes blink { 0%,100% { opacity: 0.6; } 50% { opacity: 1; } }
-.panel {
-  position: absolute; top: 60px; bottom: 70px; left: 50%; transform: translateX(-50%);
-  width: 90%; max-width: 760px; background: rgba(10,5,0,0.95); border: 1px solid #4a3820;
-  z-index: 300; padding: 20px 24px; overflow-y: auto; display: none; border-radius: 6px;
-  box-shadow: 0 0 40px rgba(0,0,0,0.7);
+.reason-board { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; position: relative; z-index: 1; }
+.reason-slot {
+  background: rgba(64,55,34,0.4); border: 1px solid var(--dark-bronze);
+  padding: 8px 18px; cursor: pointer; font-size: 20px; color: var(--silk-yellow);
+  transition: all 0.18s; letter-spacing: 2px;
 }
-.panel h2 { color: #b8960c; font-size: 20px; border-bottom: 1px solid #3a2810; padding-bottom: 10px; margin-bottom: 16px; text-align: center; }
-.panel h3 { color: #c8a040; font-size: 16px; margin: 12px 0 6px; }
-.panel .close { position: absolute; top: 10px; right: 14px; cursor: pointer; color: #8a6a4a; font-size: 20px; }
-.panel .close:hover { color: #c8a040; }
-.inv-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
-@media (max-width: 600px) { .inv-grid { grid-template-columns: repeat(2, 1fr); } }
-.inv-item {
-  background: rgba(20,15,5,0.8); border: 1px solid #3a2810; padding: 12px 8px;
-  text-align: center; border-radius: 4px; cursor: pointer; transition: all 0.2s;
-  min-height: 90px; display: flex; flex-direction: column; align-items: center;
-  justify-content: center; gap: 6px;
-}
-.inv-item:hover { border-color: #b8960c; background: rgba(30,20,8,0.9); }
-.inv-item .icon { font-size: 32px; }
-.inv-item .name { font-size: 12px; color: #b8960c; }
-.inv-item .desc { font-size: 10px; color: #6a5a3a; }
-.inv-item.key-item { border-color: #b8960c; box-shadow: 0 0 8px rgba(180,140,10,0.4); }
+.reason-slot:hover { border-color: var(--bronze); background: rgba(64,55,34,0.6); }
+.reason-slot.selected-slot { border-color: var(--bronze-bright); box-shadow: 0 0 12px rgba(176,138,69,0.3); }
+.reason-result { color: var(--silk-bright); font-size: 20px; text-align: center; padding: 12px; margin-top: 10px; border-top: 1px solid var(--dark-bronze); }
+
+/* ========== 拼图元素 ========== */
 .puzzle-grid { display: grid; gap: 8px; margin: 0 auto; }
 .puzzle-slot {
-  border: 2px dashed #4a3820; background: rgba(20,10,5,0.5);
+  border: 2px dashed var(--dark-bronze); background: rgba(17,17,17,0.5);
   display: flex; align-items: center; justify-content: center; cursor: pointer;
-  min-height: 50px; transition: all 0.2s; color: #4a3820; font-size: 13px;
+  min-height: 60px; transition: all 0.2s; color: var(--dark-bronze); font-size: 18px;
 }
-.puzzle-slot.filled { border: 2px solid #6a4a20; background: rgba(40,25,10,0.7); color: #c8a040; }
-.puzzle-slot.wrong { border-color: #c04030; animation: shake 0.5s; }
-@keyframes shake {
-  0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); }
-}
+.puzzle-slot.filled { border: 2px solid var(--bronze); background: rgba(64,55,34,0.3); color: var(--bronze-bright); }
+.puzzle-slot.wrong { border-color: var(--cinnabar); animation: shake 0.5s; }
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-5px)} 75%{transform:translateX(5px)} }
 .puzzle-piece {
-  background: rgba(30,15,5,0.9); border: 1px solid #5a4020; padding: 8px 12px;
-  text-align: center; cursor: pointer; border-radius: 3px; color: #d4c098;
-  font-size: 14px; transition: all 0.15s;
+  background: rgba(64,55,34,0.4); border: 1px solid var(--dark-bronze);
+  padding: 10px 16px; text-align: center; cursor: pointer;
+  color: var(--silk-yellow); font-size: 18px; transition: all 0.15s;
+  letter-spacing: 2px;
 }
-.puzzle-piece:hover { background: rgba(50,30,15,0.9); border-color: #b8960c; }
-.puzzle-piece.selected { border-color: #f0d060; box-shadow: 0 0 12px rgba(240,200,60,0.5); }
-.puzzle-piece.used { opacity: 0.4; pointer-events: none; }
-.reason-board {
-  min-height: 120px; border: 1px dashed #4a3820; padding: 12px; margin: 8px 0;
-  display: flex; flex-wrap: wrap; gap: 6px; align-items: flex-start; border-radius: 4px;
+.puzzle-piece:hover { background: rgba(64,55,34,0.7); border-color: var(--bronze); }
+.puzzle-piece.selected { border-color: var(--bronze-bright); box-shadow: 0 0 14px rgba(176,138,69,0.4); }
+.puzzle-piece.used { opacity: 0.3; pointer-events: none; }
+
+/* ========== 技能栏(复用底部) ========== */
+.skill-bar { 
+  display: flex; gap: 6px; align-items: center; flex-wrap: wrap; 
+  padding: 0; margin-top: 4px;
 }
-.reason-slot {
-  background: rgba(30,15,5,0.7); border: 1px solid #5a4020; padding: 6px 12px;
-  border-radius: 3px; cursor: pointer; font-size: 13px; color: #b8960c;
+.skill-btn-small {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 4px 8px; background: rgba(17,17,17,0.7);
+  border: 1px solid var(--dark-bronze); cursor: pointer;
+  font-size: 16px; color: var(--bronze); transition: all 0.18s;
+  font-family: STKaiti, KaiTi, serif;
+  min-width: 54px;
 }
-.reason-slot.selected-slot { border-color: #f0d060; box-shadow: 0 0 10px rgba(240,200,60,0.4); }
-.reason-result { color: #60c060; font-size: 14px; text-align: center; padding: 8px; margin-top: 8px; border-top: 1px solid #3a2810; }
+.skill-btn-small:hover { border-color: var(--bronze); background: rgba(64,55,34,0.5); }
+.skill-btn-small.owned { border-color: var(--dark-bronze); color: var(--silk-yellow); }
+.skill-btn-small:disabled { opacity: 0.3; cursor: not-allowed; filter: grayscale(1); }
+
+/* ========== 标题画面 ========== */
 #title-screen {
-  position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 500;
-  display: flex; flex-direction: column; align-items: center; justify-content: center;
-  background: linear-gradient(180deg, #050505, #0a0808 40%, #100c08 70%, #050505);
+  position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  z-index: 5000; display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  background: linear-gradient(180deg, var(--deep-ink), var(--ink-black) 40%, #100c08 70%, var(--deep-ink));
 }
 #title-screen .title-main {
-  font-size: clamp(28px, 5vw, 52px); color: #b8960c;
-  text-shadow: 0 0 30px rgba(180,140,10,0.6), 0 0 60px rgba(100,70,5,0.4);
-  letter-spacing: 12px; margin-bottom: 8px;
+  font-size: clamp(32px, 5vw, 52px); color: var(--bronze-bright);
+  text-shadow: 0 0 30px rgba(154,123,69,0.5), 0 0 60px rgba(64,55,34,0.3);
+  letter-spacing: 16px; margin-bottom: 10px; font-family: STKaiti, KaiTi, serif;
 }
 #title-screen .title-sub {
-  font-size: clamp(12px, 1.5vw, 16px); color: #6a5a3a; letter-spacing: 20px; margin-bottom: 60px;
+  font-size: clamp(14px, 1.5vw, 18px); color: var(--verdigris);
+  letter-spacing: 20px; margin-bottom: 70px; font-family: FangSong, STFangsong, serif;
 }
-#title-screen .title-menu { display: flex; flex-direction: column; gap: 16px; align-items: center; }
-#title-screen .title-btn {
-  background: transparent; border: 1px solid #4a3820; color: #c8a040;
-  font-size: 18px; padding: 12px 60px; cursor: pointer; font-family: inherit;
-  letter-spacing: 4px; transition: all 0.3s;
+#title-screen .title-menu { display: flex; flex-direction: column; gap: 20px; align-items: center; }
+#title-screen .qin-title-btn {
+  background: transparent; border: 2px solid var(--dark-bronze); color: var(--bronze-bright);
+  font-size: 23px; padding: 14px 80px; cursor: pointer;
+  font-family: STKaiti, KaiTi, serif; letter-spacing: 10px;
+  transition: all 0.3s;
+  outline: 1px solid transparent; outline-offset: -5px;
 }
-#title-screen .title-btn:hover {
-  background: rgba(40,25,10,0.6); border-color: #b8960c; color: #f0d060;
-  box-shadow: 0 0 20px rgba(180,140,10,0.3);
+#title-screen .qin-title-btn:hover {
+  background: rgba(64,55,34,0.25); border-color: var(--bronze-bright);
+  color: var(--silk-bright); box-shadow: 0 0 24px rgba(154,123,69,0.2);
+  outline-color: var(--verdigris);
 }
 #title-screen .water-effect {
-  position: absolute; bottom: 0; width: 100%; height: 120px;
-  background: linear-gradient(0deg, rgba(10,20,40,0.4), transparent);
+  position: absolute; bottom: 0; width: 100%; height: 140px;
+  background: linear-gradient(0deg, rgba(10,20,40,0.3), transparent);
   animation: waterRise 8s ease-in-out infinite;
 }
+@keyframes waterRise { 0%,100%{height:100px} 50%{height:180px} }
+
+/* ========== 章节选择 ========== */
 .chapter-select { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
-@media (max-width: 600px) { .chapter-select { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .chapter-select { grid-template-columns: 1fr; } }
 .chapter-card {
-  background: rgba(15,10,5,0.8); border: 1px solid #3a2810; padding: 16px;
-  cursor: pointer; border-radius: 4px; transition: all 0.2s; position: relative;
+  background: rgba(17,17,17,0.8); border: 1px solid var(--dark-bronze);
+  padding: 20px; cursor: pointer; transition: all 0.2s; position: relative;
+  outline: 1px solid transparent; outline-offset: -4px;
 }
-.chapter-card:hover { border-color: #b8960c; background: rgba(25,15,8,0.9); }
-.chapter-card.locked { opacity: 0.4; cursor: not-allowed; filter: grayscale(0.6); }
-.chapter-card .ch-num { color: #b8960c; font-size: 14px; }
-.chapter-card .ch-title { font-size: 18px; margin: 4px 0; }
-.chapter-card .ch-desc { font-size: 12px; color: #6a5a3a; }
+.chapter-card:hover { border-color: var(--bronze); background: rgba(30,25,15,0.9); outline-color: var(--verdigris); }
+.chapter-card.locked { opacity: 0.35; cursor: not-allowed; filter: grayscale(0.5); }
+.chapter-card .ch-num { color: var(--bronze-bright); font-size: 18px; letter-spacing: 4px; }
+.chapter-card .ch-title { font-size: 23px; margin: 6px 0; letter-spacing: 3px; }
+.chapter-card .ch-desc { font-size: 18px; color: var(--bronze); }
+
+/* ========== 场景过渡 ========== */
 .transition-overlay {
   position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-  background: #000; z-index: 450; opacity: 0; transition: opacity 1.5s; pointer-events: none;
+  background: var(--deep-ink); z-index: 4500; opacity: 0; transition: opacity 1.5s;
+  pointer-events: none;
 }
 .transition-overlay.active { opacity: 1; }
-.btn-row { display: flex; gap: 8px; flex-wrap: wrap; margin: 12px 0; justify-content: center; }
-.skill-btn {
-  display: flex; flex-direction: column; align-items: center; gap: 2px;
-  padding: 4px 10px; background: rgba(20,10,5,0.8); border: 1px solid #3a2010;
-  border-radius: 4px; cursor: pointer; font-size: 11px; color: #8a6a4a;
-  transition: all 0.2s; font-family: inherit;
+
+/* ========== 黑水门按钮 ========== */
+.gate-btn-qin {
+  position: absolute; z-index: 30; border-radius: 50%;
+  width: 48px; height: 48px; cursor: pointer;
+  border: 2px solid var(--dark-bronze);
+  transition: all 0.3s;
+  outline: 1px solid transparent; outline-offset: -3px;
 }
-.skill-btn.owned { border-color: #5a4020; color: #b8960c; }
-.skill-btn.owned:hover { border-color: #b8960c; background: rgba(40,25,10,0.8); }
-.skill-btn .sk-icon { font-size: 20px; }
-@keyframes waterRise { 0%,100% { height: 100px; } 50% { height: 160px; } }
-.panel::-webkit-scrollbar { width: 6px; }
-.panel::-webkit-scrollbar-track { background: rgba(10,5,0,0.3); }
-.panel::-webkit-scrollbar-thumb { background: #4a3020; border-radius: 3px; }
-.note-item {
-  background: rgba(20,10,5,0.6); border: 1px solid #3a2010; padding: 10px;
-  margin: 8px 0; border-radius: 3px;
+.gate-btn-qin:hover {
+  border-color: var(--bronze-bright);
+  box-shadow: 0 0 18px rgba(154,123,69,0.4);
+  outline-color: var(--verdigris);
 }
-.note-item .nt { color: #b8960c; font-size: 14px; }
-.note-item .nc { color: #8a7a5a; font-size: 12px; margin-top: 4px; }
 </style>
 </head>
 <body>
 <div id="game">
   <div class="scene-bg" id="sceneBg"></div>
-  <div id="ui-top">
-    <span class="chapter-name" id="chapterLabel">水德秦陵</span>
-    <div class="risk-bar">风险: <span class="risk-dots" id="riskDots"></span></div>
+
+  <!-- 常驻 HUD 上栏 -->
+  <div id="hud-top">
+    <div id="risk-panel">
+      <span class="risk-player">沈砚</span>
+      <span class="risk-label">风险值</span>
+      <div class="risk-dots-group" id="riskDotsGroup"></div>
+      <span class="risk-num" id="riskNum"></span>
+      <span class="risk-status" id="riskStatusText">○ 安全</span>
+    </div>
   </div>
+
+
+  <!-- 场景交互区 -->
   <div id="scene-area"></div>
+
+  <!-- 全屏图片查看器 -->
+  <div id="full-image-overlay" onclick="dismissFullImage()">
+    <img id="full-image-img" src="" alt="">
+    <div class="fi-bottom-text" id="full-image-text"></div>
+    <div class="fi-close-hint">— 点击画面继续 —</div>
+  </div>
+
+  <!-- 自动提示条 -->
+  <div id="auto-hint"></div>
+
+  <!-- 对话系统 -->
   <div id="dialogue"><div class="speaker"></div><div class="text"></div><div class="continue">— 点击继续 —</div></div>
-  <div id="ui-bottom"></div>
+
+  <!-- 底部 HUD -->
+  <div id="hud-bottom">
+    <div id="archive-btn" onclick="openQinPanel('artifacts')">
+      <span style="color:var(--bronze);font-size:16px">◆</span> 考古档案 <span style="color:var(--bronze);font-size:16px">◆</span>
+    </div>
+    <div id="func-btns">
+      <div class="func-entry" onclick="openQinPanel('notes')">帛书笔记</div>
+      <div class="func-entry" onclick="openQinPanel('reason')">推理板</div>
+    </div>
+    <div class="skill-bar" id="skillBar" style="position:absolute;bottom:10px;left:340px"></div>
+  </div>
+
+  <!-- 标题画面 -->
   <div id="title-screen"></div>
+
+  <!-- 场景过渡 -->
   <div class="transition-overlay" id="transition"></div>
 </div>
 
@@ -225,7 +524,10 @@ var G = {
   activeSkill: null,
   chapterUnlocked: {1:true, 2:false, 3:false, 4:false},
   selectedPiece: null,
-  gameStarted: false
+  gameStarted: false,
+  hintTimer: null,
+  hintQueue: [],
+  fullImageCallback: null
 };
 
 function $(id) { return document.getElementById(id); }
@@ -233,10 +535,12 @@ function $(id) { return document.getElementById(id); }
 var sceneArea = $('scene-area');
 var sceneBg = $('sceneBg');
 var dialogueEl = $('dialogue');
-var uiBottom = $('ui-bottom');
-var chapterLabel = $('chapterLabel');
 var titleScreen = $('title-screen');
 var transitionEl = $('transition');
+var hintEl = $('auto-hint');
+var fullImgOverlay = $('full-image-overlay');
+var fullImgImg = $('full-image-img');
+var fullImgText = $('full-image-text');
 
 function IMG(cat, name) {
   return '02_Art_Assets/' + cat + '/' + name;
@@ -248,28 +552,92 @@ function LV(num, name) {
   return IMG(dirs[num], name);
 }
 
-// 风险值
+// ==================== 风险值系统 ====================
 function updateRisk(delta) {
   G.risk = Math.min(G.maxRisk, Math.max(0, G.risk + delta));
   renderRisk();
-  if (G.risk >= 8) showDialogue('系统', '黑水的气息越来越重……再这样下去，后果不堪设想。');
+  if (G.risk >= 8) showHint('黑水的气息越来越重……再这样下去，后果不堪设想。');
 }
 function renderRisk() {
+  var group = $('riskDotsGroup');
+  var num = $('riskNum');
+  var statusEl = $('riskStatusText');
   var h = '';
   for (var i = 0; i < G.maxRisk; i++) {
-    h += '<div class="risk-dot' + (i < G.risk ? ' active' : '') + '"></div>';
+    h += '<div class="risk-dot-qin' + (i < G.risk ? ' active' : '') + '"></div>';
   }
-  $('riskDots').innerHTML = h;
+  group.innerHTML = h;
+  num.textContent = G.risk + ' / ' + G.maxRisk;
+
+  if (statusEl) {
+    if (G.risk <= 3) { statusEl.textContent = '○ 安全'; statusEl.className = 'risk-status'; }
+    else if (G.risk <= 6) { statusEl.textContent = '◈ 警戒'; statusEl.className = 'risk-status'; }
+    else { statusEl.textContent = '◆ 危险'; statusEl.className = 'risk-status danger'; }
+  }
 }
 
-// 对话系统
+// ==================== 自动提示系统(3秒自动消失) ====================
+function showHint(text) {
+  if (!text) return;
+  G.hintQueue.push(text);
+  processHintQueue();
+}
+function processHintQueue() {
+  if (G.hintTimer || G.hintQueue.length === 0) return;
+  // 等对话结束后再显示
+  if (G.dialogueQueue.length > 0) {
+    // 延迟检查
+    G.hintTimer = setTimeout(function() {
+      G.hintTimer = null;
+      processHintQueue();
+    }, 500);
+    return;
+  }
+  var text = G.hintQueue.shift();
+  hintEl.textContent = text;
+  hintEl.classList.add('show', 'flash');
+  setTimeout(function() { hintEl.classList.remove('flash'); }, 500);
+
+  G.hintTimer = setTimeout(function() {
+    hintEl.classList.remove('show');
+    G.hintTimer = null;
+    // 显示下一个提示
+    setTimeout(function() { processHintQueue(); }, 400);
+  }, 3000);
+}
+
+// ==================== 全屏图片查看器 ====================
+function showFullImage(imgSrc, bottomText, onClose) {
+  clearHints();
+  fullImgImg.src = imgSrc;
+  fullImgText.textContent = bottomText || '';
+  fullImgText.style.display = bottomText ? 'block' : 'none';
+  fullImgOverlay.style.display = 'flex';
+  G.fullImageCallback = onClose || null;
+}
+function dismissFullImage() {
+  fullImgOverlay.style.display = 'none';
+  var cb = G.fullImageCallback;
+  G.fullImageCallback = null;
+  if (cb) { setTimeout(function() { cb(); }, 100); }
+}
+function clearHints() {
+  if (G.hintTimer) { clearTimeout(G.hintTimer); G.hintTimer = null; }
+  G.hintQueue = [];
+  hintEl.classList.remove('show', 'flash');
+}
+
+// ==================== 对话系统 ====================
 function showDialogue(speaker, text, callback) {
+  // 清除提示
+  clearHints();
   G.dialogueQueue.push({s: speaker, t: text, c: callback});
   if (G.dialogueQueue.length === 1) nextDialogue();
 }
 function nextDialogue() {
   if (G.dialogueQueue.length === 0) {
     dialogueEl.style.display = 'none';
+    processHintQueue();
     return;
   }
   var d = G.dialogueQueue[0];
@@ -279,12 +647,13 @@ function nextDialogue() {
 }
 dialogueEl.addEventListener('click', function() {
   if (G.dialogueQueue.length === 0) return;
+  if (fullImgOverlay.style.display === 'flex') return; // 不抢全屏图的点击
   var d = G.dialogueQueue.shift();
   if (d.c) d.c();
   nextDialogue();
 });
 
-// 场景过渡
+// ==================== 场景过渡 ====================
 function transitionScene(callback) {
   transitionEl.classList.add('active');
   setTimeout(function() {
@@ -293,49 +662,57 @@ function transitionScene(callback) {
   }, 800);
 }
 
-// 技能/道具/谜题
+// ==================== 技能/道具/谜题 ====================
 function unlockSkill(id, name) { G.skills[id] = {name: name, owned: true}; renderSkills(); }
 function gainItem(id, name, desc, key) { G.inventory[id] = {name: name, desc: desc, key: !!key}; }
 function completePuzzle(id) { G.completedPuzzles[id] = true; }
 function addNote(title, text) {
   if (!G.notes.some(function(n) { return n.title === title; })) {
     G.notes.push({title: title, text: text});
+    showHint('已记录：' + title);
   }
 }
 function addReasonClue(id, text) {
   if (!G.reasoningClues.some(function(c) { return c.id === id; })) {
     G.reasoningClues.push({id: id, text: text});
+    showHint('已获得线索：' + text);
   }
 }
 
-// 渲染技能栏
+// ==================== 渲染技能栏 ====================
 function renderSkills() {
   var skillDefs = [
-    {id: '观纹', icon: '🔍'}, {id: '拓印', icon: '📜'}, {id: '听风', icon: '👂'},
-    {id: '探土', icon: '⛏'}, {id: '辨伪', icon: '🔬'}, {id: '牵线', icon: '🪢'}, {id: '封气', icon: '🫧'}
+    {id: '观纹', img: IMG('技能标识', '观纹.png')},
+    {id: '拓印', img: IMG('技能标识', '拓印.png')},
+    {id: '听风', img: IMG('技能标识', '听风.png')},
+    {id: '探土', img: IMG('技能标识', '探土.png')},
+    {id: '辨伪', img: IMG('技能标识', '辩伪.png')},
+    {id: '牵线', img: IMG('技能标识', '牵线.png')},
+    {id: '封气', img: IMG('技能标识', '封气.png')}
   ];
   var h = '';
   skillDefs.forEach(function(s) {
     var owned = G.skills[s.id];
     if (owned) {
-      h += '<button class="skill-btn owned" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">';
-      h += '<span class="sk-icon">' + s.icon + '</span>' + s.id + '</button>';
+      h += '<button class="skill-btn-small owned" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">';
+      h += '<img src="' + s.img + '" style="width:26px;height:26px">' + s.id + '</button>';
     } else {
-      h += '<button class="skill-btn" disabled title="未解锁"><span class="sk-icon">' + s.icon + '</span>' + s.id + '</button>';
+      h += '<button class="skill-btn-small" disabled title="未解锁">';
+      h += '<img src="' + s.img + '" style="width:26px;height:26px;opacity:0.3;filter:grayscale(1)">' + s.id + '</button>';
     }
   });
-  h += '<button class="ui-btn" onclick="openPanel(\'notes\')">📖 笔记</button>';
-  h += '<button class="ui-btn" onclick="openPanel(\'reason\')">🧩 推理板</button>';
-  h += '<button class="ui-btn" onclick="openPanel(\'inv\')">🎒 道具</button>';
-  uiBottom.innerHTML = h;
+  h += '<span style="color:var(--dark-bronze);margin:0 8px;font-size:20px">│</span>';
+  h += '<button class="skill-btn-small" onclick="openQinPanel(\'abilities\')" title="能力">';
+  h += '<img src="' + IMG('功能入口图标', '能力.png') + '" style="width:22px;height:22px">能力</button>';
+  $('skillBar').innerHTML = h;
 }
 
-// 使用技能
+// ==================== 使用技能 ====================
 function useSkill(skillId) {
   if (!G.skills[skillId]) return;
-  if (G.activeSkill === skillId) { G.activeSkill = null; return; }
+  if (G.activeSkill === skillId) { G.activeSkill = null; showHint('已取消【' + skillId + '】'); return; }
   G.activeSkill = skillId;
-  showDialogue('系统', '已装备【' + skillId + '】，点击场景中的目标使用。');
+  showHint('已激活【' + skillId + '】，点击场景中的目标使用。');
   var els = document.querySelectorAll('.interactive');
   for (var i = 0; i < els.length; i++) {
     if (els[i].dataset.skill && els[i].dataset.skill.split(',').indexOf(skillId) >= 0) {
@@ -344,7 +721,164 @@ function useSkill(skillId) {
   }
 }
 
-// 推理板
+// ==================== 场景管理 ====================
+function clearScene() {
+  sceneArea.innerHTML = '';
+  sceneBg.style.backgroundImage = '';
+  G.activeSkill = null;
+  clearHints();
+}
+function setBg(img) {
+  if (img) sceneBg.style.backgroundImage = 'url("' + img + '")';
+}
+function setObjective(text) {
+  // 不再使用objective显示，改为底部提示
+}
+
+// ==================== 添加可交互热区 ====================
+function addInteractive(x, y, w, h, label, onClick, opts) {
+  opts = opts || {};
+  var el = document.createElement('div');
+  el.className = 'interactive';
+  el.style.left = x + 'px';
+  el.style.top = y + 'px';
+  el.style.width = w + 'px';
+  el.style.height = h + 'px';
+
+  if (opts.investigateImg) {
+    el.dataset.investigateImg = opts.investigateImg;
+  }
+  if (opts.skill) el.dataset.skill = opts.skill;
+
+  el.onclick = function() {
+    // 技能模式
+    if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
+      var skillName = G.activeSkill;
+      if (opts.investigateImg) {
+        showFullImage(opts.investigateImg, null, function() {
+          if (opts.onSkill) { opts.onSkill(skillName); }
+          else if (onClick) { onClick(); }
+        });
+      } else if (opts.onSkill) {
+        opts.onSkill(skillName);
+      } else if (onClick) {
+        onClick();
+      }
+      G.activeSkill = null;
+      var allInt = document.querySelectorAll('.interactive');
+      for (var j = 0; j < allInt.length; j++) allInt[j].classList.remove('highlight');
+    } else if (G.activeSkill) {
+      showHint('【' + G.activeSkill + '】在这里没有发现什么。');
+    }
+    // 普通调查模式：有调查图 → 全屏展示图 + 回调
+    else if (opts.investigateImg) {
+      showFullImage(opts.investigateImg, null, onClick || null);
+    } else if (onClick) {
+      onClick();
+    }
+  };
+  sceneArea.appendChild(el);
+  return el;
+}
+
+// ==================== 秦式通用面板 ====================
+function openQinPanel(type) {
+  dismissFullImage();
+  var existingOverlay = document.querySelector('.qin-panel-overlay');
+  if (existingOverlay) existingOverlay.remove();
+
+  var overlay = document.createElement('div');
+  overlay.className = 'qin-panel-overlay';
+  overlay.style.display = 'flex';
+  overlay.onclick = function(e) { if (e.target === overlay) overlay.remove(); };
+
+  var panel = document.createElement('div');
+  panel.className = 'qin-panel';
+  var content = '';
+
+  if (type === 'artifacts') {
+    content = '<h2>考古档案</h2>';
+    var artifacts = [
+      {id: '黑水玉玦', desc: '开启水德机关', img: LV(0, '黑水玉玦-完成.png')},
+      {id: '黑玉残玦显影', desc: '可感应秦陵机关', img: LV(0, '黑玉残玦特写（单独物品图）.png')},
+      {id: '黑玉残玦', desc: '主角自幼佩戴的命运凭证', img: LV(0, '黑水残玦-残片.png')},
+      {id: '断木神斧', desc: '第一章核心秘宝，可作金属机关钥', img: null},
+      {id: '青铜虎符', desc: '控制兵俑阵列方向', img: null},
+      {id: '黑水渠令', desc: '水系机关秘宝', img: null}
+    ];
+    var hasAny = false;
+    content += '<div class="artifact-grid">';
+    artifacts.forEach(function(a) {
+      var owned = G.inventory[a.id];
+      if (owned) hasAny = true;
+      content += '<div class="artifact-card' + (owned && owned.key ? ' key-item' : '') + '" style="opacity:' + (owned ? 1 : 0.35) + '">';
+      if (a.img && owned) {
+        content += '<img src="' + a.img + '" style="width:70px;height:70px;object-fit:contain">';
+      } else if (a.img) {
+        content += '<img src="' + a.img + '" style="width:70px;height:70px;object-fit:contain;filter:grayscale(1);opacity:0.3">';
+      } else {
+        content += '<div style="font-size:36px;color:var(--dark-bronze)">◆</div>';
+      }
+      content += '<div style="font-size:20px;color:var(--silk-bright);letter-spacing:2px">' + a.id + '</div>';
+      content += '<div style="font-size:16px;color:var(--bronze)">' + (owned ? owned.desc : a.desc) + '</div></div>';
+    });
+    content += '</div>';
+    if (!hasAny) content += '<p style="color:var(--bronze);text-align:center;padding:30px;font-size:20px">尚未获取秘宝</p>';
+
+  } else if (type === 'abilities') {
+    content = '<h2>考古能力</h2>';
+    var abilities = [
+      {id: '观纹', desc: '观察隐藏纹样和机关痕迹，发现肉眼不可见的暗纹与铭文。', img: IMG('技能标识', '观纹.png'), owned: !!G.skills['观纹']},
+      {id: '拓印', desc: '记录铭文与图案，用于后续分析和推理比对。', img: IMG('技能标识', '拓印.png'), owned: !!G.skills['拓印']},
+      {id: '听风', desc: '判断墙体空腔与风道走向，感知暗室位置。', img: IMG('技能标识', '听风.png'), owned: !!G.skills['听风']},
+      {id: '探土', desc: '判断地面结构与承重，探测地下空腔。', img: IMG('技能标识', '探土.png'), owned: !!G.skills['探土']},
+      {id: '辨伪', desc: '判断六国残片与秦制标准的差异，辨识文物真伪。', img: IMG('技能标识', '辩伪.png'), owned: !!G.skills['辨伪']},
+      {id: '牵线', desc: '串联分散线索，发现隐藏关联。', img: IMG('技能标识', '牵线.png'), owned: !!G.skills['牵线']},
+      {id: '封气', desc: '临时封堵毒气和水银蒸汽，保障探索安全。', img: IMG('技能标识', '封气.png'), owned: !!G.skills['封气']}
+    ];
+    abilities.forEach(function(a) {
+      content += '<div class="note-item" style="display:flex;align-items:center;gap:18px;opacity:' + (a.owned ? 1 : 0.35) + '">';
+      content += '<img src="' + a.img + '" style="width:56px;height:56px;border:1px solid ' + (a.owned ? 'var(--dark-bronze)' : 'var(--disabled)') + '">';
+      content += '<div style="flex:1"><div class="nt">' + a.id + '</div>';
+      content += '<div class="nc">' + a.desc + '</div>';
+      content += '<div style="color:' + (a.owned ? '#60c060' : '#804040') + ';font-size:16px">' + (a.owned ? '已解锁' : '未解锁') + '</div></div></div>';
+    });
+
+  } else if (type === 'notes') {
+    content = '<h2>帛书笔记</h2>';
+    if (G.notes.length === 0) {
+      content += '<p style="color:var(--bronze);text-align:center;padding:30px;font-size:20px">暂无笔记记录</p>';
+    } else {
+      content += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">';
+      G.notes.forEach(function(n) {
+        content += '<div class="note-item"><div class="nt">◆ ' + n.title + '</div>';
+        content += '<div class="nc">' + n.text + '</div></div>';
+      });
+      content += '</div>';
+    }
+
+  } else if (type === 'reason') {
+    content = '<h2>推理板</h2>';
+    content += '<p style="font-size:18px;color:var(--bronze);margin-bottom:14px;letter-spacing:2px">将相关线索点击选中，组合推理出结论。</p>';
+    content += '<div class="reason-area">';
+    content += '<div class="reason-board" id="reasonBoard"></div>';
+    content += '</div>';
+    content += '<div class="reason-result" id="reasonResult"></div>';
+    content += '<div style="display:flex;gap:12px;justify-content:center;margin-top:14px">';
+    content += '<button class="qin-btn" onclick="checkReasoning()">验证推理</button>';
+    content += '<button class="qin-btn" onclick="clearReasoning()">清空选择</button></div>';
+  }
+
+  panel.innerHTML = content + '<button class="close-btn" onclick="this.closest(\'.qin-panel-overlay\').remove()">返回探索</button>';
+  overlay.appendChild(panel);
+  $('game').appendChild(overlay);
+
+  if (type === 'reason') {
+    setTimeout(function() { renderReasoningClues(); }, 50);
+  }
+}
+
+// ==================== 推理板逻辑 ====================
 var selectedClues = [];
 function renderReasoningClues() {
   var board = $('reasonBoard');
@@ -354,7 +888,7 @@ function renderReasoningClues() {
     var sel = selectedClues.indexOf(c.id) >= 0 ? ' selected-slot' : '';
     h += '<span class="reason-slot' + sel + '" onclick="toggleClue(\'' + c.id + '\')">' + c.text + '</span>';
   });
-  if (G.reasoningClues.length === 0) h = '<span style="color:#4a3820">当前无可用线索</span>';
+  if (G.reasoningClues.length === 0) h = '<span style="color:var(--dark-bronze);font-size:18px">当前无可用线索</span>';
   board.innerHTML = h;
 }
 function toggleClue(id) {
@@ -363,125 +897,33 @@ function toggleClue(id) {
   else selectedClues.push(id);
   renderReasoningClues();
 }
-function clearReasoning() { selectedClues = []; renderReasoningClues(); $('reasonResult').textContent = ''; }
+function clearReasoning() { selectedClues = []; renderReasoningClues(); var r = $('reasonResult'); if (r) r.innerHTML = ''; }
 function checkReasoning() {
   var result = $('reasonResult');
+  if (!result) return;
   var ids = selectedClues.sort().join(',');
+
   if (ids === '北方属水,水色为黑,秦承玄水') {
-    result.innerHTML = '<span style="color:#60c060">✓ 推理正确：秦承玄水 + 水色为黑 + 北方属水 → <b>机关应在北方黑水门</b></span>';
+    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：秦承玄水 + 水色为黑 + 北方属水 → <b>机关应在北方黑水门</b></span>';
+    if (!G.completedPuzzles['reasoning_done']) {
+      completePuzzle('reasoning_done');
+      addNote('推理结论', '秦以水德代周火德。水为黑色，对应北方。秦陵入口——黑水门，必在北方。');
+      showHint('推理完成：机关应在北方黑水门');
+    }
   } else if (ids === '朱丝缚木,树创复合,南方属火') {
-    result.innerHTML = '<span style="color:#60c060">✓ 推理正确：需先以火困木灵，再以金断木形</span>';
+    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：需先以火困木灵，再以金断木形</span>';
+    addNote('神木推理', '朱丝属火，可困树神。火克木，朱丝缚木后方可用斧伐树。');
   } else if (ids === '金克木,青铜属金') {
-    result.innerHTML = '<span style="color:#60c060">✓ 推理正确：青铜斧属金，金可克木</span>';
+    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：青铜斧属金，金可克木</span>';
   } else if (ids === '木入土,秦以水德') {
-    result.innerHTML = '<span style="color:#60c060">✓ 推理正确：木入土后，最终导向黑水，水德归秦</span>';
+    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：木入土后，最终导向黑水，水德归秦</span>';
+  } else if (selectedClues.length === 1) {
+    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">需要选择多条线索组合推理。秦为水德、水对应哪些要素？</span>';
+  } else if (selectedClues.length === 2) {
+    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">两条线索的关联还不够完整，试着再加入一条。</span>';
   } else {
-    result.innerHTML = '<span style="color:#c8a040">这些线索的关联尚不明确，试试其他组合。</span>';
+    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">这些线索的关联尚不明确，试试其他组合。</span>';
   }
-}
-
-// 打开面板
-function openPanel(type) {
-  var existing = document.querySelector('.panel');
-  if (existing) existing.remove();
-
-  var panel = document.createElement('div');
-  panel.className = 'panel';
-  var content = '';
-
-  if (type === 'inv') {
-    content = '<h2>🎒 道具栏</h2><div class="inv-grid">';
-    var tools = [
-      {id: '火折子', icon: '🔥', desc: '照明与验氧'}, {id: '蜡封', icon: '🕯', desc: '封堵孔洞'},
-      {id: '洛阳铲', icon: '🪏', desc: '探测空腔'}, {id: '墨线', icon: '📏', desc: '标记位移'},
-      {id: '绳钩', icon: '🪝', desc: '远程触发'}, {id: '拓包', icon: '🧽', desc: '复制铭文'},
-      {id: '铜镜', icon: '🪞', desc: '反光与暗纹'}, {id: '朱砂', icon: '🟥', desc: '标记与补全'}
-    ];
-    var keyItems = [
-      {id: '黑水玉玦', desc: '水德机关秘宝'}, {id: '黑玉残玦', desc: '主角命运凭证'},
-      {id: '断木神斧', desc: '第一章秘宝'}, {id: '青铜虎符', desc: '控制兵俑'},
-      {id: '黑水渠令', desc: '水系机关秘宝'}, {id: '朱丝', desc: '火属前置道具'},
-      {id: '十二金人残片', desc: '隐藏条件收集物'}
-    ];
-    content += '<h3>盗墓工具</h3>';
-    tools.forEach(function(t) {
-      var owned = G.inventory[t.id];
-      content += '<div class="inv-item" style="opacity:' + (owned ? 1 : 0.3) + '">';
-      content += '<div class="icon">' + t.icon + '</div>';
-      content += '<div class="name">' + t.id + '</div><div class="desc">' + t.desc + '</div></div>';
-    });
-    content += '</div><h3>关键秘宝</h3><div class="inv-grid">';
-    keyItems.forEach(function(k) {
-      var owned = G.inventory[k.id];
-      content += '<div class="inv-item' + (owned && owned.key ? ' key-item' : '') + '" style="opacity:' + (owned ? 1 : 0.3) + '">';
-      content += '<div class="icon">💎</div><div class="name">' + k.id + '</div>';
-      content += '<div class="desc">' + (owned ? owned.desc : k.desc) + '</div></div>';
-    });
-    content += '</div>';
-  } else if (type === 'notes') {
-    content = '<h2>📖 帛书笔记</h2>';
-    if (G.notes.length === 0) {
-      content += '<p style="color:#6a5a3a;text-align:center;padding:20px">暂无笔记记录</p>';
-    } else {
-      G.notes.forEach(function(n) {
-        content += '<div class="note-item"><div class="nt">◆ ' + n.title + '</div>';
-        content += '<div class="nc">' + n.text + '</div></div>';
-      });
-    }
-  } else if (type === 'reason') {
-    content = '<h2>🧩 推理板</h2><p style="font-size:12px;color:#6a5a3a;margin-bottom:10px">将相关线索点击选中，组合推理出答案</p>';
-    content += '<div class="reason-board" id="reasonBoard"></div>';
-    content += '<div class="reason-result" id="reasonResult"></div>';
-    content += '<div class="btn-row"><button class="ui-btn" onclick="checkReasoning()">组合推理</button><button class="ui-btn" onclick="clearReasoning()">清空</button></div>';
-  }
-
-  panel.innerHTML = content + '<span class="close" onclick="this.parentElement.remove()">✕</span>';
-  $('game').appendChild(panel);
-  panel.style.display = 'block';
-
-  if (type === 'reason') renderReasoningClues();
-}
-
-// 场景管理
-function clearScene() {
-  sceneArea.innerHTML = '';
-  sceneBg.style.backgroundImage = '';
-  G.activeSkill = null;
-}
-function setBg(img) {
-  if (img) sceneBg.style.backgroundImage = 'url("' + img + '")';
-}
-function addInteractive(x, y, w, h, label, onClick, opts) {
-  opts = opts || {};
-  var el = document.createElement('div');
-  el.className = 'interactive';
-  el.style.left = x + 'px';
-  el.style.top = y + 'px';
-  el.style.width = w + 'px';
-  el.style.height = h + 'px';
-  if (opts.icon) {
-    el.innerHTML = '<div style="text-align:center;font-size:' + (opts.iconSize || 28) + 'px;line-height:' + h + 'px">' + opts.icon + '</div>';
-  }
-  if (opts.label) {
-    el.innerHTML += '<div style="position:absolute;bottom:-18px;left:50%;transform:translateX(-50%);font-size:11px;color:#8a6a4a;white-space:nowrap">' + opts.label + '</div>';
-  }
-  if (opts.skill) el.dataset.skill = opts.skill;
-  el.onclick = function() {
-    if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
-      if (opts.onSkill) {
-        opts.onSkill(G.activeSkill);
-      } else if (onClick) {
-        onClick();
-      }
-      G.activeSkill = null;
-      var allInt = document.querySelectorAll('.interactive');
-      for (var i = 0; i < allInt.length; i++) allInt[i].classList.remove('highlight');
-    } else if (onClick) {
-      onClick();
-    }
-  };
-  sceneArea.appendChild(el);
-  return el;
 }
 
 // ==================== 标题画面 ====================
@@ -489,19 +931,18 @@ function showTitle() {
   G.chapter = 0; G.scene = 0;
   clearScene();
   setBg('');
-  chapterLabel.textContent = '水德秦陵';
   titleScreen.style.display = 'flex';
   titleScreen.innerHTML = '' +
     '<div class="water-effect"></div>' +
     '<div class="title-main">水 德 秦 陵</div>' +
-    '<div class="title-sub">黑 水 残 简  ·  万 流 归 秦</div>' +
+    '<div class="title-sub">黑  水  残  简  ·  万  流  归  秦</div>' +
     '<div class="title-menu">' +
-      '<button class="title-btn" onclick="startGame()">入 陵</button>' +
-      '<button class="title-btn" onclick="showChapterSelect()">选 章</button>' +
-      '<button class="title-btn" onclick="showCredits()">题 记</button>' +
+      '<button class="qin-title-btn" onclick="startGame()">入  陵</button>' +
+      '<button class="qin-title-btn" onclick="showChapterSelect()">选  章</button>' +
+      '<button class="qin-title-btn" onclick="showCredits()">题  记</button>' +
     '</div>';
   renderRisk();
-  uiBottom.innerHTML = '';
+  $('skillBar').innerHTML = '';
 }
 
 function startGame() {
@@ -530,24 +971,24 @@ function showChapterSelect() {
   var cnNames = ['', '零', '一', '三', '四'];
 
   var h = '' +
-    '<div style="text-align:center;margin-bottom:30px">' +
-      '<div style="font-size:32px;color:#b8960c;letter-spacing:8px">章节选择</div>' +
+    '<div style="text-align:center;margin-bottom:40px">' +
+      '<div style="font-size:38px;color:var(--silk-bright);letter-spacing:12px">章节选择</div>' +
     '</div>' +
-    '<div class="chapter-select" style="max-width:600px;margin:0 auto">';
+    '<div class="chapter-select" style="max-width:640px;margin:0 auto">';
 
   chapters.forEach(function(c) {
     var clickFn = c.unlocked ? 'onclick="loadChapter(' + c.n + ')"' : '';
-    h += '<div class="chapter-card' + (c.unlocked ? '' : ' locked') + '" style="position:relative" ' + clickFn + '>';
+    h += '<div class="chapter-card' + (c.unlocked ? '' : ' locked') + '" ' + clickFn + '>';
     h += '<div class="ch-num">第' + cnNames[c.n] + '章</div>';
     h += '<div class="ch-title">' + c.t + '</div>';
     h += '<div class="ch-desc">' + c.d + '</div>';
-    if (!c.unlocked) h += '<div style="color:#804040;font-size:12px;margin-top:4px">🔒 尚未解锁</div>';
+    if (!c.unlocked) h += '<div style="color:#804040;font-size:16px;margin-top:6px">尚未解锁</div>';
     h += '</div>';
   });
 
   h += '</div>' +
-    '<div style="text-align:center;margin-top:20px">' +
-      '<button class="title-btn" style="font-size:14px;padding:8px 30px" onclick="showTitle()">返回</button>' +
+    '<div style="text-align:center;margin-top:30px">' +
+      '<button class="qin-title-btn" style="font-size:20px;padding:10px 40px" onclick="showTitle()">返回</button>' +
     '</div>';
 
   titleScreen.innerHTML = h;
@@ -558,14 +999,10 @@ function loadChapter(n) {
   G.chapter = n; G.scene = 0;
   G.risk = 0; G.reasoningClues = []; selectedClues = [];
   G.completedPuzzles = {}; G.notes = []; G.skills = {};
-  renderRisk();
-  renderSkills();
-
-  // 基础工具
+  renderRisk(); renderSkills();
   G.inventory = {};
   ['火折子','蜡封','洛阳铲','墨线','绳钩','拓包','铜镜','朱砂'].forEach(function(t) { gainItem(t, t, '盗墓工具'); });
   gainItem('黑玉残玦', '黑玉残玦', '主角命运凭证', true);
-
   if (n === 1) {
     unlockSkill('观纹', '观察纹样暗纹');
     unlockSkill('拓印', '复制铭文图案');
@@ -603,154 +1040,211 @@ function loadChapter(n) {
 
 function showCredits() {
   titleScreen.innerHTML = '' +
-    '<div style="text-align:center;max-width:600px">' +
-      '<div style="font-size:28px;color:#b8960c;margin-bottom:30px">《水德秦陵》</div>' +
-      '<p style="color:#c8a040;line-height:2;font-size:14px">' +
+    '<div style="text-align:center;max-width:640px">' +
+      '<div style="font-size:38px;color:var(--silk-bright);margin-bottom:40px;letter-spacing:8px">《水德秦陵》</div>' +
+      '<p style="color:var(--silk-yellow);line-height:2.5;font-size:21px;letter-spacing:3px">' +
         '黑为尊，水为德，北为正<br>' +
         '六国归一，万流归秦<br><br>' +
         '表层目标是寻找不死药<br>' +
         '真正的体验目标是：<br>' +
-        '<span style="color:#b8960c">我已读懂了这座陵墓。</span><br><br>' +
+        '<span style="color:var(--bronze-bright)">我已读懂了这座陵墓。</span><br><br>' +
         '所谓不死，也许不是肉体不灭<br>' +
         '而是文明、权力、记忆与秩序<br>' +
         '在历史深处持续回响。' +
       '</p>' +
-      '<button class="title-btn" style="margin-top:30px;font-size:14px" onclick="showTitle()">返回</button>' +
+      '<button class="qin-title-btn" style="margin-top:40px;font-size:20px" onclick="showTitle()">返回</button>' +
     '</div>';
 }
 
 // ==================== 序章：黑水残简 ====================
 function prologueDream() {
-  chapterLabel.textContent = '序章：黑水残简 · 梦境引子';
   clearScene();
   setBg(LV(0, '梦境主背景.png'));
 
-  addInteractive(440, 180, 400, 360, '', function() {
-    showDialogue('沈砚', '这扇门……我似乎见过。', function() {
-      showDialogue('沈砚', '水下的编钟声，每次入梦都能听到。', function() {
-        showDialogue('沈砚', '黑玉残玦……它在回应这扇门。', function() {
-          transitionScene(function() {
-            showDialogue('沈砚', '(惊醒) 又是这个梦。黑玉残玦上残留了一滴黑水……', function() {
+  // 梦境自动放映：文字演示 + 缓缓黑屏切换图片，无点击交互
+  showHint('黑暗的水面下，黑色的墓门若隐若现。水下的编钟声回荡在梦里，像是在召唤什么。');
+  addNote('梦境墓门', '黑暗水面下的黑色墓门，每次入梦都会出现。');
+
+  setTimeout(function() {
+    transitionScene(function() {
+      setBg(LV(0, '梦境分镜1.png'));
+      showHint('这扇门……我似乎见过。');
+
+      setTimeout(function() {
+        transitionScene(function() {
+          setBg(LV(0, '梦境分镜2.png'));
+          showHint('北斗七星在倒影中变成了秦篆……但太模糊了，读不清。');
+          addNote('北斗倒影', '水面倒影中北斗变为秦篆，但文字模糊无法辨认。');
+          addNote('黑玉残玦震动', '靠近墓门时残玦低鸣，似乎在回应某种力量。');
+
+          setTimeout(function() {
+            transitionScene(function() {
               prologueRestoration();
+              clearHints();
+              showDialogue('沈砚', '从梦境中醒来……又是这个梦。黑玉残玦上残留了一滴黑水。', function() {
+                showHint('修复黑水残简，寻找秦陵入口的线索');
+              });
+            });
+          }, 3500);
+        });
+      }, 3500);
+    });
+  }, 3500);
+}
+
+
+function prologueRestoration() {
+  G.scene = 1;
+  clearScene();
+  setBg(LV(0, '古籍修复室.png'));
+  showHint('修复黑水残简，寻找秦陵入口的线索');
+
+  addInteractive(160, 100, 240, 180, '', function() {
+    addNote('残破帛书', '帛书上反复出现"黑水""玄药"等字样，似乎与秦陵传说中的不死药有关。帛书残缺严重，需要拼合复原。');
+    if (!G.completedPuzzles['silk_puzzle']) {
+      setTimeout(function() { startSilkPuzzle(); }, 500);
+    } else {
+      showDialogue('沈砚', '帛书已经修复完成，上面显示"黑水入陵，玄药不死"。');
+    }
+  }, { investigateImg: LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') });
+
+  addInteractive(620, 130, 150, 140, '', function() {
+    showDialogue('沈砚', '只有半枚……边缘像被人为切断，不是天然断裂。这枚残玦我自幼佩戴。', function() {
+      addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，遇水会出现墨痕。');
+    });
+  }, { investigateImg: LV(0, '黑玉残玦特写（单独物品图）.png') });
+
+  addInteractive(380, 280, 200, 120, '', function() {
+    showDialogue('沈砚', '"若黑水再响，莫入陵；若你非入不可，记得不要取药。"', function() {
+      showDialogue('系统', '信尾署名：父  沈伯安。落款时间是十年前，正是他最后一次出发前。', function() {
+        addNote('养父遗信', '养父沈伯安留下的最后信件。警告不要入陵，更不要取药。十年前在探索中失踪。');
+      });
+    });
+  }, { investigateImg: LV(0, '养父遗信.png') });
+
+  addInteractive(720, 320, 140, 140, '', function() {
+    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北。东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
+      showDialogue('沈砚', '秦代周而立，周为火德，秦以水德代之。水在五行中对应北方、黑色。', function() {
+        addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
+        addReasonClue('北方属水', '北方属水');
+        addReasonClue('水色为黑', '水色为黑');
+      });
+    });
+  }, { investigateImg: LV(0, '五行图.png') });
+
+  addInteractive(60, 320, 140, 130, '', function() {
+    showDialogue('沈砚', '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。', function() {
+      showDialogue('沈砚', '拓本还提到："玄水在北，旧祠为门"——与养父研究的秦陵入口说法一致。', function() {
+        addNote('秦简拓本', '秦以水德，尚黑色。"水胜火"——秦代周，水克火。玄水在北方，旧祠可能作为入口。');
+        addReasonClue('秦承玄水', '秦承玄水');
+      });
+    });
+  }, { investigateImg: LV(0, '秦简拓本.png') });
+
+  addInteractive(830, 60, 110, 220, '', function() {
+    if (G.completedPuzzles['silk_puzzle'] && !G.completedPuzzles['jade_dev']) {
+      showDialogue('沈砚', '窗台上有个水盏，雨水从窗缝汇聚其中。如果把水滴到黑玉残玦上……', function() {
+        completePuzzle('jade_dev');
+        showDialogue('系统', '水滴落在黑玉残玦上，残玦渗出黑色墨痕，墨痕沿帛书纹路缓缓流动。', function() {
+          showFullImage(LV(0, 'WD-PUZ-000-001-02（黑水玉显影）.png'), null, function() {
+            showDialogue('系统', '帛书显现出隐藏文字："玄水在北，旧祠为门。"', function() {
+              addNote('显现文字', '黑玉残玦遇水显影后，帛书显现"玄水在北，旧祠为门"。');
+              addNote('黑水显影', '黑玉残玦遇水后渗出黑色墨痕，沿帛书纹路流动，最终指向北方旧祠。');
+              gainItem('黑玉残玦显影', '黑玉残玦(已显影)', '可感应秦陵机关', true);
+              showDialogue('沈砚', '旧祠……黑水指引的方向。地图上标出了地表旧祠的位置，我必须去看看。', function() {
+                prologueShrine();
+              });
             });
           });
         });
       });
-    });
-  }, {icon: '🚪', iconSize: 60, label: '黑色墓门'});
-
-  addInteractive(500, 480, 280, 50, '', null, {icon: '🌊', iconSize: 20, label: '水面倒影'});
-}
-
-function prologueRestoration() {
-  G.scene = 1;
-  chapterLabel.textContent = '序章：黑水残简 · 古籍修复室';
-  clearScene();
-  setBg(LV(0, '古籍修复室.png'));
-
-  addInteractive(200, 120, 180, 160, '', function() {
-    showDialogue('系统', '残破帛书上依稀可见："黑水入陵，玄药不死"', function() {
-      addNote('残破帛书', '帛书上反复出现"黑水""玄药"等字样，似乎与秦陵传说中的不死药有关。');
-      if (!G.completedPuzzles['silk_puzzle']) startSilkPuzzle();
-    });
-  }, {icon: '📜', label: '残破帛书'});
-
-  addInteractive(620, 150, 140, 120, '', function() {
-    showDialogue('沈砚', '只有半枚……边缘像被人为切断。这枚残玦我自幼佩戴。', function() {
-      addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，遇水会出现墨痕。');
-    });
-  }, {icon: '💎', label: '黑玉残玦'});
-
-  addInteractive(430, 300, 160, 100, '', function() {
-    showDialogue('沈砚', '"若黑水再响，莫入陵；若你非入不可，记得不要取药。"——养父遗信', function() {
-      addNote('养父遗信', '养父留下的最后信件，警告不要入陵，更不要取药。他是研究秦陵的学者，十年前失踪。');
-    });
-  }, {icon: '📧', label: '养父遗信'});
-
-  addInteractive(700, 350, 130, 120, '', function() {
-    showDialogue('沈砚', '五行图：木火土金水。东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
-      addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
-      addReasonClue('北方属水', '北方属水');
-      addReasonClue('水色为黑', '水色为黑');
-    });
-  }, {icon: '🎨', label: '五行图'});
-
-  addInteractive(80, 350, 130, 110, '', function() {
-    showDialogue('沈砚', '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。', function() {
-      addNote('秦简拓本', '秦以水德，尚黑色。水胜火，秦代周。');
-      addReasonClue('秦承玄水', '秦承玄水');
-    });
-  }, {icon: '📚', label: '秦简拓本'});
-
-  addInteractive(820, 80, 100, 180, '', function() {
-    if (G.completedPuzzles['silk_puzzle'] && !G.completedPuzzles['jade_dev']) {
-      showDialogue('沈砚', '雨水滴在残玦上时，出现了黑色墨痕……让我试试用它触碰复原的帛书。', function() {
-        completePuzzle('jade_dev');
-        showDialogue('系统', '残玦渗出黑色墨痕，墨痕沿帛书纹路流动。帛书显现："玄水在北，旧祠为门。"', function() {
-          addNote('显现文字', '玄水在北，旧祠为门。地图上出现了地表旧祠的位置。');
-          gainItem('黑玉残玦显影', '黑玉残玦(已显影)', '可感应秦陵机关', true);
-          showDialogue('沈砚', '旧祠……黑水指引的方向。我必须去看看。', function() {
-            prologueShrine();
-          });
-        });
-      });
     } else if (!G.completedPuzzles['silk_puzzle']) {
-      showDialogue('沈砚', '雨水从窗缝漏进来……还是先修复帛书吧。');
+      showDialogue('沈砚', '雨水从窗缝漏进来，汇聚在窗台水盏里。还是先修复桌上那卷帛书吧。', function() {
+        addNote('窗边水痕', '雨水汇聚在窗台水盏中，水滴似乎可以用在某些地方。');
+      });
+    } else if (G.completedPuzzles['jade_dev']) {
+      showDialogue('沈砚', '水盏里还剩一些水，但残玦已经完成显影了。');
     }
-  }, {icon: '🪟', label: '窗边雨水'});
+  }, { investigateImg: LV(0, '雨水窗边氛围图.png') });
 }
 
-// 帛书复原拼图
+// ==================== 帛书复原拼图 ====================
 function startSilkPuzzle() {
-  var panel = document.createElement('div');
-  panel.className = 'panel';
-  panel.style.display = 'block';
-  panel.id = 'silkPuzzlePanel';
+  dismissFullImage();
 
   var pieces = [
-    {id: 'A', text: '黑水', correct: 0},
-    {id: 'B', text: '入陵', correct: 1},
-    {id: 'C', text: '玄药', correct: 2},
-    {id: 'D', text: '不死', correct: 3},
-    {id: 'E', text: '路线残纹', correct: 4}
+    {id: 'A', name: '黑水', correct: 0, img: LV(0, '残片A-黑水.png')},
+    {id: 'B', name: '入陵', correct: 1, img: LV(0, '残片B-入陵.png')},
+    {id: 'C', name: '玄药', correct: 2, img: LV(0, '残片C-玄药.png')},
+    {id: 'D', name: '不死', correct: 3, img: LV(0, '残片D-不死.png')},
+    {id: 'E', name: '路线纹路', correct: 4, img: LV(0, '残片E-路线纹路.png')}
   ];
   var slots = [null, null, null, null, null];
   var availablePieces = pieces.slice();
 
+  var panel = document.createElement('div');
+  panel.className = 'qin-panel';
+  panel.id = 'silkPuzzlePanel';
+  panel.style.width = '95%'; panel.style.maxWidth = '1000px'; panel.style.height = 'auto'; panel.style.maxHeight = '88%';
+
   function renderPuzzle() {
-    var h = '<h2>🧩 帛书复原</h2>';
-    h += '<p style="text-align:center;color:#6a5a3a;margin-bottom:10px">将残片拖放到正确位置，复原"黑水入陵，玄药不死"</p>';
-    h += '<div class="puzzle-grid" style="grid-template-columns:repeat(5,1fr);max-width:600px">';
+    var h = '<h2>帛书复原</h2>';
+    h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:14px;letter-spacing:2px">点击下方残片选择，再点击上方空位放入，复原"黑水入陵，玄药不死"</p>';
+
+    // 帛书底图
+    h += '<div style="margin:0 auto;max-width:760px;border:2px solid var(--dark-bronze);background:rgba(5,3,0,0.6);padding:10px">';
+    h += '<img src="' + LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') + '" style="width:100%;max-height:230px;object-fit:contain;opacity:0.85;display:block">';
+    h += '</div>';
+
+    // 空位槽
+    h += '<div style="display:flex;gap:12px;justify-content:center;margin-top:14px;flex-wrap:wrap">';
     for (var i = 0; i < 5; i++) {
-      h += '<div class="puzzle-slot' + (slots[i] ? ' filled' : '') + '" onclick="window._placeSilkPiece(' + i + ')" id="slot' + i + '">';
-      h += (slots[i] ? slots[i].text : '空位') + '</div>';
+      h += '<div class="puzzle-slot' + (slots[i] ? ' filled' : '') + '"';
+      h += ' onclick="window._placeSilkPiece(' + i + ')" id="slot' + i + '"';
+      h += ' style="width:118px;height:64px;display:flex;align-items:center;justify-content:center;flex-shrink:0">';
+      if (slots[i]) h += '<span style="color:var(--bronze-bright);font-weight:bold;font-size:18px">' + slots[i].name + '</span>';
+      else h += '<span style="color:var(--dark-bronze);font-size:16px">空位</span>';
+      h += '</div>';
     }
     h += '</div>';
-    h += '<div class="btn-row" style="margin-top:12px">';
+
+    // 残片选择
+    h += '<div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;margin-top:14px;min-height:64px">';
     availablePieces.forEach(function(p) {
-      h += '<div class="puzzle-piece" onclick="window._selectSilkPiece(\'' + p.id + '\')" id="piece' + p.id + '">' + p.text + '</div>';
+      h += '<div class="puzzle-piece' + (G.selectedPiece === p.id ? ' selected' : '') + '" onclick="window._selectSilkPiece(\'' + p.id + '\')" id="piece' + p.id + '"';
+      h += ' style="display:flex;align-items:center;gap:8px;padding:8px 14px;flex-shrink:0">';
+      h += '<img src="' + p.img + '" style="height:38px;width:auto;max-width:80px;object-fit:contain">';
+      h += '<span style="font-size:18px">' + p.name + '</span></div>';
     });
     h += '</div>';
-    h += '<span class="close" onclick="window._closeSilkPuzzle()">✕</span>';
+
+    h += '<div style="display:flex;gap:12px;justify-content:center;margin-top:16px">';
+    h += '<button class="qin-btn" onclick="window._resetSilkPuzzle()">重排</button></div>';
+    h += '<button class="close-btn" onclick="window._closeSilkPuzzle()">返回探索</button>';
     panel.innerHTML = h;
   }
 
+  window._resetSilkPuzzle = function() {
+    availablePieces = pieces.slice();
+    slots = [null, null, null, null, null];
+    G.selectedPiece = null;
+    renderPuzzle();
+  };
+
   window._placeSilkPiece = function(idx) {
-    if (!G.selectedPiece) return;
+    if (!G.selectedPiece) { showHint('请先在下方选择一块残片。'); return; }
     var piece = pieces.find(function(p) { return p.id === G.selectedPiece; });
     if (!piece) return;
-    if (slots[idx]) {
-      availablePieces.push(slots[idx]);
-      slots[idx] = null;
-    }
+    if (slots[idx]) { availablePieces.push(slots[idx]); slots[idx] = null; }
     slots[idx] = piece;
     availablePieces = availablePieces.filter(function(p) { return p.id !== piece.id; });
     G.selectedPiece = null;
-    var allPieces = document.querySelectorAll('.puzzle-piece');
-    for (var i = 0; i < allPieces.length; i++) allPieces[i].classList.remove('selected');
     renderPuzzle();
 
-    // 检查完成
+    var allFilled = true;
+    for (var i = 0; i < 5; i++) { if (!slots[i]) { allFilled = false; break; } }
+    if (!allFilled) return;
+
     var correct = true;
     for (var i = 0; i < 5; i++) {
       if (!slots[i] || slots[i].correct !== i) { correct = false; break; }
@@ -758,132 +1252,183 @@ function startSilkPuzzle() {
     if (correct) {
       setTimeout(function() {
         completePuzzle('silk_puzzle');
-        showDialogue('沈砚', '复原了："黑水入陵，玄药不死。"残图显示一条从旧祠通往地下的路径……尽头缺了半枚玉玦形状。', function() {
-          addNote('黑水残简', '帛书复原后显示"黑水入陵，玄药不死"。残图指示旧祠位置。');
-          window._closeSilkPuzzle();
-          showDialogue('沈砚', '这个玉玦缺口……和我的黑玉残玦形状吻合。也许需要用水激活它。');
+        showFullImage(LV(0, '帛书修复后的完整图.png'), '帛书修复完成："黑水入陵，玄药不死"', function() {
+          showDialogue('沈砚', '复原了——"黑水入陵，玄药不死。"', function() {
+            addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
+            showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
+              addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头缺了半枚玉玦形状。');
+              showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {
+                window._closeSilkPuzzle();
+              });
+            });
+          });
         });
       }, 500);
+    } else {
+      showHint('残片的位置不太对……再调整一下。');
     }
   };
 
   window._selectSilkPiece = function(id) {
     G.selectedPiece = G.selectedPiece === id ? null : id;
-    var allPieces = document.querySelectorAll('.puzzle-piece');
-    for (var i = 0; i < allPieces.length; i++) {
-      allPieces[i].classList.toggle('selected', allPieces[i].id === 'piece' + G.selectedPiece);
-    }
+    renderPuzzle();
   };
 
   window._closeSilkPuzzle = function() {
-    panel.remove();
+    panel.parentElement && panel.parentElement.remove();
     if (!G.completedPuzzles['silk_puzzle']) {
       availablePieces = pieces.slice();
       slots = [null, null, null, null, null];
     }
   };
 
+  // 用overlay包裹
+  var overlay = document.createElement('div');
+  overlay.className = 'qin-panel-overlay';
+  overlay.style.display = 'flex';
+  overlay.onclick = function(e) { if (e.target === overlay) { window._closeSilkPuzzle(); } };
+  overlay.appendChild(panel);
+  $('game').appendChild(overlay);
   renderPuzzle();
-  $('game').appendChild(panel);
 }
+
 
 function prologueShrine() {
   G.scene = 2;
-  chapterLabel.textContent = '序章：黑水残简 · 地表旧祠';
   clearScene();
   setBg(LV(0, '背景图·地表旧祠.png'));
+  showHint('调查旧祠，找到黑水门并解开机关');
 
-  addInteractive(560, 100, 100, 140, '', function() {
-    showDialogue('沈砚', '南墙的朱雀壁画颜色鲜明，火纹完整。但太过显眼了……也许是误导。', function() {
-      addNote('朱雀壁画', '南墙朱雀火纹，颜色鲜明但可能是周火或误导。');
-      addReasonClue('朱雀火纹', '南墙朱雀火纹(可能是误导)');
+  addInteractive(560, 80, 160, 180, '', function() {
+    showDialogue('沈砚', '南墙的朱雀壁画颜色鲜明，火纹完整。赤色过于显眼……像是故意引导人看向南方的。', function() {
+      showDialogue('沈砚', '但秦代周而立，秦为水德、周为火德。这朱雀代表的应该是被水德取代的周火。', function() {
+        addNote('朱雀壁画', '南墙朱雀火纹，颜色鲜明但应是周火遗迹或秦陵设计者的误导。');
+        addReasonClue('南墙朱雀', '南墙朱雀火纹(误导)');
+      });
     });
-  }, {icon: '🔥', label: '南墙朱雀壁画'});
+  }, { investigateImg: LV(0, '南墙朱雀壁画.png') });
 
-  addInteractive(350, 320, 200, 100, '', function() {
-    showDialogue('沈砚', '供案没有积灰，近年有人来过。香炉底部有黑色水纹。', function() {
-      addNote('供案调查', '供案未积尘，近年有人来过。香炉底部有黑色水纹暗刻。');
+  addInteractive(80, 200, 160, 260, '', function() {
+    showDialogue('沈砚', '残碑风化严重，上半已不可读。下半依稀可见"周火既衰……秦承玄水……"', function() {
+      showDialogue('沈砚', '残碑印证了五行交替：周火衰微，秦以水德承继天命。', function() {
+        addNote('残碑铭文', '残碑记载"周火既衰，秦承玄水"，印证秦以水德代周火德。');
+        addReasonClue('秦承玄水', '秦承玄水');
+      });
     });
-  }, {icon: '🪔', label: '供案'});
+  }, { investigateImg: LV(0, '分镜3·碑文放大图.png'), skill: '拓印' });
 
-  addInteractive(100, 280, 120, 200, '', function() {
-    showDialogue('沈砚', '残碑文："周火既衰……秦承玄水……"周与火相关，秦与水相关。', function() {
-      addNote('残碑铭文', '残碑记载"周火既衰，秦承玄水"，印证秦以水德代周火德。');
-      addReasonClue('水胜火', '秦水代周火');
+  addInteractive(320, 280, 140, 100, '', function() {
+    showDialogue('系统', '香炉没有积灰，铜面光洁——近年有人来过这里。', function() {
+      showDialogue('沈砚', '香炉底部有暗刻的黑色水纹……这不是普通装饰，是水德崇拜者的标记。', function() {
+        addNote('香炉调查', '供案未积尘，近年有人来过。香炉底部有黑色水纹暗刻，与秦水德相关。');
+      });
     });
-  }, {icon: '🪦', label: '残碑', skill: '拓印'});
+  }, { investigateImg: LV(0, '香炉特写.png'), skill: '观纹' });
 
-  addInteractive(320, 80, 260, 200, '', function() {
+  addInteractive(320, 60, 300, 200, '', function() {
     if (!G.completedPuzzles['north_clean']) {
       G.completedPuzzles['north_clean'] = true;
-      showDialogue('沈砚', '刮开泥灰后，北墙露出了黑色水纹和一门轮廓！还有一个玉玦形状的凹槽。这就是黑水门。', function() {
-        addNote('黑水门', '北墙泥灰下发现黑水门。北侧有玉玦形凹槽，需要按下正确颜色按钮。');
-        addReasonClue('北墙黑水纹', '北墙露出黑水纹机关');
-        renderBlackWaterGate();
+      showDialogue('沈砚', '泥灰下露出了黑色水纹！还有一道暗门轮廓，北侧有一个玉玦形状的凹槽。这就是黑水门。', function() {
+        showDialogue('沈砚', '门上还有五色按钮面板和方位盘——需要正确的操作顺序才能打开。', function() {
+          addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮、方位盘和玉玦形凹槽。');
+          addReasonClue('北墙黑水门', '北墙露出黑水门机关');
+          renderBlackWaterGate();
+        });
       });
     } else {
-      showDialogue('沈砚', '黑水门已经清理干净。需要按下正确的颜色按钮。');
+      showDialogue('沈砚', '黑水门已经清理干净。五行按钮和方位盘都已显露——需要正确的操作顺序。');
     }
-  }, {icon: '🧱', label: '北墙(泥灰覆盖)'});
+  }, { investigateImg: LV(0, '地表旧祠后面的北方黑水门.png') });
+
+  addInteractive(180, 460, 480, 50, '', function() {
+    showDialogue('沈砚', '雨水从屋顶漏下，沿着地面的坡度全部向北墙方向汇集。', function() {
+      showDialogue('沈砚', '水往北流……这是自然现象，还是有人特意设计的暗示？', function() {
+        addNote('地面水流', '屋顶漏下的雨水沿地面向北汇集，暗示"水向北方"。');
+      });
+    });
+  });
 
   if (G.completedPuzzles['north_clean'] && !G.completedPuzzles['black_gate']) {
     renderBlackWaterGate();
   }
-
-  addInteractive(200, 450, 300, 40, '', function() {
-    showDialogue('沈砚', '雨水从屋顶漏下，全部向北墙汇集。北方……水往北流。');
-  }, {icon: '💧', label: '地面水流'});
 }
 
 function renderBlackWaterGate() {
-  var oldBtns = document.querySelectorAll('.gate-btn');
+  var oldBtns = document.querySelectorAll('.gate-btn-qin');
   for (var i = 0; i < oldBtns.length; i++) oldBtns[i].remove();
 
+  // 机关面板缩略图
+  var gatePanel = document.getElementById('gatePanelImg');
+  if (!gatePanel) {
+    gatePanel = document.createElement('div');
+    gatePanel.id = 'gatePanelImg';
+    gatePanel.style.cssText = 'position:absolute;bottom:130px;right:24px;z-index:50;cursor:pointer';
+    gatePanel.innerHTML = '<img src="' + LV(0, '五色按钮面板与方位盘.png') + '" style="max-height:160px;border:2px solid var(--dark-bronze);opacity:0.8">';
+    gatePanel.onclick = function() { showFullImage(LV(0, '五色按钮面板与方位盘.png'), null); };
+    sceneArea.appendChild(gatePanel);
+  }
+
   var colors = [
-    {x: 360, y: 120, c: '#4a8', label: '青(木)', id: '青'},
-    {x: 430, y: 120, c: '#e44', label: '赤(火)', id: '赤'},
-    {x: 500, y: 120, c: '#da4', label: '黄(土)', id: '黄'},
-    {x: 570, y: 120, c: '#ddd', label: '白(金)', id: '白'},
-    {x: 640, y: 120, c: '#222', label: '黑(水)', id: '黑'}
+    {x: 340, y: 90, bg: '#3a6a3a', id: '青', label: '青(木/东)'},
+    {x: 410, y: 90, bg: '#b04030', id: '赤', label: '赤(火/南)'},
+    {x: 480, y: 90, bg: '#c8a030', id: '黄', label: '黄(土/中)'},
+    {x: 550, y: 90, bg: '#c8c0b0', id: '白', label: '白(金/西)'},
+    {x: 620, y: 90, bg: '#1a1a1a', id: '黑', label: '黑(水/北)'}
   ];
 
   colors.forEach(function(c) {
     var btn = document.createElement('div');
-    btn.className = 'interactive gate-btn';
+    btn.className = 'gate-btn-qin';
     btn.style.left = c.x + 'px';
     btn.style.top = c.y + 'px';
-    btn.style.width = '50px';
-    btn.style.height = '50px';
-    btn.style.borderRadius = '50%';
-    btn.style.background = c.c;
-    btn.style.border = '2px solid #5a4020';
+    btn.style.background = c.bg;
 
     btn.onclick = function() {
       if (c.id === '黑') {
-        showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹开始发光了。', function() {
+        showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹开始发光了！', function() {
           if (G.inventory['黑玉残玦'] || G.inventory['黑玉残玦显影']) {
-            showDialogue('系统', '黑玉残玦靠近北方槽位……虽然无法完全嵌入，但它引出了真正的"黑水玉玦"！', function() {
-              completePuzzle('black_gate');
-              gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝', true);
-              addNote('黑水玉玦', '从黑水门获得的秘宝，是后续水德机关的基础钥匙。');
-              showDialogue('沈砚', '黑水门开启了……暗阶通往秦陵外藏道。阶梯两侧的秦篆写着："持半玦者，慎入。"', function() {
-                showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
-                  G.chapterUnlocked[2] = true;
-                  showDialogue('系统', '🎉 序章完成！第一章已解锁。', function() {
-                    transitionScene(function() { ch1Start(); });
+            showFullImage(LV(0, '黑水门.png'), null, function() {
+              showDialogue('系统', '黑玉残玦靠近北方槽位……虽然无法完全嵌入，但它引出了真正的"黑水玉玦"！', function() {
+                completePuzzle('black_gate');
+                gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
+                addNote('黑水门开启', '按下黑色按钮、将黑玉残玦靠近北方方位槽后，黑水门开启。获得了完整的黑水玉玦。');
+                addNote('黑水玉玦', '从黑水门获得的水德秘宝，是后续秦陵水德机关的基础钥匙。');
+                showFullImage(LV(0, '黑水门开启（露出外藏道）.png'), null, function() {
+                  showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
+                    showDialogue('系统', '阶梯两侧刻着秦篆："持半玦者，慎入。"', function() {
+                      showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
+                        G.chapterUnlocked[2] = true;
+                        showDialogue('系统', '序章完成！第一章已解锁。', function() {
+                          transitionScene(function() { ch1Start(); });
+                        });
+                      });
+                    });
                   });
                 });
               });
             });
+          } else {
+            showDialogue('沈砚', '黑水纹亮了……但玉玦槽还需要黑玉残玦来激活。');
           }
         });
       } else if (c.id === '赤') {
         updateRisk(1);
-        showDialogue('沈砚', '南墙朱雀发亮，祠内温度升高……火纹果然是误导。', function() {
-          addNote('朱雀误导', '按下赤色按钮后朱雀发亮，验证了南墙火纹是误导机关。');
+        showDialogue('系统', '南墙的朱雀壁画突然发亮！祠内温度骤然升高……', function() {
+          showDialogue('沈砚', '赤色在南，对应火德。朱雀是周火的象征——秦以水代火，这南墙果然在误导人！', function() {
+            addNote('朱雀警示', '按赤色按钮后南墙朱雀发亮，温度升高——南墙火纹是误导机关，真正的门在北方。');
+          });
         });
-      } else {
-        showDialogue('系统', '按下' + c.label + '按钮，没有明显变化。');
+      } else if (c.id === '青') {
+        showDialogue('系统', '按下青色(木/东)按钮，东侧龛位发出微光，但没有进一步变化。');
+      } else if (c.id === '黄') {
+        showDialogue('系统', '按下黄色(土/中)按钮，地面微微震动，但门依然紧闭。');
+      } else if (c.id === '白') {
+        showDialogue('系统', '按下白色(金/西)按钮，西侧龛位有金属回响，但门没有任何反应。');
+      }
+      if (c.id !== '黑' && c.id !== '赤') {
+        setTimeout(function() {
+          showHint('秦为水德，水在北方、色为黑。也许应该按黑色的按钮？');
+        }, 2000);
       }
     };
     sceneArea.appendChild(btn);
@@ -893,65 +1438,61 @@ function renderBlackWaterGate() {
 // ==================== 第一章：文公伐树 ====================
 function ch1Start() {
   G.chapter = 2; G.scene = 0;
-  chapterLabel.textContent = '第一章：文公伐树 · 外藏道入口';
   clearScene();
   setBg(LV(0, '外藏道概念图.png'));
   unlockSkill('听风', '判断墙体空腔与风道');
   unlockSkill('探土', '判断地面结构与承重');
   renderSkills();
+  showHint('探索外藏道，寻找前往神木祠的通路');
 
   addInteractive(300, 250, 200, 200, '', function() {
     showDialogue('沈砚', '中央地砖下方有空响……使用探土确认。', function() {
       showDialogue('探土', '地砖下方中空，承重不足。不能直接踩踏。');
     });
-  }, {icon: '⬜', label: '中央地砖', skill: '探土'});
+  }, {icon: '⬜', skill: '探土'});
 
   addInteractive(100, 200, 140, 200, '', function() {
     showDialogue('沈砚', '左侧墙缝有微弱风声……使用听风。', function() {
       showDialogue('听风', '确认左侧墙缝后有风道，树根向左侧延伸。');
     });
-  }, {icon: '🧱', label: '左侧墙缝', skill: '听风'});
+  }, {icon: '🧱', skill: '听风'});
 
   addInteractive(80, 400, 160, 60, '', function() {
     showDialogue('沈砚', '拉动左侧树根，墙面打开了一条通路！', function() {
       transitionScene(function() { ch1ShrineFront(); });
     });
-  }, {icon: '🌿', label: '左侧树根'});
+  }, {icon: '🌿'});
 }
 
 function ch1ShrineFront() {
   G.scene = 1;
-  chapterLabel.textContent = '第一章：文公伐树 · 神木祠前殿';
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
+  showHint('调查神木祠前殿，使用壁画机关找到前往神木主殿的方法');
 
   addInteractive(100, 150, 500, 300, '', function() {
     if (!G.completedPuzzles['mural_order']) startMuralPuzzle();
     else showDialogue('沈砚', '壁画顺序已经正确排列。接下来需要去南壁祭灶取得朱丝。');
-  }, {icon: '🖼', label: '壁画排序'});
+  }, {icon: '🖼'});
 
   addInteractive(620, 300, 200, 100, '', function() {
     showDialogue('沈砚', '被树根缠住的主殿门，需要破解机关才能进入。');
-  }, {icon: '🚪', label: '主殿门'});
+  }, {icon: '🚪'});
 
   if (G.completedPuzzles['mural_order'] && !G.inventory['朱丝']) {
     addInteractive(620, 420, 150, 50, '', function() {
       transitionScene(function() { ch1SouthWall(); });
-    }, {icon: '🔥', label: '前往南壁祭灶'});
+    }, {icon: '🔥'});
   }
   if (G.inventory['朱丝']) {
     addInteractive(620, 420, 150, 50, '', function() {
       transitionScene(function() { ch1MainHall(); });
-    }, {icon: '🌳', label: '前往神木主殿'});
+    }, {icon: '🌳'});
   }
 }
 
 function startMuralPuzzle() {
-  var panel = document.createElement('div');
-  panel.className = 'panel';
-  panel.style.display = 'block';
-  panel.id = 'muralPanel';
-
+  dismissFullImage();
   var correct = ['A','B','C','D','E','F'];
   var current = ['C','A','F','B','E','D'];
   var murals = {
@@ -961,30 +1502,29 @@ function startMuralPuzzle() {
   };
   var selectedMural = -1;
 
+  var panel = document.createElement('div');
+  panel.className = 'qin-panel';
+  panel.id = 'muralPanel';
+  panel.style.height = 'auto'; panel.style.maxHeight = '88%';
+
   function render() {
-    var h = '<h2>🖼 风雨自合壁画排序</h2>';
-    h += '<p style="text-align:center;color:#6a5a3a;margin-bottom:10px">按正确顺序排列壁画(点击交换)</p>';
-    h += '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">';
+    var h = '<h2>风雨自合壁画排序</h2>';
+    h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:12px;letter-spacing:2px">按正确顺序排列壁画(点击交换)</p>';
+    h += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
     current.forEach(function(id, i) {
-      h += '<div class="puzzle-piece" onclick="window._swapMural(' + i + ')" style="min-width:80px">';
-      h += '<div style="font-weight:bold">' + String.fromCharCode(65+i) + '</div>';
-      h += '<div style="font-size:11px">' + murals[id] + '</div></div>';
+      h += '<div class="puzzle-piece" onclick="window._swapMural(' + i + ')" style="min-width:90px">';
+      h += '<div style="font-weight:bold;font-size:18px">' + String.fromCharCode(65+i) + '</div>';
+      h += '<div style="font-size:16px">' + murals[id] + '</div></div>';
     });
     h += '</div>';
-    h += '<div class="btn-row"><button class="ui-btn" onclick="window._checkMural()">确认顺序</button></div>';
-    h += '<span class="close" onclick="window._closeMural()">✕</span>';
+    h += '<div style="display:flex;gap:10px;justify-content:center;margin-top:14px"><button class="qin-btn" onclick="window._checkMural()">确认顺序</button></div>';
+    h += '<button class="close-btn" onclick="window._closeMural()">返回探索</button>';
     panel.innerHTML = h;
   }
 
   window._swapMural = function(idx) {
     if (selectedMural === -1) { selectedMural = idx; render(); }
-    else {
-      var tmp = current[selectedMural];
-      current[selectedMural] = current[idx];
-      current[idx] = tmp;
-      selectedMural = -1;
-      render();
-    }
+    else { var tmp = current[selectedMural]; current[selectedMural] = current[idx]; current[idx] = tmp; selectedMural = -1; render(); }
   };
 
   window._checkMural = function() {
@@ -1000,32 +1540,35 @@ function startMuralPuzzle() {
         ch1SouthWall();
       });
     } else {
-      showDialogue('沈砚', '顺序不对……想想伐树的前后逻辑。树被砍→伤口复合→鬼语提示→朱丝破法→重新伐树→青牛出水。');
+      showHint('顺序不对……想想伐树的前后逻辑：被砍→复合→鬼语→朱丝→再伐→青牛出水。');
     }
   };
 
-  window._closeMural = function() { panel.remove(); };
+  window._closeMural = function() { panel.parentElement && panel.parentElement.remove(); };
   render();
-  $('game').appendChild(panel);
+
+  var overlay = document.createElement('div');
+  overlay.className = 'qin-panel-overlay';
+  overlay.style.display = 'flex';
+  overlay.onclick = function(e) { if (e.target === overlay) { window._closeMural(); } };
+  overlay.appendChild(panel);
+  $('game').appendChild(overlay);
 }
 
 function ch1SouthWall() {
   G.scene = 2;
-  chapterLabel.textContent = '第一章：文公伐树 · 南壁祭灶';
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
+  showHint('在南壁祭灶取得朱丝以破神木自合之力');
 
   addInteractive(400, 200, 200, 150, '', function() {
     showDialogue('沈砚', '灶旁小碑："南火困灵，朱丝缚木"。需要用火点燃祭灶。', function() {
       addReasonClue('南火困灵', '南火困灵，朱丝缚木');
     });
-  }, {icon: '🪦', label: '灶旁小碑'});
+  }, {icon: '🪦'});
 
   addInteractive(500, 300, 100, 100, '', function() {
-    if (G.inventory['朱丝']) {
-      ch1MainHall();
-      return;
-    }
+    if (G.inventory['朱丝']) { ch1MainHall(); return; }
     if (G.inventory['火折子']) {
       showDialogue('沈砚', '用火折子点燃火盆，火光照亮了灰层下的红线——是朱丝！', function() {
         gainItem('朱丝', '朱丝', '火属前置道具，可困树神', true);
@@ -1034,89 +1577,60 @@ function ch1SouthWall() {
           transitionScene(function() { ch1MainHall(); });
         });
       });
-    } else {
-      showDialogue('沈砚', '火盆中有残炭，但需要火折子来点燃。');
-    }
-  }, {icon: '🔥', label: '祭灶火盆'});
+    } else { showDialogue('沈砚', '火盆中有残炭，但需要火折子来点燃。'); }
+  }, {icon: '🔥'});
 
   if (G.inventory['朱丝']) {
-    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {icon: '🚪', label: '前往神木主殿'});
+    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {icon: '🚪'});
   }
 }
 
 function ch1MainHall() {
   G.scene = 3;
-  chapterLabel.textContent = '第一章：文公伐树 · 神木主殿';
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
+  showHint('按五行生克破解神木机关：朱丝困灵(火)→青铜断木(金)→木入土台(土)');
 
   var steps = {fire: false, gold: false, earth: false};
-
-  function checkAllDone() {
-    if (steps.fire && steps.gold && steps.earth) {
-      setTimeout(function() { ch1GreenOx(); }, 1200);
-    }
-  }
+  function checkAllDone() { if (steps.fire && steps.gold && steps.earth) { setTimeout(function() { ch1GreenOx(); }, 1200); } }
 
   addInteractive(560, 350, 80, 80, '', function() {
     if (G.inventory['朱丝'] && !steps.fire) {
       steps.fire = true;
-      showDialogue('沈砚', '将朱丝绕在神木南侧火纹上，点亮火纹。红线沿树皮发亮，树身停止蠕动了！', function() {
-        addNote('朱丝绕树', '朱丝沿树皮发亮，神木停止了自合之力。火已困住木灵。');
-        checkAllDone();
-      });
-    } else if (steps.fire) {
-      showDialogue('沈砚', '火纹已经点亮，朱丝正束缚着树神。');
-    } else {
-      showDialogue('沈砚', '需要朱丝才能激活这个火纹。');
-    }
-  }, {icon: '🔥', label: '南侧火纹'});
+      showDialogue('沈砚', '将朱丝绕在神木南侧火纹上，点亮火纹。红线沿树皮发亮，树身停止蠕动了！', function() { checkAllDone(); });
+    } else if (steps.fire) { showDialogue('沈砚', '火纹已经点亮，朱丝正束缚着树神。'); }
+    else { showDialogue('沈砚', '需要朱丝才能激活这个火纹。'); }
+  }, {icon: '🔥'});
 
   addInteractive(100, 300, 100, 100, '', function() {
     if (steps.fire && !steps.gold) {
       steps.gold = true;
       showDialogue('系统', '青铜斧影劈入树身——斧痕不再愈合！神木开始断裂。', function() {
-        addReasonClue('金克木', '金可克木');
-        addReasonClue('青铜属金', '青铜斧属金');
-        checkAllDone();
+        addReasonClue('金克木', '金可克木'); addReasonClue('青铜属金', '青铜斧属金'); checkAllDone();
       });
-    } else if (!steps.fire) {
-      showDialogue('沈砚', '青铜斧痕出现后迅速合拢……必须先困住树神。');
-    } else if (steps.gold) {
-      showDialogue('沈砚', '斧痕已落下，神木正在断裂。');
-    }
-  }, {icon: '🪓', label: '西侧青铜斧槽'});
+    } else if (!steps.fire) { showDialogue('沈砚', '青铜斧痕出现后迅速合拢……必须先困住树神。'); }
+    else if (steps.gold) { showDialogue('沈砚', '斧痕已落下，神木正在断裂。'); }
+  }, {icon: '🪓'});
 
   addInteractive(350, 420, 150, 80, '', function() {
     if (steps.gold && !steps.earth) {
       steps.earth = true;
       showDialogue('沈砚', '断木落入中央土台。土台裂开，露出青牛浮雕与黑水声。', function() {
-        addReasonClue('木入土', '神木落入土台');
-        addReasonClue('秦以水德', '最终归水，水德归秦');
-        checkAllDone();
+        addReasonClue('木入土', '神木落入土台'); addReasonClue('秦以水德', '最终归水，水德归秦'); checkAllDone();
       });
-    } else if (!steps.gold) {
-      showDialogue('沈砚', '土台轻响但不开启……需要先让神木断裂。');
-    }
-  }, {icon: '⛰', label: '中央土台', skill: '探土'});
+    } else if (!steps.gold) { showDialogue('沈砚', '土台轻响但不开启……需要先让神木断裂。'); }
+  }, {icon: '⛰', skill: '探土'});
 }
 
 function ch1GreenOx() {
   G.scene = 4;
-  chapterLabel.textContent = '第一章：文公伐树 · 青牛丰水渠';
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
-
+  showHint('推动青牛浮雕，确认正确水渠方向');
   var oxStep = 0;
 
-  addInteractive(100, 300, 80, 50, '', function() {
-    if (oxStep >= 1) { showDialogue('系统', '东侧木渠：树根堵住，不适合。'); }
-  }, {icon: '🌿', label: '东侧木渠'});
-
-  addInteractive(600, 300, 80, 50, '', function() {
-    if (oxStep >= 1) { showDialogue('系统', '南侧火渠：水汽蒸腾，黑水会被蒸发。'); updateRisk(1); }
-  }, {icon: '🔥', label: '南侧火渠'});
-
+  addInteractive(100, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '东侧木渠：树根堵住，不适合。'); } }, {icon: '🌿'});
+  addInteractive(600, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '南侧火渠：水汽蒸腾，黑水会被蒸发。'); updateRisk(1); } }, {icon: '🔥'});
   addInteractive(500, 250, 100, 100, '', function() {
     if (oxStep === 2) {
       showDialogue('沈砚', '将青牛推向北侧丰水渠。渠底黑水涌出，沿渠流向北门！', function() {
@@ -1124,10 +1638,10 @@ function ch1GreenOx() {
           completePuzzle('green_ox');
           gainItem('断木神斧', '断木神斧', '第一章核心秘宝，可作金属机关钥', true);
           addNote('断木神斧', '文公伐树后获得的秘宝。青牛入水，水德归秦。');
-          showDialogue('沈砚', '秦文公伐树，树断而青牛入水。可这座祠真正记下的，是在教后来者如何读懂秦陵的规则。', function() {
+          showDialogue('沈砚', '秦文公伐树，树断而青牛入水。可这座祠真正记下的，是教后来者如何读懂秦陵的规则。', function() {
             showDialogue('沈砚', '墙上浮现秦篆："持玦者已归其一，玄鸟当启其二。"', function() {
               G.chapterUnlocked[3] = true;
-              showDialogue('系统', '🎉 第一章完成！第三章已解锁。', function() {
+              showDialogue('系统', '第一章完成！第三章已解锁。', function() {
                 addReasonClue('木入土', '木入土导向黑水');
                 transitionScene(function() {
                   showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。');
@@ -1137,65 +1651,31 @@ function ch1GreenOx() {
           });
         });
       });
-    } else if (oxStep < 2) {
-      showDialogue('沈砚', '需要先用听风确认正确的水渠。');
-    }
-  }, {icon: '💧', label: '北方黑水渠'});
-
-  addInteractive(400, 500, 120, 50, '', function() {
-    if (oxStep === 1) {
-      oxStep = 2;
-      showDialogue('听风', '北侧水渠有回声！北侧才是正确的方向。');
-    }
-  }, {icon: '👂', label: '使用听风', skill: '听风'});
-
+    } else if (oxStep < 2) { showDialogue('沈砚', '需要先用听风确认正确的水渠。'); }
+  }, {icon: '💧'});
+  addInteractive(400, 500, 120, 50, '', function() { if (oxStep === 1) { oxStep = 2; showDialogue('听风', '北侧水渠有回声！北侧才是正确的方向。'); } }, {icon: '👂', skill: '听风'});
   addInteractive(300, 380, 160, 100, '', function() {
-    if (oxStep === 0) {
-      oxStep = 1;
-      showDialogue('沈砚', '青牛浮雕半嵌在土中，底部可推动。现在需要确认它该推向哪条水渠。');
-    } else if (oxStep === 1) {
-      showDialogue('沈砚', '先使用听风确认正确的水渠方向。');
-    } else if (oxStep === 2) {
-      showDialogue('沈砚', '北侧水渠有回声——应该把青牛推向北方！');
-    }
-  }, {icon: '🐂', label: '青牛浮雕'});
+    if (oxStep === 0) { oxStep = 1; showDialogue('沈砚', '青牛浮雕半嵌在土中，底部可推动。需要确认推向哪条水渠。'); }
+    else if (oxStep === 1) { showDialogue('沈砚', '先使用听风确认正确的水渠方向。'); }
+    else if (oxStep === 2) { showDialogue('沈砚', '北侧水渠有回声——应该把青牛推向北方！'); }
+  }, {icon: '🐂'});
 }
 
 // ==================== 第三章：六国兵俑阵 ====================
 function ch3Start() {
   G.chapter = 3; G.scene = 0;
-  chapterLabel.textContent = '第三章：六国兵俑阵 · 兵俑长廊入口';
-  clearScene();
-  setBg(LV(3, '主背景4.png'));
-  unlockSkill('辨伪', '判断六国残片与秦制标准的差异');
-  renderSkills();
-
-  addInteractive(100, 200, 120, 250, '', function() {
-    showDialogue('沈砚', '六道石门分别刻韩、赵、魏、楚、燕、齐的旧字。文字各不相同。', function() {
-      addNote('六国门铭', '六国石门铭文字体各异，暗示需要统一。');
-    });
-  }, {icon: '🚪', label: '六国石门'});
-
-  addInteractive(350, 300, 300, 100, '', function() {
-    showDialogue('沈砚', '兵俑朝向不一致，武器长度各不相同，车轨宽窄也不同。', function() {
-      addNote('兵俑差异', '兵俑的武器长度、车轨宽度、朝向各不相同，需要统一标准。');
-    });
-  }, {icon: '🗿', label: '错列兵俑'});
-
-  addInteractive(550, 400, 200, 80, '', function() {
-    showDialogue('沈砚', '地面黑水线被六种不同刻度打断。残简记载："同书、同轨、同量，则兵归一。"', function() {
-      addNote('残简提示', '同书、同轨、同量，则兵归一。');
-      transitionScene(function() { ch3Writing(); });
-    });
-  }, {icon: '📏', label: '中央黑水线'});
+  clearScene(); setBg(LV(3, '主背景4.png'));
+  unlockSkill('辨伪', '判断六国残片与秦制标准的差异'); renderSkills();
+  showHint('探索兵俑长廊，统一六国标准');
+  addInteractive(100, 200, 120, 250, '', function() { showDialogue('沈砚', '六道石门分别刻韩、赵、魏、楚、燕、齐的旧字。文字各不相同。', function() { addNote('六国门铭', '六国石门铭文字体各异，暗示需要统一。'); }); }, {icon: '🚪'});
+  addInteractive(350, 300, 300, 100, '', function() { showDialogue('沈砚', '兵俑朝向不一致，武器长度各不相同，车轨宽窄也不同。', function() { addNote('兵俑差异', '兵俑的武器长度、车轨宽度、朝向各不相同，需要统一标准。'); }); }, {icon: '🗿'});
+  addInteractive(550, 400, 200, 80, '', function() { showDialogue('沈砚', '地面黑水线被六种不同刻度打断。残简记载："同书、同轨、同量，则兵归一。"', function() { addNote('残简提示', '同书、同轨、同量，则兵归一。'); transitionScene(function() { ch3Writing(); }); }); }, {icon: '📏'});
 }
 
 function ch3Writing() {
   G.scene = 1;
-  chapterLabel.textContent = '第三章：书同文';
-  clearScene();
-  setBg(LV(3, '主背景4.png'));
-
+  clearScene(); setBg(LV(3, '主背景4.png'));
+  showHint('书同文：选择秦小篆组成"六合同风，玄水归一"');
   var selectedChars = [];
   var correct = ['六','合','同','风','玄','水','归','一'];
   var options = ['六','合','同','风','玄','水','归','一','火','山','木','金'];
@@ -1203,57 +1683,38 @@ function ch3Writing() {
   function renderWriting() {
     var oldBtns = document.querySelectorAll('.write-btn');
     for (var i = 0; i < oldBtns.length; i++) oldBtns[i].remove();
-
-    var positions = [
-      {x:100,y:200},{x:200,y:200},{x:300,y:200},{x:400,y:200},
-      {x:500,y:200},{x:600,y:200},{x:700,y:200},{x:800,y:200}
-    ];
-
+    var positions = [{x:100,y:200},{x:200,y:200},{x:300,y:200},{x:400,y:200},{x:500,y:200},{x:600,y:200},{x:700,y:200},{x:800,y:200}];
     positions.forEach(function(p, i) {
       var btn = document.createElement('div');
       btn.className = 'interactive write-btn';
-      btn.style.left = p.x + 'px';
-      btn.style.top = p.y + 'px';
-      btn.style.width = '60px';
-      btn.style.height = '60px';
-      btn.style.border = '2px solid #5a4020';
-      btn.style.borderRadius = '4px';
-      btn.style.display = 'flex';
-      btn.style.alignItems = 'center';
-      btn.style.justifyContent = 'center';
-      btn.style.fontSize = '22px';
-      btn.style.color = '#c8a040';
-      btn.style.background = 'rgba(20,10,5,0.8)';
-      btn.style.cursor = 'pointer';
+      btn.style.left = p.x + 'px'; btn.style.top = p.y + 'px';
+      btn.style.width = '68px'; btn.style.height = '68px';
+      btn.style.border = '2px solid var(--dark-bronze)';
+      btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
+      btn.style.fontSize = '25px'; btn.style.color = 'var(--bronze-bright)';
+      btn.style.background = 'rgba(17,17,17,0.8)'; btn.style.cursor = 'pointer';
+      btn.style.fontFamily = 'STKaiti, KaiTi, serif';
       btn.textContent = selectedChars[i] || '?';
-
       (function(idx) {
         btn.onclick = function() {
-          var optsPanel = document.createElement('div');
-          optsPanel.className = 'panel';
-          optsPanel.style.display = 'block';
-          var h = '<h3>选择秦小篆字</h3><div class="btn-row">';
-          options.forEach(function(c) {
-            h += '<button class="ui-btn" onclick="this.parentElement.parentElement.remove();selectedChars[' + idx + ']=\'' + c + '\';renderWriting();checkWriting()">' + c + '</button>';
-          });
-          h += '</div><span class="close" onclick="this.parentElement.remove()">✕</span>';
-          optsPanel.innerHTML = h;
-          $('game').appendChild(optsPanel);
+          var opts = document.createElement('div'); opts.className = 'qin-panel';
+          opts.style.cssText = 'width:auto;max-width:700px;height:auto;max-height:70%;padding:24px;position:absolute;top:30%;left:50%;transform:translate(-50%,-30%);z-index:4000';
+          var h = '<h3 style="font-size:25px;color:var(--bronze-bright);margin-bottom:16px;text-align:center;letter-spacing:4px">选择秦小篆字</h3><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">';
+          options.forEach(function(c) { h += '<button class="qin-btn" style="padding:8px 20px;font-size:20px" onclick="this.parentElement.parentElement.remove();selectedChars[' + idx + ']=\'' + c + '\';renderWriting();checkWriting()">' + c + '</button>'; });
+          h += '</div><button class="close-btn" style="margin-top:16px" onclick="this.parentElement.remove()">取消</button>';
+          opts.innerHTML = h; $('game').appendChild(opts);
         };
       })(i);
-
       sceneArea.appendChild(btn);
     });
-
     if (!document.querySelector('.write-hint')) {
       var hint = document.createElement('div');
       hint.className = 'write-hint';
-      hint.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);color:#6a5a3a;font-size:13px';
+      hint.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);color:var(--bronze);font-size:18px;letter-spacing:3px;font-family:STKaiti,KaiTi,serif';
       hint.textContent = '目标句子：六合同风，玄水归一';
       sceneArea.appendChild(hint);
     }
   }
-
   window.checkWriting = function() {
     if (selectedChars.length === 8 && selectedChars.join(',') === correct.join(',')) {
       completePuzzle('writing');
@@ -1263,435 +1724,213 @@ function ch3Writing() {
       });
     }
   };
-
   window.renderWriting = renderWriting;
   renderWriting();
 }
 
 function ch3Measure() {
-  G.scene = 2;
-  chapterLabel.textContent = '第三章：秦尺归一';
-  clearScene();
-  setBg(LV(3, '主背景4.png'));
-
-  var aligned = 0;
-  var rulersCreated = false;
-
+  G.scene = 2; clearScene(); setBg(LV(3, '主背景4.png'));
+  showHint('秦尺归一：校准六国石尺为秦制标准');
+  var aligned = 0; var rulersCreated = false;
   addInteractive(300, 200, 300, 80, '', function() {
     showDialogue('沈砚', '秦尺黑线被泥封住，需要清理。', function() {
-      if (rulersCreated) return;
-      rulersCreated = true;
+      if (rulersCreated) return; rulersCreated = true;
       for (var i = 0; i < 6; i++) {
         var btn = document.createElement('div');
         btn.className = 'interactive';
-        btn.style.left = (150 + i * 100) + 'px';
-        btn.style.top = '350px';
-        btn.style.width = '70px';
-        btn.style.height = '120px';
-        btn.style.border = '1px solid #5a4020';
-        btn.style.background = 'rgba(30,15,8,0.8)';
-        btn.style.display = 'flex';
-        btn.style.alignItems = 'center';
-        btn.style.justifyContent = 'center';
-        btn.style.fontSize = '12px';
-        btn.style.color = '#b8960c';
-        btn.style.cursor = 'pointer';
-        btn.textContent = '尺' + (i + 1);
-        btn.onclick = function() {
-          aligned++;
-          this.style.borderColor = '#60c060';
-          this.style.background = 'rgba(20,40,20,0.8)';
-          this.onclick = function() {};
-          if (aligned >= 6) {
-            completePuzzle('measure');
-            showDialogue('沈砚', '六国石尺已对齐秦尺标准。第二段黑水线恢复！', function() {
-              addNote('统一度量衡', '六国石尺校准为秦制，兵器长度统一，黑水线恢复。');
-              transitionScene(function() { ch3Track(); });
-            });
-          } else {
-            showDialogue('系统', '已校准 ' + aligned + '/6 国石尺。');
-          }
-        };
+        btn.style.left = (150 + i * 100) + 'px'; btn.style.top = '350px';
+        btn.style.width = '70px'; btn.style.height = '120px';
+        btn.style.border = '1px solid var(--dark-bronze)';
+        btn.style.background = 'rgba(17,17,17,0.8)';
+        btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
+        btn.style.fontSize = '16px'; btn.style.color = 'var(--bronze-bright)'; btn.style.cursor = 'pointer';
+        btn.style.fontFamily = 'STKaiti, KaiTi, serif';
+        btn.textContent = '尺' + (i+1);
+        btn.onclick = function() { aligned++; this.style.borderColor = '#60c060'; this.style.background = 'rgba(20,40,20,0.8)'; this.onclick = function(){}; if (aligned >= 6) { completePuzzle('measure'); showDialogue('沈砚', '六国石尺已对齐秦尺标准。第二段黑水线恢复！', function() { addNote('统一度量衡', '六国石尺校准为秦制，兵器长度统一。'); transitionScene(function() { ch3Track(); }); }); } else { showHint('已校准 '+aligned+'/6 国石尺。'); } };
         sceneArea.appendChild(btn);
       }
     });
-  }, {icon: '📐', label: '秦尺校准台'});
+  }, {icon: '📐'});
 }
 
 function ch3Track() {
-  G.scene = 3;
-  chapterLabel.textContent = '第三章：车同轨';
-  clearScene();
-  setBg(LV(3, '主背景4.png'));
-
+  G.scene = 3; clearScene(); setBg(LV(3, '主背景4.png'));
+  showHint('车同轨：统一三段车轨为秦制标准');
   var tracksDone = 0;
-
   for (var i = 0; i < 3; i++) {
     var btn = document.createElement('div');
-    btn.className = 'interactive';
-    btn.style.left = (200 + i * 220) + 'px';
-    btn.style.top = '250px';
-    btn.style.width = '140px';
-    btn.style.height = '80px';
-    btn.style.border = '2px dashed #5a4020';
-    btn.style.display = 'flex';
-    btn.style.alignItems = 'center';
-    btn.style.justifyContent = 'center';
-    btn.style.color = '#8a6a4a';
-    btn.style.fontSize = '13px';
-    btn.style.cursor = 'pointer';
-    btn.textContent = '轨段' + (i + 1) + '(调整)';
-
-    (function(b, idx) {
-      b.onclick = function() {
-        b.style.borderColor = '#60c060';
-        b.style.borderStyle = 'solid';
-        b.textContent = '轨段' + (idx + 1) + ' ✓';
-        tracksDone++;
-        b.onclick = function() {};
-        if (tracksDone >= 3) {
-          completePuzzle('track');
-          showDialogue('沈砚', '三段车轨已统一为秦制标准。机关车轮顺利滚到尽头，闸门开启！第三段黑水线恢复。', function() {
-            addNote('车同轨', '三段车轨统一为秦制。黑水线三段全通！');
-            transitionScene(function() { ch3TigerTally(); });
-          });
-        }
-      };
-    })(btn, i);
-
+    btn.className = 'interactive'; btn.style.left = (200 + i * 220) + 'px'; btn.style.top = '250px';
+    btn.style.width = '140px'; btn.style.height = '80px';
+    btn.style.border = '2px dashed var(--dark-bronze)';
+    btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
+    btn.style.color = 'var(--bronze)'; btn.style.fontSize = '18px'; btn.style.cursor = 'pointer'; btn.style.fontFamily = 'STKaiti, KaiTi, serif';
+    btn.textContent = '轨段' + (i+1) + '(调整)';
+    (function(b, idx) { b.onclick = function() { b.style.borderColor = '#60c060'; b.style.borderStyle = 'solid'; b.textContent = '轨段'+(idx+1)+' ✓'; tracksDone++; b.onclick = function(){}; if (tracksDone >= 3) { completePuzzle('track'); showDialogue('沈砚', '三段车轨已统一为秦制标准。第三段黑水线恢复！', function() { addNote('车同轨', '三段车轨统一为秦制。黑水线三段全通！'); transitionScene(function() { ch3TigerTally(); }); }); } }; })(btn, i);
     sceneArea.appendChild(btn);
   }
-
-  addInteractive(400, 380, 150, 60, '', function() {
-    if (tracksDone < 3) showDialogue('沈砚', '秦轨模板背面刻有"同轨"。需要用这个来对齐轨距。');
-  }, {icon: '📋', label: '秦轨模板'});
+  addInteractive(400, 380, 150, 60, '', function() { if (tracksDone < 3) showDialogue('沈砚', '秦轨模板背面刻有"同轨"。需要用这个来对齐轨距。'); }, {icon: '📋'});
 }
 
 function ch3TigerTally() {
-  G.scene = 4;
-  chapterLabel.textContent = '第三章：中央虎符台';
-  clearScene();
-  setBg(LV(3, '主背景4.png'));
-
+  G.scene = 4; clearScene(); setBg(LV(3, '主背景4.png'));
+  showHint('控制虎符，调遣六国兵俑归一');
   addInteractive(400, 250, 200, 150, '', function() {
-    if (!G.inventory['断木神斧']) {
-      showDialogue('沈砚', '虎符台缺失半枚虎符，外锁需要金属机关钥打开。');
-      return;
-    }
-
+    if (!G.inventory['断木神斧']) { showDialogue('沈砚', '虎符台缺失半枚虎符，外锁需要金属机关钥打开。'); return; }
     showDialogue('沈砚', '用断木神斧打开虎符龛外锁，取得半枚青铜虎符！', function() {
       gainItem('青铜虎符', '青铜虎符', '控制兵俑阵列方向', true);
-
-      var order = ['韩','赵','魏','楚','燕','齐'];
-      var step = 0;
-
+      var order = ['韩','赵','魏','楚','燕','齐']; var step = 0;
       var triggerBtn = document.createElement('div');
-      triggerBtn.className = 'interactive';
-      triggerBtn.style.left = '350px';
-      triggerBtn.style.top = '420px';
-      triggerBtn.style.width = '300px';
-      triggerBtn.style.height = '60px';
-      triggerBtn.style.border = '2px solid #b8960c';
-      triggerBtn.style.display = 'flex';
-      triggerBtn.style.alignItems = 'center';
-      triggerBtn.style.justifyContent = 'center';
-      triggerBtn.style.color = '#b8960c';
-      triggerBtn.style.fontSize = '16px';
-      triggerBtn.style.cursor = 'pointer';
-      triggerBtn.style.background = 'rgba(20,10,5,0.9)';
-      triggerBtn.textContent = '按顺序触发六国门铭：韩→赵→魏→楚→燕→齐';
-
+      triggerBtn.className = 'interactive'; triggerBtn.style.left = '350px'; triggerBtn.style.top = '420px';
+      triggerBtn.style.width = '320px'; triggerBtn.style.height = '60px';
+      triggerBtn.style.border = '2px solid var(--bronze-bright)';
+      triggerBtn.style.display = 'flex'; triggerBtn.style.alignItems = 'center'; triggerBtn.style.justifyContent = 'center';
+      triggerBtn.style.color = 'var(--bronze-bright)'; triggerBtn.style.fontSize = '20px';
+      triggerBtn.style.cursor = 'pointer'; triggerBtn.style.background = 'rgba(17,17,17,0.9)';
+      triggerBtn.style.fontFamily = 'STKaiti, KaiTi, serif'; triggerBtn.style.letterSpacing = '3px';
+      triggerBtn.textContent = '按顺序触发：韩→赵→魏→楚→燕→齐';
       triggerBtn.onclick = function() {
-        if (step < 6) {
-          showDialogue('系统', order[step] + '国兵俑转向中央黑水旗！(' + (step+1) + '/6)');
-          step++;
-          if (step >= 6) {
-            completePuzzle('tiger');
-            gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true);
-            showDialogue('系统', '六国兵俑全部转向黑水旗，齐声跪拜！十二金人残片龛打开。', function() {
-              showDialogue('沈砚', '六国文字、车轨、尺度各不相同。可在这里，它们都被迫归于同一条黑水线。', function() {
-                addNote('六合同风', '六国兵俑归一。"六合同风，玄水归一"——水银地宫入口开启。');
-                G.chapterUnlocked[4] = true;
-                showDialogue('系统', '🎉 第三章完成！第四章已解锁。', function() {
-                  showDialogue('沈砚', '这座陵墓记住的不是战争，而是统一之后的秩序。');
-                });
-              });
-            });
-          }
-        }
+        if (step < 6) { showHint(order[step]+'国兵俑转向中央黑水旗！('+(step+1)+'/6)'); step++; if (step >= 6) { completePuzzle('tiger'); gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true); showDialogue('系统', '六国兵俑全部转向黑水旗，齐声跪拜！十二金人残片龛打开。', function() { showDialogue('沈砚', '六国文字、车轨、尺度各不相同。可在这里，它们都被迫归于同一条黑水线。', function() { addNote('六合同风', '六国兵俑归一。"六合同风，玄水归一"——水银地宫入口开启。'); G.chapterUnlocked[4] = true; showDialogue('系统', '第三章完成！第四章已解锁。', function() { showDialogue('沈砚', '这座陵墓记住的不是战争，而是统一之后的秩序。'); }); }); }); } }
       };
       sceneArea.appendChild(triggerBtn);
     });
-  }, {icon: '🐯', label: '虎符台'});
+  }, {icon: '🐯'});
 }
 
 // ==================== 第四章：水银江河 ====================
 function ch4Start() {
-  G.chapter = 4; G.scene = 0;
-  chapterLabel.textContent = '第四章：水银江河 · 地宫前庭';
-  clearScene();
-  setBg(LV(4, '主背景5.png'));
-  unlockSkill('封气', '临时封堵水银蒸汽孔和毒气孔');
-  renderSkills();
-
-  addInteractive(200, 300, 100, 80, '', function() {
-    showDialogue('沈砚', '墙碑："银为江，黑为归，气不可久闻"。银雾有毒！', function() {
-      addNote('银雾风险', '水银蒸汽有毒，需要使用封气技能堵住喷气孔。');
-    });
-  }, {icon: '🪦', label: '墙碑'});
-
-  addInteractive(550, 200, 80, 60, '', function() {
-    showDialogue('沈砚', '右侧喷气孔正在喷出银白雾气，使用封气堵住它。', function() {
-      showDialogue('封气', '喷气孔已被蜡封堵住，银雾逐渐变淡。前方闸门可以操作了。', function() {
-        completePuzzle('seal');
-        transitionScene(function() { ch4Astronomy(); });
-      });
-    });
-  }, {icon: '💨', label: '喷气孔', skill: '封气'});
+  G.chapter = 4; G.scene = 0; clearScene(); setBg(LV(4, '主背景5.png'));
+  unlockSkill('封气', '临时封堵水银蒸汽孔和毒气孔'); renderSkills();
+  showHint('用水银填满地宫，封堵毒气孔');
+  addInteractive(200, 300, 100, 80, '', function() { showDialogue('沈砚', '墙碑："银为江，黑为归，气不可久闻"。银雾有毒！', function() { addNote('银雾风险', '水银蒸汽有毒，需要使用封气技能堵住喷气孔。'); }); }, {icon: '🪦'});
+  addInteractive(550, 200, 80, 60, '', function() { showDialogue('沈砚', '右侧喷气孔正在喷出银白雾气，使用封气堵住它。', function() { showDialogue('封气', '喷气孔已被蜡封堵住，银雾逐渐变淡。闸门可以操作了。', function() { completePuzzle('seal'); transitionScene(function() { ch4Astronomy(); }); }); }); }, {icon: '💨', skill: '封气'});
 }
 
 function ch4Astronomy() {
-  G.scene = 1;
-  chapterLabel.textContent = '第四章：北斗倒影';
-  clearScene();
-  setBg(LV(4, '主背景5.png'));
-
+  G.scene = 1; clearScene(); setBg(LV(4, '主背景5.png'));
+  showHint('点亮北斗七星，记录星图');
   var starsLit = 0;
-
   for (var i = 0; i < 7; i++) {
-    var x = 300 + (i % 4) * 80;
-    var y = 180 + Math.floor(i / 4) * 100 + (i === 4 ? 50 : 0) + (i === 5 ? 30 : 0) + (i === 6 ? 60 : 0);
+    var x = 300 + (i%4)*80; var y = 180 + Math.floor(i/4)*100 + (i===4?50:0)+(i===5?30:0)+(i===6?60:0);
     var star = document.createElement('div');
     star.className = 'interactive';
-    star.style.left = x + 'px';
-    star.style.top = y + 'px';
-    star.style.width = '40px';
-    star.style.height = '40px';
-    star.style.borderRadius = '50%';
-    star.style.border = '2px solid #4a3820';
-    star.style.background = 'rgba(20,10,5,0.6)';
-    star.style.cursor = 'pointer';
-
-    star.onclick = function() {
-      starsLit++;
-      this.style.background = 'rgba(200,200,250,0.9)';
-      this.style.boxShadow = '0 0 15px rgba(200,200,250,0.8)';
-      this.style.borderColor = 'rgba(200,200,250,0.8)';
-      this.onclick = function() {};
-      if (starsLit >= 7) {
-        completePuzzle('dipper');
-        showDialogue('沈砚', '北斗七星全部点亮！星图已记录到笔记。石柱刻有"斗柄指北，玄水乃归"。', function() {
-          addNote('北斗星图', '北斗七星的位置已记录。斗柄指北，需将此映射到地面水渠。');
-          transitionScene(function() { ch4Rivers(); });
-        });
-      }
-    };
+    star.style.left = x+'px'; star.style.top = y+'px';
+    star.style.width = '44px'; star.style.height = '44px';
+    star.style.borderRadius = '50%'; star.style.border = '2px solid var(--dark-bronze)';
+    star.style.background = 'rgba(17,17,17,0.6)'; star.style.cursor = 'pointer';
+    star.onclick = function() { starsLit++; this.style.background = 'rgba(200,200,250,0.9)'; this.style.boxShadow = '0 0 18px rgba(200,200,250,0.7)'; this.style.borderColor = 'rgba(200,200,250,0.7)'; this.onclick = function(){}; if (starsLit >= 7) { completePuzzle('dipper'); showDialogue('沈砚', '北斗七星全部点亮！星图记录完成。"斗柄指北，玄水乃归"。', function() { addNote('北斗星图', '北斗七星的位置已记录。斗柄指北，需将此映射到地面水渠。'); transitionScene(function() { ch4Rivers(); }); }); } };
     sceneArea.appendChild(star);
   }
-
-  addInteractive(450, 350, 150, 40, '', function() {
-    showDialogue('沈砚', '"斗柄指北，玄水乃归"——北方是水银的终点。');
-  }, {icon: '📜', label: '石柱铭文'});
+  addInteractive(450, 350, 150, 40, '', function() { showDialogue('沈砚', '"斗柄指北，玄水乃归"——北方是水银的终点。'); }, {icon: '📜'});
 }
 
 function ch4Rivers() {
-  G.scene = 2;
-  chapterLabel.textContent = '第四章：江河归流';
-  clearScene();
-  setBg(LV(4, '主背景5.png'));
-
+  G.scene = 2; clearScene(); setBg(LV(4, '主背景5.png'));
+  showHint('将三路水银全部导向北方黑水主渠');
   var gates = {south: true, west: true, east: true, north: false};
-
   ['南','西','东','北'].forEach(function(dir, i) {
     var gate = document.createElement('div');
-    gate.className = 'interactive';
-    gate.style.left = (250 + i * 150) + 'px';
-    gate.style.top = '300px';
-    gate.style.width = '80px';
-    gate.style.height = '80px';
-    gate.style.border = '2px solid #5a4020';
-    gate.style.display = 'flex';
-    gate.style.alignItems = 'center';
-    gate.style.justifyContent = 'center';
-    gate.style.color = '#b8960c';
-    gate.style.fontSize = '13px';
-    gate.style.background = 'rgba(20,10,5,0.8)';
-    gate.style.cursor = 'pointer';
-    gate.style.borderRadius = '4px';
+    gate.className = 'interactive'; gate.style.left = (250+i*150)+'px'; gate.style.top = '300px';
+    gate.style.width = '80px'; gate.style.height = '80px';
+    gate.style.border = '2px solid var(--dark-bronze)';
+    gate.style.display = 'flex'; gate.style.alignItems = 'center'; gate.style.justifyContent = 'center';
+    gate.style.color = 'var(--bronze-bright)'; gate.style.fontSize = '18px';
+    gate.style.background = 'rgba(17,17,17,0.8)'; gate.style.cursor = 'pointer';
+    gate.style.fontFamily = 'STKaiti, KaiTi, serif';
     gate.textContent = dir + '闸门';
-
     gate.onclick = function() {
-      if (dir === '南') {
-        gates.south = false;
-        gate.style.borderColor = '#c04030';
-        updateRisk(1);
-        showDialogue('沈砚', '南侧是火坑！必须关闭，否则水银会被蒸发。', function() {});
-      } else if (dir === '西') {
-        gates.west = !gates.west;
-        gate.style.borderColor = gates.west ? '#5a4020' : '#60c060';
-        showDialogue('系统', '西侧金门已调整。');
-      } else if (dir === '东') {
-        gates.east = !gates.east;
-        gate.style.borderColor = gates.east ? '#5a4020' : '#60c060';
-        showDialogue('系统', '东侧木渠已调整。');
-      } else if (dir === '北') {
-        if (!gates.south && !gates.west && !gates.east) {
-          gates.north = true;
-          gate.style.borderColor = '#60c060';
-          showDialogue('系统', '北方黑水主渠开启！三路水银汇入北渠，第一段北斗水线出现。', function() {
-            completePuzzle('rivers');
-            addNote('江河归流', '水银从三路汇入北方黑水主渠，形成北斗水线雏形。');
-            transitionScene(function() { ch4Buoy(); });
-          });
-        } else {
-          showDialogue('沈砚', '还需要先调整其他闸门，确保水银能正确汇入北渠。');
-        }
+      if (dir === '南') { gates.south = false; gate.style.borderColor = 'var(--cinnabar)'; updateRisk(1); showDialogue('沈砚', '南侧是火坑！必须关闭，否则水银会被蒸发.', function(){}); }
+      else if (dir === '西') { gates.west = !gates.west; gate.style.borderColor = gates.west ? 'var(--dark-bronze)' : '#60c060'; showHint('西侧金门已调整。'); }
+      else if (dir === '东') { gates.east = !gates.east; gate.style.borderColor = gates.east ? 'var(--dark-bronze)' : '#60c060'; showHint('东侧木渠已调整。'); }
+      else if (dir === '北') {
+        if (!gates.south && !gates.west && !gates.east) { gates.north = true; gate.style.borderColor = '#60c060'; showDialogue('系统', '北方黑水主渠开启！三路水银汇入北渠，第一段北斗水线出现。', function() { completePuzzle('rivers'); addNote('江河归流', '水银从三路汇入北方黑水主渠，形成北斗水线雏形。'); transitionScene(function() { ch4Buoy(); }); }); }
+        else { showHint('还需要先调整其他闸门，确保水银能正确汇入北渠。'); }
       }
     };
     sceneArea.appendChild(gate);
   });
-
-  addInteractive(420, 200, 200, 30, '', function() {
-    showDialogue('沈砚', '"百川不同源，归秦则一流"——将所有水银都导向北方。');
-  }, {icon: '📜', label: '地图铭文'});
+  addInteractive(420, 200, 200, 30, '', function() { showDialogue('沈砚', '"百川不同源，归秦则一流"——将所有水银都导向北方。'); }, {icon: '📜'});
 }
 
 function ch4Buoy() {
-  G.scene = 3;
-  chapterLabel.textContent = '第四章：水位校准';
-  clearScene();
-  setBg(LV(4, '主背景5.png'));
-
-  var targets = {'斗口': '中', '斗身': '高', '斗柄': '低'};
-  var current = {'斗口': '低', '斗身': '低', '斗柄': '低'};
+  G.scene = 3; clearScene(); setBg(LV(4, '主背景5.png'));
+  showHint('校准三枚浮标水位：斗口中、斗身高、斗柄低');
+  var targets = {'斗口':'中','斗身':'高','斗柄':'低'};
+  var current = {'斗口':'低','斗身':'低','斗柄':'低'};
   var levels = ['低','中','高'];
-
   ['斗口','斗身','斗柄'].forEach(function(part, idx) {
     var buoy = document.createElement('div');
-    buoy.className = 'interactive';
-    buoy.style.left = (200 + idx * 220) + 'px';
-    buoy.style.top = '250px';
-    buoy.style.width = '100px';
-    buoy.style.height = '120px';
-    buoy.style.border = '2px solid #5a4020';
-    buoy.style.display = 'flex';
-    buoy.style.flexDirection = 'column';
-    buoy.style.alignItems = 'center';
-    buoy.style.justifyContent = 'center';
-    buoy.style.color = '#b8960c';
-    buoy.style.fontSize = '13px';
-    buoy.style.background = 'rgba(20,10,5,0.8)';
-    buoy.style.cursor = 'pointer';
-    buoy.style.borderRadius = '4px';
-    buoy.innerHTML = '<div>' + part + '</div><div style="font-size:20px" id="buoy' + idx + '">低</div>';
-
-    buoy.onclick = function() {
-      var ci = levels.indexOf(current[part]);
-      current[part] = levels[(ci + 1) % 3];
-      document.getElementById('buoy' + idx).textContent = current[part];
-
-      if (current['斗口'] === targets['斗口'] && current['斗身'] === targets['斗身'] && current['斗柄'] === targets['斗柄']) {
-        completePuzzle('buoy');
-        showDialogue('沈砚', '水位校准完成！北斗图案完整成形——斗口稳、斗身满、斗柄细。', function() {
-          addNote('水位校准', '三枚浮标调整正确。斗口中位、斗身高位、斗柄低位。');
-          transitionScene(function() { ch4BlackPool(); });
-        });
-      }
-    };
+    buoy.className = 'interactive'; buoy.style.left = (200+idx*220)+'px'; buoy.style.top = '250px';
+    buoy.style.width = '110px'; buoy.style.height = '130px';
+    buoy.style.border = '2px solid var(--dark-bronze)';
+    buoy.style.display = 'flex'; buoy.style.flexDirection = 'column';
+    buoy.style.alignItems = 'center'; buoy.style.justifyContent = 'center';
+    buoy.style.color = 'var(--bronze-bright)'; buoy.style.fontSize = '18px';
+    buoy.style.background = 'rgba(17,17,17,0.8)'; buoy.style.cursor = 'pointer';
+    buoy.style.fontFamily = 'STKaiti, KaiTi, serif';
+    buoy.innerHTML = '<div>'+part+'</div><div style="font-size:24px" id="buoy'+idx+'">低</div>';
+    buoy.onclick = function() { var ci = levels.indexOf(current[part]); current[part] = levels[(ci+1)%3]; document.getElementById('buoy'+idx).textContent = current[part]; if (current['斗口']===targets['斗口'] && current['斗身']===targets['斗身'] && current['斗柄']===targets['斗柄']) { completePuzzle('buoy'); showDialogue('沈砚', '水位校准完成！北斗图案完整成形。', function() { addNote('水位校准', '三枚浮标调整正确。斗口中位、斗身高位、斗柄低位。'); transitionScene(function() { ch4BlackPool(); }); }); } };
     sceneArea.appendChild(buoy);
   });
-
-  addInteractive(420, 400, 250, 30, '', function() {
-    showDialogue('沈砚', '"水不及，则星不明；水太过，则斗不成"——需要根据渠宽调整水位。');
-  }, {icon: '📜', label: '墙面提示'});
+  addInteractive(420, 400, 250, 30, '', function() { showDialogue('沈砚', '"水不及，则星不明；水太过，则斗不成"——需根据渠宽调整水位。'); }, {icon: '📜'});
 }
 
 function ch4BlackPool() {
-  G.scene = 4;
-  chapterLabel.textContent = '第四章：北方黑池 · 水银星图';
-  clearScene();
-  setBg(LV(4, '主背景5.png'));
-
+  G.scene = 4; clearScene(); setBg(LV(4, '主背景5.png'));
+  showHint('使用黑水玉玦激活北方黑池，完成北斗水银星图');
   addInteractive(400, 180, 200, 150, '', function() {
     if (G.inventory['黑水玉玦']) {
       showDialogue('沈砚', '打开中央总闸！水银沿地面沟渠形成完整北斗。使用黑水玉玦激活黑池。', function() {
         showDialogue('系统', '斗柄指向北方黑池，水银在池中化为玄黑色。黑水渠令升起！', function() {
-          completePuzzle('star_map');
-          gainItem('黑水渠令', '黑水渠令', '水系机关秘宝', true);
+          completePuzzle('star_map'); gainItem('黑水渠令', '黑水渠令', '水系机关秘宝', true);
           addNote('水银星图', '北斗星渠全部点亮，水银流入北方黑池化为玄黑。获得黑水渠令。');
           showDialogue('沈砚', '水银不是为了防盗才流在这里。它在替这座陵墓记住天下的形状。', function() {
             showDialogue('沈砚', '百川江河，最终都被引向同一个黑色的北方。', function() {
               showDialogue('沈砚', '如果水银是秦陵的江河，那么不死药也许不是药。它更像是这套机关的心脏。', function() {
-                showDialogue('系统', '🎉 第四章完成！前四章全破！', function() {
-                  showEnding();
-                });
+                showDialogue('系统', '第四章完成！前四章全破！', function() { showEnding(); });
               });
             });
           });
         });
       });
-    } else {
-      showDialogue('沈砚', '黑池需要黑水玉玦来激活。');
-    }
-  }, {icon: '🌑', label: '北方黑池'});
+    } else { showDialogue('沈砚', '黑池需要黑水玉玦来激活。'); }
+  }, {icon: '🌑'});
 }
 
 // ==================== 结局 ====================
 function showEnding() {
-  clearScene();
-  setBg('');
-  chapterLabel.textContent = '结局';
-
+  clearScene(); setBg('');
   var endingType;
   if (G.risk <= 3) endingType = 'hidden';
   else if (G.risk <= 6) endingType = 'seal';
   else endingType = 'take';
 
   var endings = {
-    seal: {
-      title: '结局：封药',
-      text: '你重新封印了不死药。秦陵重新沉入地下，你带走了拓片与真相。\n\n真正的不朽，是文明记忆。',
-      extra: '黑水声在身后逐渐远去。那些刻在石壁上的文字，比任何不死药都更长久。'
-    },
-    take: {
-      title: '结局：取药',
-      text: '你取走了不死药，逃出秦陵。\n\n但袖口渗出了黑色的水痕……对永生的贪欲，延续了秦皇的执念。',
-      extra: '那滴水痕再也没有干过。'
-    },
-    hidden: {
-      title: '隐藏结局：黑水不息',
-      text: '你没有取药，也没有毁药。\n\n你把黑玉残玦留在了秦王墓室，秦陵不再召唤后人。\n\n黑水声逐渐远去……你终于读懂了这座陵墓。',
-      extra: '历史不是死亡，而是循环。\n\n你走出了秦陵，但黑玉残玦留在了那里——等待下一个读懂水德的人。'
-    }
+    seal: { title: '结局：封药', text: '你重新封印了不死药。秦陵重新沉入地下，你带走了拓片与真相。\n\n真正的不朽，是文明记忆。', extra: '黑水声在身后逐渐远去。那些刻在石壁上的文字，比任何不死药都更长久。' },
+    take: { title: '结局：取药', text: '你取走了不死药，逃出秦陵。\n\n但袖口渗出了黑色的水痕……对永生的贪欲，延续了秦皇的执念。', extra: '那滴水痕再也没有干过。' },
+    hidden: { title: '隐藏结局：黑水不息', text: '你没有取药，也没有毁药。\n\n你把黑玉残玦留在了秦王墓室，秦陵不再召唤后人。\n\n黑水声逐渐远去……你终于读懂了这座陵墓。', extra: '历史不是死亡，而是循环。\n\n你走出了秦陵，但黑玉残玦留在了那里——等待下一个读懂水德的人。' }
   };
-
   var e = endings[endingType];
-
-  var panel = document.createElement('div');
-  panel.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:300;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,3,0,0.95)';
   var stars = '';
   for (var i = 0; i < 5; i++) stars += i < Math.min(G.risk, 5) ? '★' : '☆';
+
+  var panel = document.createElement('div');
+  panel.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:5000;display:flex;flex-direction:column;align-items:center;justify-content:center;background:rgba(5,5,5,0.96)';
   panel.innerHTML = '' +
-    '<div style="font-size:36px;color:#b8960c;margin-bottom:20px;letter-spacing:8px">' + e.title + '</div>' +
-    '<div style="max-width:500px;text-align:center;color:#d4c098;font-size:16px;line-height:2;white-space:pre-line">' + e.text + '</div>' +
-    '<div style="color:#8a6a4a;margin-top:20px;font-size:13px;white-space:pre-line;text-align:center">' + e.extra + '</div>' +
-    '<div style="margin-top:40px;color:#b8960c;font-size:14px">最终风险值：' + stars + '</div>' +
-    '<button class="title-btn" style="margin-top:30px;font-size:14px" onclick="location.reload()">重返标题</button>';
+    '<div style="font-size:42px;color:var(--silk-bright);margin-bottom:30px;letter-spacing:10px;font-family:STKaiti,KaiTi,serif">' + e.title + '</div>' +
+    '<div style="max-width:540px;text-align:center;color:var(--silk-yellow);font-size:21px;line-height:2.2;white-space:pre-line;letter-spacing:3px">' + e.text + '</div>' +
+    '<div style="color:var(--bronze);margin-top:28px;font-size:18px;white-space:pre-line;text-align:center;letter-spacing:2px">' + e.extra + '</div>' +
+    '<div style="margin-top:50px;color:var(--bronze-bright);font-size:20px">最终风险值：' + stars + '</div>' +
+    '<button class="qin-title-btn" style="margin-top:40px;font-size:20px" onclick="location.reload()">重返标题</button>';
   $('game').appendChild(panel);
 }
 
 // ==================== 启动 ====================
 function init() {
   try {
-    renderRisk();
-    showTitle();
+    renderRisk(); showTitle();
     console.log('【水德秦陵】游戏初始化完成');
-  } catch (e) {
-    alert('游戏加载失败: ' + e.message);
-    console.error(e);
-  }
+  } catch (e) { alert('游戏加载失败: ' + e.message); console.error(e); }
 }
-
 init();
 </script>
 </body>
