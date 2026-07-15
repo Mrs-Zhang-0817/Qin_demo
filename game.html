@@ -3,7 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>水德秦陵 - 解密推理冒险</title>
+<meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+<meta http-equiv="Pragma" content="no-cache">
+<meta http-equiv="Expires" content="0">
+<title>水德秦陵 - 解密推理冒险 v2</title>
 <style>
 /* ========== 色彩体系 ========== */
 :root {
@@ -603,7 +606,7 @@ function processHintQueue() {
     G.hintTimer = null;
     // 显示下一个提示
     setTimeout(function() { processHintQueue(); }, 400);
-  }, 3000);
+  }, 2500);
 }
 
 // ==================== 全屏图片查看器 ====================
@@ -940,7 +943,8 @@ function showTitle() {
       '<button class="qin-title-btn" onclick="startGame()">入  陵</button>' +
       '<button class="qin-title-btn" onclick="showChapterSelect()">选  章</button>' +
       '<button class="qin-title-btn" onclick="showCredits()">题  记</button>' +
-    '</div>';
+    '</div>' +
+    '<div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:14px;letter-spacing:4px;opacity:0.4">' + APP_VERSION + '</div>';
   renderRisk();
   $('skillBar').innerHTML = '';
 }
@@ -1073,6 +1077,7 @@ function prologueDream() {
       setTimeout(function() {
         transitionScene(function() {
           setBg(LV(0, '梦境分镜2.png'));
+          clearHints();
           showHint('北斗七星在倒影中变成了秦篆……但太模糊了，读不清。');
           addNote('北斗倒影', '水面倒影中北斗变为秦篆，但文字模糊无法辨认。');
           addNote('黑玉残玦震动', '靠近墓门时残玦低鸣，似乎在回应某种力量。');
@@ -1085,11 +1090,11 @@ function prologueDream() {
                 showHint('修复黑水残简，寻找秦陵入口的线索');
               });
             });
-          }, 3500);
+          }, 1800);
         });
-      }, 3500);
+      }, 1800);
     });
-  }, 3500);
+  }, 1800);
 }
 
 
@@ -1925,11 +1930,19 @@ function showEnding() {
 }
 
 // ==================== 启动 ====================
+var APP_VERSION = 'v2.1';
 function init() {
   try {
+    console.log('【水德秦陵 ' + APP_VERSION + '】开始初始化...');
+    // 检查关键元素
+    var missing = [];
+    ['risk-panel','scene-area','full-image-overlay','auto-hint','dialogue','archive-btn','transition'].forEach(function(id) {
+      if (!document.getElementById(id)) missing.push(id);
+    });
+    if (missing.length > 0) { console.warn('缺失元素:', missing.join(', ')); }
     renderRisk(); showTitle();
-    console.log('【水德秦陵】游戏初始化完成');
-  } catch (e) { alert('游戏加载失败: ' + e.message); console.error(e); }
+    console.log('【水德秦陵 ' + APP_VERSION + '】游戏初始化完成');
+  } catch (e) { alert('游戏加载失败: ' + e.message + '\\n\\n版本: ' + APP_VERSION); console.error(e); }
 }
 init();
 </script>
