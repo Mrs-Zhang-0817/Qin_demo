@@ -755,6 +755,9 @@ body {
 
   <!-- 场景过渡 -->
   <div class="transition-overlay" id="transition"></div>
+
+  <!-- BGM 背景音乐 -->
+  <audio id="bgm-player" loop style="display:none"></audio>
 </div>
 
 <script>
@@ -814,6 +817,58 @@ var fullImgOverlay = $('full-image-overlay');
 var fullImgImg = $('full-image-img');
 var fullImgText = $('full-image-text');
 var fullImgCloseHint = $('full-image-close-hint');
+var bgmPlayer = $('bgm-player');
+
+// BGM 映射：sceneId → 音频文件名
+var BGM_MAP = {
+  'restoration':   '修复室.ogg',
+  'shrine':        '祠堂探索.ogg',
+  'ch1outer':      '祠堂探索.ogg',
+  'shrinefront':   '祠堂探索.ogg',
+  'southwall':     '祠堂探索.ogg',
+  'mainhall':      '祠堂探索.ogg',
+  'greenox':       '祠堂探索.ogg',
+  'ch3start':      '地宫探索.ogg',
+  'ch3writing':    '地宫探索.ogg',
+  'ch3measure':    '地宫探索.ogg',
+  'ch3track':      '地宫探索.ogg',
+  'ch3tiger':      '地宫探索.ogg',
+  'ch4start':      '地宫探索.ogg',
+  'ch4astro':      '地宫探索.ogg',
+  'ch4rivers':     '地宫探索.ogg',
+  'ch4buoy':       '地宫探索.ogg',
+  'ch4pool':       '地宫探索.ogg'
+};
+
+var BGM_CURRENT = ''; // 当前播放的 BGM 文件名
+
+function playBGM(sceneId) {
+  var file = BGM_MAP[sceneId];
+  if (!file) {
+    // 不在映射中的场景（如标题），停止 BGM
+    stopBGM();
+    return;
+  }
+  if (BGM_CURRENT === file) return; // 同场景不重复切
+  BGM_CURRENT = file;
+  bgmPlayer.src = 'Music/' + file;
+  bgmPlayer.volume = 0.4;
+  bgmPlayer.play().catch(function() {});
+}
+
+function playTitleBGM() {
+  if (BGM_CURRENT === '菜单页面.ogg') return;
+  BGM_CURRENT = '菜单页面.ogg';
+  bgmPlayer.src = 'Music/菜单页面.ogg';
+  bgmPlayer.volume = 0.4;
+  bgmPlayer.play().catch(function() {});
+}
+
+function stopBGM() {
+  bgmPlayer.pause();
+  bgmPlayer.currentTime = 0;
+  BGM_CURRENT = '';
+}
 
 function IMG(cat, name) {
   return '02_Art_Assets/' + cat + '/' + name;
@@ -1636,6 +1691,7 @@ function showTitle() {
   G.currentSceneId = ''; G._hsIndex = 0;
   clearScene();
   setBg('');
+  playTitleBGM();
   titleScreen.style.display = 'flex';
   titleScreen.innerHTML = '' +
     '<div class="water-effect"></div>' +
@@ -1670,6 +1726,7 @@ function startGame() {
 }
 
 function showChapterSelect() {
+  playTitleBGM();
   var chapters = [
     {n: 1, t: '序章：黑水残简', d: '修复残简，破解黑水门，获得黑水玉玦', unlocked: true},
     {n: 2, t: '第一章：文公伐树', d: '探索神木祠，破解五行机关，获得断木神斧', unlocked: G.chapterUnlocked[2]},
@@ -1830,6 +1887,7 @@ function prologueRestoration() {
   clearScene();
   G.sceneContent['restoration'] = {};
   setBg(LV(0, '古籍修复室.png'));
+  playBGM('restoration');
   showHint('调查修复室中的物品，收集关于秦陵的线索');
 
   var REST_SCENE = 'restoration';
@@ -2070,6 +2128,7 @@ function prologueShrine() {
   clearScene();
   G.sceneContent['shrine'] = {};
   setBg(LV(0, '背景图·地表旧祠.png'));
+  playBGM('shrine');
   showHint('调查旧祠中的线索，找到黑水门的秘密');
 
   var SHR_SCENE = 'shrine';
@@ -2246,6 +2305,7 @@ function ch1Start() {
   G.currentSceneId = 'ch1outer'; G._hsIndex = 0;
   G.sceneContent['ch1outer'] = {};
   setBg(LV(0, '外藏道概念图.png'));
+  playBGM('ch1outer');
   unlockSkill('听风', '判断墙体空腔与风道');
   unlockSkill('探土', '判断地面结构与承重');
   renderSkills();
@@ -2295,6 +2355,7 @@ function ch1ShrineFront() {
   clearScene();
   G.sceneContent['shrinefront'] = {};
   setBg(LV(1, '神木祠背景图.png'));
+  playBGM('shrinefront');
   showHint('调查神木祠前殿，使用壁画机关找到前往神木主殿的方法');
 
   var SF_SCENE = 'shrinefront';
@@ -2399,6 +2460,7 @@ function ch1SouthWall() {
   clearScene();
   G.sceneContent['southwall'] = {};
   setBg(LV(1, '神木祠背景图.png'));
+  playBGM('southwall');
   showHint('在南壁祭灶取得朱丝以破神木自合之力');
 
   var SW_SCENE = 'southwall';
@@ -2439,6 +2501,7 @@ function ch1MainHall() {
   G.currentSceneId = 'mainhall'; G._hsIndex = 0;
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
+  playBGM('mainhall');
   showHint('按五行生克破解神木机关：朱丝困灵(火)→青铜断木(金)→木入土台(土)');
 
   var steps = {fire: false, gold: false, earth: false};
@@ -2477,6 +2540,7 @@ function ch1GreenOx() {
   G.currentSceneId = 'greenox'; G._hsIndex = 0;
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
+  playBGM('greenox');
   showHint('推动青牛浮雕，确认正确水渠方向');
   var oxStep = 0;
 
@@ -2517,6 +2581,7 @@ function ch3Start() {
   G.chapter = 3; G.scene = 0;
   clearScene(); setBg(LV(3, '主背景4.png'));
   G.currentSceneId = 'ch3start'; G._hsIndex = 0;
+  playBGM('ch3start');
   G.sceneContent['ch3start'] = {};
   unlockSkill('辨伪', '判断六国残片与秦制标准的差异'); renderSkills();
   showHint('探索兵俑长廊，调查六国门铭与兵俑差异');
@@ -2559,6 +2624,7 @@ function ch3Writing() {
   G.scene = 1;
   G.currentSceneId = 'ch3writing'; G._hsIndex = 0;
   clearScene(); setBg(LV(3, '主背景4.png'));
+  playBGM('ch3writing');
   showHint('书同文：选择秦小篆组成"六合同风，玄水归一"');
   var selectedChars = [];
   var correct = ['六','合','同','风','玄','水','归','一'];
@@ -2619,6 +2685,7 @@ function ch3Writing() {
 function ch3Measure() {
   G.scene = 2; clearScene(); setBg(LV(3, '主背景4.png'));
   G.currentSceneId = 'ch3measure'; G._hsIndex = 0;
+  playBGM('ch3measure');
   showHint('秦尺归一：校准六国石尺为秦制标准');
   var aligned = 0; var rulersCreated = false;
   addInteractive(300, 200, 300, 80, '', function() {
@@ -2648,6 +2715,7 @@ function ch3Measure() {
 function ch3Track() {
   G.scene = 3; clearScene(); setBg(LV(3, '主背景4.png'));
   G.currentSceneId = 'ch3track'; G._hsIndex = 0;
+  playBGM('ch3track');
   showHint('车同轨：统一三段车轨为秦制标准');
   var tracksDone = 0;
   for (var i = 0; i < 3; i++) {
@@ -2670,6 +2738,7 @@ function ch3Track() {
 function ch3TigerTally() {
   G.scene = 4; clearScene(); setBg(LV(3, '主背景4.png'));
   G.currentSceneId = 'ch3tiger'; G._hsIndex = 0;
+  playBGM('ch3tiger');
   showHint('控制虎符，调遣六国兵俑归一');
   addInteractive(400, 250, 200, 150, '', function() {
     if (!G.inventory['断木神斧']) { showDialogue('沈砚', '虎符台缺失半枚虎符，外锁需要金属机关钥打开。'); return; }
@@ -2699,6 +2768,7 @@ function ch3TigerTally() {
 function ch4Start() {
   G.chapter = 4; G.scene = 0; clearScene(); setBg(LV(4, '主背景5.png'));
   G.currentSceneId = 'ch4start'; G._hsIndex = 0;
+  playBGM('ch4start');
   G.sceneContent['ch4start'] = {};
   unlockSkill('封气', '临时封堵水银蒸汽孔和毒气孔'); renderSkills();
   showHint('探索水银地宫前庭，小心银雾');
@@ -2730,6 +2800,7 @@ function ch4Start() {
 function ch4Astronomy() {
   G.scene = 1; clearScene(); setBg(LV(4, '主背景5.png'));
   G.currentSceneId = 'ch4astro'; G._hsIndex = 0;
+  playBGM('ch4astro');
   showHint('点亮北斗七星，记录星图');
   var starsLit = 0;
   for (var i = 0; i < 7; i++) {
@@ -2752,6 +2823,7 @@ function ch4Astronomy() {
 function ch4Rivers() {
   G.scene = 2; clearScene(); setBg(LV(4, '主背景5.png'));
   G.currentSceneId = 'ch4rivers'; G._hsIndex = 0;
+  playBGM('ch4rivers');
   showHint('将三路水银全部导向北方黑水主渠');
   var gates = {south: true, west: true, east: true, north: false};
   var dirMap = {0:'gate_south', 1:'gate_west', 2:'gate_east', 3:'gate_north'};
@@ -2785,6 +2857,7 @@ function ch4Rivers() {
 function ch4Buoy() {
   G.scene = 3; clearScene(); setBg(LV(4, '主背景5.png'));
   G.currentSceneId = 'ch4buoy'; G._hsIndex = 0;
+  playBGM('ch4buoy');
   showHint('校准三枚浮标水位：斗口中、斗身高、斗柄低');
   var targets = {'斗口':'中','斗身':'高','斗柄':'低'};
   var current = {'斗口':'低','斗身':'低','斗柄':'低'};
@@ -2812,6 +2885,7 @@ function ch4Buoy() {
 function ch4BlackPool() {
   G.scene = 4; clearScene(); setBg(LV(4, '主背景5.png'));
   G.currentSceneId = 'ch4pool'; G._hsIndex = 0;
+  playBGM('ch4pool');
   showHint('使用黑水玉玦激活北方黑池，完成北斗水银星图');
   addInteractive(400, 180, 200, 150, '', function() {
     if (G.inventory['黑水玉玦']) {
