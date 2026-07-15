@@ -578,6 +578,86 @@ body {
   box-shadow: 0 0 18px rgba(154,123,69,0.4);
   outline-color: var(--verdigris);
 }
+
+/* ========== 热区编辑器 ========== */
+#hs-editor-bar {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 5000;
+  background: rgba(20,10,5,0.95); border-bottom: 2px solid #e09030;
+  padding: 6px 16px; display: none; align-items: center; gap: 10px;
+  flex-wrap: wrap; pointer-events: auto;
+}
+#hs-editor-bar .hs-eb-title {
+  color: #e09030; font-size: 16px; letter-spacing: 3px;
+  font-family: STKaiti, KaiTi, serif; margin-right: 8px; white-space: nowrap;
+}
+#hs-editor-bar button {
+  background: #302010; border: 1px solid #805020; color: #d0b070;
+  font-family: STKaiti, KaiTi, serif; font-size: 14px; padding: 4px 12px;
+  cursor: pointer; letter-spacing: 2px; white-space: nowrap; transition: all 0.15s;
+}
+#hs-editor-bar button:hover { background: #503020; border-color: #c08030; color: #f0d090; }
+#hs-editor-bar button.active-btn { background: #604020; border-color: #e09030; color: #ffd090; box-shadow: 0 0 8px rgba(224,144,48,0.3); }
+#hs-editor-bar .hs-sep { color: #604020; margin: 0 4px; }
+#hs-editor-bar .hs-info { color: #907040; font-size: 13px; letter-spacing: 2px; }
+
+/* 编辑器属性面板 */
+#hs-prop-panel {
+  position: absolute; right: 10px; top: 90px; z-index: 5000;
+  background: rgba(15,8,5,0.95); border: 2px solid #e09030;
+  padding: 12px; display: none; width: 220px; font-family: STKaiti, KaiTi, serif;
+}
+#hs-prop-panel h4 { color: #e09030; font-size: 15px; margin: 0 0 8px; letter-spacing: 2px; }
+#hs-prop-panel label { color: #b09060; font-size: 13px; display: block; margin: 4px 0 1px; }
+#hs-prop-panel input {
+  width: 60px; background: #1a0f08; border: 1px solid #604020;
+  color: #d0b070; font-size: 14px; padding: 3px 6px; font-family: monospace;
+}
+#hs-prop-panel .prop-row { display: flex; gap: 10px; align-items: center; }
+#hs-prop-panel .prop-row button {
+  background: #302010; border: 1px solid #604020; color: #b09060;
+  font-size: 12px; padding: 2px 8px; cursor: pointer;
+}
+#hs-prop-panel .prop-row button:hover { background: #503020; }
+
+/* 编辑器中的热区样式 */
+.editor-mode .interactive {
+  border: 2px dashed rgba(255,200,50,0.7) !important;
+  background: rgba(255,200,50,0.12) !important;
+  cursor: move !important;
+  z-index: 60 !important;
+  pointer-events: auto !important;
+}
+.editor-mode .interactive:hover {
+  border: 2px solid rgba(255,200,50,0.9) !important;
+  background: rgba(255,200,50,0.22) !important;
+  box-shadow: 0 0 16px rgba(255,200,50,0.3) !important;
+}
+.editor-mode .interactive.hs-selected {
+  border: 2px solid #ff4040 !important;
+  background: rgba(255,60,60,0.18) !important;
+  box-shadow: 0 0 20px rgba(255,60,60,0.4) !important;
+}
+.editor-mode .interactive.dragging {
+  opacity: 0.7; border-style: solid !important;
+}
+.editor-mode .hs-label-tag {
+  position: absolute; top: -22px; left: 0; background: rgba(255,180,30,0.9);
+  color: #1a0800; font-size: 11px; padding: 1px 6px; pointer-events: none;
+  white-space: nowrap; font-weight: bold; letter-spacing: 1px;
+}
+
+/* 拖拽时的遮罩 */
+#hs-drag-cover {
+  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+  z-index: 9999; display: none; cursor: move;
+}
+
+/* 编辑器快捷键提示 */
+#hs-shortcut-hint {
+  position: absolute; bottom: 30px; left: 50%; transform: translateX(-50%);
+  z-index: 5000; color: #907040; font-size: 14px; letter-spacing: 2px;
+  display: none; pointer-events: none;
+}
 </style>
 </head>
 <body>
@@ -598,6 +678,52 @@ body {
 
   <!-- 场景交互区 -->
   <div id="scene-area"></div>
+
+  <!-- 热区编辑器工具栏 -->
+  <div id="hs-editor-bar">
+    <span class="hs-eb-title">◆ 热区编辑器</span>
+    <span class="hs-info" id="hs-scene-name">-</span>
+    <span class="hs-sep">|</span>
+    <button id="hs-btn-select" onclick="hsSetTool('select')" class="active-btn">选择/移动</button>
+    <button id="hs-btn-resize" onclick="hsSetTool('resize')">调整大小</button>
+    <span class="hs-sep">|</span>
+    <button onclick="hsSaveConfig()">💾 保存</button>
+    <button onclick="hsExportJSON()">📥 导出JSON</button>
+    <button onclick="hsImportJSON()">📤 导入JSON</button>
+    <span class="hs-sep">|</span>
+    <button onclick="hsResetScene()">🔄 重置当前场景</button>
+    <button onclick="hsResetAll()">⚠ 重置全部</button>
+    <span class="hs-sep">|</span>
+    <button onclick="hsToggleEditor()" style="border-color:#c04030;color:#e08070">退出编辑器</button>
+  </div>
+
+  <!-- 热区属性面板 -->
+  <div id="hs-prop-panel">
+    <h4 id="hs-prop-title">热区属性</h4>
+    <label>X:</label><input type="number" id="hs-prop-x" onchange="hsPropChanged()">
+    <label>Y:</label><input type="number" id="hs-prop-y" onchange="hsPropChanged()">
+    <label>宽:</label><input type="number" id="hs-prop-w" onchange="hsPropChanged()">
+    <label>高:</label><input type="number" id="hs-prop-h" onchange="hsPropChanged()">
+    <div class="prop-row" style="margin-top:8px">
+      <button onclick="hsPropNudge(-5,0)">◀-5</button>
+      <button onclick="hsPropNudge(5,0)">+5▶</button>
+      <button onclick="hsPropNudge(0,-5)">▲-5</button>
+      <button onclick="hsPropNudge(0,5)">+5▼</button>
+    </div>
+    <div class="prop-row" style="margin-top:4px">
+      <button onclick="hsPropNudge(-1,0)">◀-1</button>
+      <button onclick="hsPropNudge(1,0)">+1▶</button>
+      <button onclick="hsPropNudge(0,-1)">▲-1</button>
+      <button onclick="hsPropNudge(0,1)">+1▼</button>
+    </div>
+    <div id="hs-prop-id" style="color:#907040;font-size:11px;margin-top:6px"></div>
+  </div>
+
+  <!-- 拖拽遮罩 -->
+  <div id="hs-drag-cover"></div>
+
+  <!-- 快捷键提示 -->
+  <div id="hs-shortcut-hint">Ctrl+E 进入/退出编辑器 | 拖拽移动热区 | 右键属性面板 | Delete删除选中</div>
 
   <!-- 全屏图片查看器 -->
   <div id="full-image-overlay">
@@ -649,8 +775,21 @@ var G = {
   hintTimer: null,
   hintQueue: [],
   fullImageCallback: null,
+<<<<<<< HEAD
   interactionLock: false,
   sceneContent: {}  // 场景内容追踪: { 'sceneId': { 'itemId': true, ... } }
+=======
+  sceneContent: {},  // 场景内容追踪: { 'sceneId': { 'itemId': true, ... } }
+  // 热区编辑器相关
+  editorMode: false,          // 编辑器开关
+  currentSceneId: '',         // 当前场景ID
+  _hsIndex: 0,                // 热区创建序号
+  hotspotConfig: {},          // 加载的热区配置
+  hsSelected: null,           // 当前选中的热区元素
+  hsTool: 'select',           // 编辑器工具: 'select' | 'resize'
+  hsDragging: false,          // 是否正在拖拽
+  hsDragData: null            // 拖拽数据
+>>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
 };
 
 // 标记场景内容已发现
@@ -689,6 +828,363 @@ function LV(num, name) {
     'LV005_Alchemy_Room', 'LV006_Qin_King_Tomb'];
   return IMG(dirs[num], name);
 }
+
+// ==================== 热区配置加载 ====================
+function loadHotspotConfig() {
+  // 先从 localStorage 加载
+  var saved = null;
+  try { saved = localStorage.getItem('qin_hotspots_config'); } catch(e) {}
+  if (saved) {
+    try { G.hotspotConfig = JSON.parse(saved).scenes || {}; console.log('热区配置: 从localStorage加载'); return; } catch(e) {}
+  }
+  // 再尝试从 hotspots.json 加载
+  try {
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', 'hotspots.json?_=' + Date.now(), false);
+    xhr.send();
+    if (xhr.status === 200 || xhr.status === 0) {
+      var cfg = JSON.parse(xhr.responseText);
+      G.hotspotConfig = cfg.scenes || {};
+      console.log('热区配置: 从hotspots.json加载, 共 ' + Object.keys(G.hotspotConfig).length + ' 个场景');
+      return;
+    }
+  } catch(e) { console.log('热区配置: 无法加载hotspots.json, 使用默认值'); }
+  G.hotspotConfig = {};
+}
+
+function saveHotspotConfigToStorage() {
+  var cfg = { version: 1, scenes: G.hotspotConfig };
+  try { localStorage.setItem('qin_hotspots_config', JSON.stringify(cfg)); } catch(e) {}
+}
+
+// 获取热区配置坐标，如无则返回默认值
+function getHotspotPos(sceneId, hsId, defX, defY, defW, defH) {
+  if (G.hotspotConfig[sceneId] && G.hotspotConfig[sceneId].hotspots && G.hotspotConfig[sceneId].hotspots[hsId]) {
+    var c = G.hotspotConfig[sceneId].hotspots[hsId];
+    return { x: c.x, y: c.y, w: c.w, h: c.h };
+  }
+  return { x: defX, y: defY, w: defW, h: defH };
+}
+
+// ==================== 热区编辑器 ====================
+function hsToggleEditor() {
+  G.editorMode = !G.editorMode;
+  var bar = $('hs-editor-bar');
+  var prop = $('hs-prop-panel');
+  var hint = $('hs-shortcut-hint');
+  var game = $('game');
+
+  if (G.editorMode) {
+    bar.style.display = 'flex';
+    hint.style.display = 'block';
+    game.classList.add('editor-mode');
+    G.hsSelected = null;
+    G.hsTool = 'select';
+    hsUpdateSceneLabel();
+    hsRefreshAllLabels();
+    console.log('热区编辑器已开启 - 拖拽移动热区，右键面板编辑属性');
+  } else {
+    bar.style.display = 'none';
+    prop.style.display = 'none';
+    hint.style.display = 'none';
+    game.classList.remove('editor-mode');
+    hsRemoveAllLabels();
+  }
+}
+
+function hsSetTool(tool) {
+  G.hsTool = tool;
+  $('hs-btn-select').classList.toggle('active-btn', tool === 'select');
+  $('hs-btn-resize').classList.toggle('active-btn', tool === 'resize');
+}
+
+function hsUpdateSceneLabel() {
+  $('hs-scene-name').textContent = '场景: ' + (G.currentSceneId || '未设置');
+}
+
+function hsRefreshAllLabels() {
+  hsRemoveAllLabels();
+  if (!G.editorMode) return;
+  var els = document.querySelectorAll('#scene-area .interactive');
+  for (var i = 0; i < els.length; i++) {
+    hsAddLabel(els[i]);
+  }
+}
+
+function hsAddLabel(el) {
+  if (!G.editorMode) return;
+  if (el.querySelector('.hs-label-tag')) return;
+  var tag = document.createElement('div');
+  tag.className = 'hs-label-tag';
+  var id = el.dataset.hsId || ('#' + el.dataset.hsIdx);
+  tag.textContent = id;
+  el.appendChild(tag);
+}
+
+function hsRemoveAllLabels() {
+  var tags = document.querySelectorAll('.hs-label-tag');
+  for (var i = 0; i < tags.length; i++) tags[i].remove();
+}
+
+function hsSelectEl(el) {
+  if (!G.editorMode) return;
+  if (G.hsSelected) G.hsSelected.classList.remove('hs-selected');
+  G.hsSelected = el;
+  if (el) {
+    el.classList.add('hs-selected');
+    hsShowPropPanel(el);
+  } else {
+    $('hs-prop-panel').style.display = 'none';
+  }
+}
+
+function hsShowPropPanel(el) {
+  var panel = $('hs-prop-panel');
+  panel.style.display = 'block';
+  var id = el.dataset.hsId || ('热区#' + el.dataset.hsIdx);
+  $('hs-prop-title').textContent = '热区: ' + id;
+  $('hs-prop-id').textContent = '场景: ' + (el.dataset.hsScene || '?');
+  $('hs-prop-x').value = parseInt(el.style.left) || 0;
+  $('hs-prop-y').value = parseInt(el.style.top) || 0;
+  $('hs-prop-w').value = parseInt(el.style.width) || 0;
+  $('hs-prop-h').value = parseInt(el.style.height) || 0;
+}
+
+function hsPropChanged() {
+  if (!G.hsSelected) return;
+  G.hsSelected.style.left = ($('hs-prop-x').value | 0) + 'px';
+  G.hsSelected.style.top = ($('hs-prop-y').value | 0) + 'px';
+  G.hsSelected.style.width = ($('hs-prop-w').value | 0) + 'px';
+  G.hsSelected.style.height = ($('hs-prop-h').value | 0) + 'px';
+}
+
+function hsPropNudge(dx, dy) {
+  if (!G.hsSelected) return;
+  var x = (parseInt(G.hsSelected.style.left) || 0) + dx;
+  var y = (parseInt(G.hsSelected.style.top) || 0) + dy;
+  G.hsSelected.style.left = x + 'px';
+  G.hsSelected.style.top = y + 'px';
+  hsShowPropPanel(G.hsSelected);
+}
+
+// 保存配置：从DOM读取所有热区位置写入配置
+function hsSaveConfig() {
+  if (!G.editorMode) { alert('请先进入编辑器模式(Ctrl+E)'); return; }
+  var sceneId = G.currentSceneId;
+  if (!sceneId) { alert('当前场景ID未设置'); return; }
+  if (!G.hotspotConfig[sceneId]) G.hotspotConfig[sceneId] = { name: sceneId, hotspots: {} };
+  
+  var els = document.querySelectorAll('#scene-area .interactive');
+  var count = 0;
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var id = el.dataset.hsId;
+    if (!id) continue;
+    var cfg = {
+      x: parseInt(el.style.left) || 0,
+      y: parseInt(el.style.top) || 0,
+      w: parseInt(el.style.width) || 0,
+      h: parseInt(el.style.height) || 0,
+      label: G.hotspotConfig[sceneId].hotspots[id] ? G.hotspotConfig[sceneId].hotspots[id].label : id
+    };
+    G.hotspotConfig[sceneId].hotspots[id] = cfg;
+    count++;
+  }
+  saveHotspotConfigToStorage();
+  hsExportJSON(); // 同时下载JSON文件
+  showHint('已保存 ' + count + ' 个热区到 ' + sceneId + ' (localStorage + JSON下载)');
+}
+
+// 导出JSON文件下载
+function hsExportJSON() {
+  var cfg = { version: 1, description: '热区配置文件 - 可通过编辑器(Ctrl+E)自由调整', scenes: G.hotspotConfig };
+  var json = JSON.stringify(cfg, null, 2);
+  var blob = new Blob([json], { type: 'application/json' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url; a.download = 'hotspots.json';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+  console.log('热区配置已导出为 hotspots.json');
+}
+
+// 导入JSON文件
+function hsImportJSON() {
+  var input = document.createElement('input');
+  input.type = 'file'; input.accept = '.json';
+  input.onchange = function() {
+    var file = input.files[0];
+    if (!file) return;
+    var reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        var cfg = JSON.parse(e.target.result);
+        if (cfg.scenes) {
+          // 合并导入的配置
+          for (var sceneId in cfg.scenes) {
+            if (!G.hotspotConfig[sceneId]) G.hotspotConfig[sceneId] = { name: sceneId, hotspots: {} };
+            var hs = cfg.scenes[sceneId].hotspots || cfg.scenes[sceneId];
+            if (hs) {
+              for (var hsId in hs) {
+                G.hotspotConfig[sceneId].hotspots[hsId] = hs[hsId];
+              }
+            }
+          }
+          saveHotspotConfigToStorage();
+          showHint('已导入热区配置，共 ' + Object.keys(cfg.scenes).length + ' 个场景。重新进入场景生效。');
+          // 重新应用配置到当前场景
+          hsApplyConfigToScene();
+        } else {
+          alert('JSON格式不正确，需要包含 "scenes" 字段');
+        }
+      } catch(err) { alert('JSON解析失败: ' + err.message); }
+    };
+    reader.readAsText(file);
+  };
+  input.click();
+}
+
+// 将配置应用到当前场景的热区
+function hsApplyConfigToScene() {
+  if (!G.currentSceneId) return;
+  var sceneCfg = G.hotspotConfig[G.currentSceneId];
+  if (!sceneCfg || !sceneCfg.hotspots) return;
+  var els = document.querySelectorAll('#scene-area .interactive');
+  for (var i = 0; i < els.length; i++) {
+    var el = els[i];
+    var id = el.dataset.hsId;
+    if (id && sceneCfg.hotspots[id]) {
+      var c = sceneCfg.hotspots[id];
+      el.style.left = c.x + 'px';
+      el.style.top = c.y + 'px';
+      el.style.width = c.w + 'px';
+      el.style.height = c.h + 'px';
+    }
+  }
+}
+
+// 重置当前场景配置
+function hsResetScene() {
+  if (!G.currentSceneId) return;
+  if (confirm('确定要重置场景 "' + G.currentSceneId + '" 的热区配置吗？\n这将删除此场景的所有自定义位置。')) {
+    delete G.hotspotConfig[G.currentSceneId];
+    saveHotspotConfigToStorage();
+    showHint('已重置场景 ' + G.currentSceneId + '，重新进入场景后恢复默认位置。');
+  }
+}
+
+// 重置全部配置
+function hsResetAll() {
+  if (confirm('确定要重置全部热区配置吗？\n这将删除所有自定义位置，恢复为默认值。')) {
+    G.hotspotConfig = {};
+    try { localStorage.removeItem('qin_hotspots_config'); } catch(e) {}
+    showHint('已重置全部热区配置');
+    hsApplyConfigToScene();
+  }
+}
+
+// ==================== 编辑器拖拽事件处理 ====================
+document.addEventListener('mousedown', function(e) {
+  if (!G.editorMode) return;
+  var el = e.target.closest('#scene-area .interactive');
+  if (!el) {
+    hsSelectEl(null);
+    return;
+  }
+  e.preventDefault(); e.stopPropagation();
+  
+  // 右键点击=选中
+  if (e.button === 2) {
+    hsSelectEl(el);
+    return;
+  }
+  if (e.button !== 0) return;
+  
+  hsSelectEl(el);
+  
+  var cover = $('hs-drag-cover');
+  cover.style.display = 'block';
+  G.hsDragging = true;
+  G.hsDragData = {
+    el: el,
+    startX: e.clientX,
+    startY: e.clientY,
+    origLeft: parseInt(el.style.left) || 0,
+    origTop: parseInt(el.style.top) || 0,
+    origW: parseInt(el.style.width) || 0,
+    origH: parseInt(el.style.height) || 0,
+    mode: G.hsTool
+  };
+  el.classList.add('dragging');
+});
+
+document.addEventListener('mousemove', function(e) {
+  if (!G.editorMode || !G.hsDragging) return;
+  e.preventDefault();
+  var d = G.hsDragData;
+  var dx = e.clientX - d.startX;
+  var dy = e.clientY - d.startY;
+  
+  if (d.mode === 'select') {
+    d.el.style.left = (d.origLeft + dx) + 'px';
+    d.el.style.top = (d.origTop + dy) + 'px';
+  } else if (d.mode === 'resize') {
+    d.el.style.width = Math.max(10, d.origW + dx) + 'px';
+    d.el.style.height = Math.max(10, d.origH + dy) + 'px';
+  }
+});
+
+document.addEventListener('mouseup', function(e) {
+  if (!G.editorMode || !G.hsDragging) return;
+  G.hsDragging = false;
+  $('hs-drag-cover').style.display = 'none';
+  if (G.hsDragData && G.hsDragData.el) {
+    G.hsDragData.el.classList.remove('dragging');
+    hsShowPropPanel(G.hsDragData.el);
+  }
+  G.hsDragData = null;
+});
+
+// 阻止编辑器模式下的右键菜单
+document.addEventListener('contextmenu', function(e) {
+  if (!G.editorMode) return;
+  if (e.target.closest('#scene-area .interactive') || 
+      e.target.closest('#scene-area') ||
+      e.target.closest('#hs-editor-bar') ||
+      e.target.closest('#hs-prop-panel')) {
+    e.preventDefault();
+  }
+});
+
+// 编辑器快捷键
+document.addEventListener('keydown', function(e) {
+  // Ctrl+E 切换编辑器
+  if (e.ctrlKey && e.key === 'e') {
+    e.preventDefault();
+    hsToggleEditor();
+    return;
+  }
+  // 编辑器模式下的快捷键
+  if (!G.editorMode) return;
+  // Delete键删除选中热区
+  if (e.key === 'Delete' && G.hsSelected) {
+    e.preventDefault();
+    var el = G.hsSelected;
+    hsSelectEl(null);
+    el.remove();
+    hsRefreshAllLabels();
+    showHint('已删除热区');
+  }
+  // 方向键微调
+  if (G.hsSelected && ['ArrowLeft','ArrowRight','ArrowUp','ArrowDown'].indexOf(e.key) >= 0) {
+    e.preventDefault();
+    var step = e.shiftKey ? 10 : 1;
+    if (e.key === 'ArrowLeft') hsPropNudge(-step, 0);
+    if (e.key === 'ArrowRight') hsPropNudge(step, 0);
+    if (e.key === 'ArrowUp') hsPropNudge(0, -step);
+    if (e.key === 'ArrowDown') hsPropNudge(0, step);
+  }
+});
 
 // ==================== 风险值系统 ====================
 function updateRisk(delta) {
@@ -939,7 +1435,11 @@ function clearScene() {
   sceneArea.innerHTML = '';
   sceneBg.style.backgroundImage = '';
   G.activeSkill = null;
+<<<<<<< HEAD
   G.interactionLock = false;
+=======
+  G._hsIndex = 0;
+>>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
   clearHints();
   dismissFullImage();
 }
@@ -951,14 +1451,27 @@ function setObjective(text) {
 }
 
 // ==================== 添加可交互热区 ====================
+// opts.hsId: 热区唯一ID（用于编辑器识别和配置保存）
+// opts.investigateImg, opts.skill, opts.onSkill, opts.skillHint: 原有参数
 function addInteractive(x, y, w, h, label, onClick, opts) {
   opts = opts || {};
+  var hsId = opts.hsId || ('hs_' + G._hsIndex);
+  var sceneId = G.currentSceneId || 'unknown';
+
+  // 从配置中加载覆盖坐标
+  var pos = getHotspotPos(sceneId, hsId, x, y, w, h);
+  x = pos.x; y = pos.y; w = pos.w; h = pos.h;
+
   var el = document.createElement('div');
   el.className = 'interactive';
   el.style.left = x + 'px';
   el.style.top = y + 'px';
   el.style.width = w + 'px';
   el.style.height = h + 'px';
+  el.dataset.hsId = hsId;
+  el.dataset.hsScene = sceneId;
+  el.dataset.hsIdx = G._hsIndex;
+  G._hsIndex++;
 
   if (opts.investigateImg) {
     el.dataset.investigateImg = opts.investigateImg;
@@ -966,8 +1479,16 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
   if (opts.skill) el.dataset.skill = opts.skill;
 
   el.onclick = function() {
+<<<<<<< HEAD
     // 交互锁：图片/文字展示期间阻止其他点击
     if (G.interactionLock) return;
+=======
+    // 编辑器模式下不触发游戏逻辑
+    if (G.editorMode) {
+      hsSelectEl(el);
+      return;
+    }
+>>>>>>> d24cc0631b695d679c7d8d5d051f8085ec8e022c
     // 技能模式：已激活正确技能 → 展现答案
     if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
       var skillName = G.activeSkill;
@@ -1007,7 +1528,17 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
       onClick();
     }
   };
+
+  // 编辑器模式下的事件
+  el.addEventListener('mousedown', function(e) {
+    if (!G.editorMode) return;
+    // 游戏模式的click已经处理互动，这里处理编辑器拖拽
+    // 统一在document的mousedown处理
+  });
+
   sceneArea.appendChild(el);
+
+  if (G.editorMode) hsAddLabel(el);
   return el;
 }
 
@@ -1112,6 +1643,7 @@ function checkReasoning() {
 // ==================== 标题画面 ====================
 function showTitle() {
   G.chapter = 0; G.scene = 0;
+  G.currentSceneId = ''; G._hsIndex = 0;
   clearScene();
   setBg('');
   titleScreen.style.display = 'flex';
@@ -1124,7 +1656,7 @@ function showTitle() {
       '<button class="qin-title-btn" onclick="showChapterSelect()">选  章</button>' +
       '<button class="qin-title-btn" onclick="showCredits()">题  记</button>' +
     '</div>' +
-    '<div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:14px;letter-spacing:4px;opacity:0.4">' + APP_VERSION + '</div>';
+    '<div style="position:absolute;bottom:30px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:14px;letter-spacing:4px;opacity:0.4">' + APP_VERSION + ' | Ctrl+E 热区编辑器</div>';
   renderRisk();
   closeSkillPanel();
   var popup = $('skillPopup'); if (popup) popup.innerHTML = '';
@@ -1304,6 +1836,7 @@ function prologueDream() {
 
 function prologueRestoration() {
   G.scene = 1;
+  G.currentSceneId = 'restoration'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['restoration'] = {};
   setBg(LV(0, '古籍修复室.png'));
@@ -1346,7 +1879,7 @@ function prologueRestoration() {
     } else {
       showDialogue('沈砚', '帛书已经修复完成，上面显示"黑水入陵，玄药不死"。');
     }
-  }, { investigateImg: LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') });
+  }, { hsId: 'silk', investigateImg: LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') });
 
   // 黑玉残玦
   addInteractive(620, 130, 150, 140, '', function() {
@@ -1354,7 +1887,7 @@ function prologueRestoration() {
     showDialogue('沈砚', '只有半枚……边缘像被人为切断，不是天然断裂。这枚残玦我自幼佩戴。', function() {
       addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，遇水会出现墨痕。');
     });
-  }, { investigateImg: LV(0, '黑玉残玦特写（单独物品图）.png') });
+  }, { hsId: 'jade', investigateImg: LV(0, '黑玉残玦特写（单独物品图）.png') });
 
   // 养父遗信
   addInteractive(380, 280, 200, 120, '', function() {
@@ -1364,7 +1897,7 @@ function prologueRestoration() {
         addNote('养父遗信', '养父沈伯安留下的最后信件。警告不要入陵，更不要取药。十年前在探索中失踪。');
       });
     });
-  }, { investigateImg: LV(0, '养父遗信.png') });
+  }, { hsId: 'letter', investigateImg: LV(0, '养父遗信.png') });
 
   // 五行图
   addInteractive(720, 320, 140, 140, '', function() {
@@ -1376,7 +1909,7 @@ function prologueRestoration() {
         addReasonClue('水色为黑', '水色为黑');
       });
     });
-  }, { investigateImg: LV(0, '五行图.png') });
+  }, { hsId: 'wuxing', investigateImg: LV(0, '五行图.png') });
 
   // 秦简拓本
   addInteractive(60, 320, 140, 130, '', function() {
@@ -1387,7 +1920,7 @@ function prologueRestoration() {
         addReasonClue('秦承玄水', '秦承玄水');
       });
     });
-  }, { investigateImg: LV(0, '秦简拓本.png') });
+  }, { hsId: 'bamboo', investigateImg: LV(0, '秦简拓本.png') });
 
   addInteractive(830, 60, 110, 220, '', function() {
     if (G.completedPuzzles['silk_puzzle'] && !G.completedPuzzles['jade_dev']) {
@@ -1413,7 +1946,7 @@ function prologueRestoration() {
     } else if (G.completedPuzzles['jade_dev']) {
       showDialogue('沈砚', '水盏里还剩一些水，但残玦已经完成显影了。');
     }
-  }, { investigateImg: LV(0, '雨水窗边氛围图.png') });
+  }, { hsId: 'window_water', investigateImg: LV(0, '雨水窗边氛围图.png') });
 }
 
 // ==================== 帛书复原拼图 ====================
@@ -1543,6 +2076,7 @@ function startSilkPuzzle() {
 
 function prologueShrine() {
   G.scene = 2;
+  G.currentSceneId = 'shrine'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['shrine'] = {};
   setBg(LV(0, '背景图·地表旧祠.png'));
@@ -1564,7 +2098,7 @@ function prologueShrine() {
         addReasonClue('南墙朱雀', '南墙朱雀火纹(误导)');
       });
     });
-  }, { investigateImg: LV(0, '南墙朱雀壁画.png') });
+  }, { hsId: 'mural', investigateImg: LV(0, '南墙朱雀壁画.png') });
 
   // 残碑（需拓印技能）
   addInteractive(80, 200, 160, 260, '', function() {
@@ -1575,7 +2109,7 @@ function prologueShrine() {
         addReasonClue('秦承玄水', '秦承玄水');
       });
     });
-  }, { investigateImg: LV(0, '分镜3·碑文放大图.png'), skill: '拓印', skillHint: '残碑上的文字已经风化模糊，但似乎可以通过某种方式记录下这些铭文……' });
+  }, { hsId: 'stela', investigateImg: LV(0, '分镜3·碑文放大图.png'), skill: '拓印', skillHint: '残碑上的文字已经风化模糊，但似乎可以通过某种方式记录下这些铭文……' });
 
   // 香炉（需观纹技能）
   addInteractive(320, 280, 140, 100, '', function() {
@@ -1585,7 +2119,7 @@ function prologueShrine() {
         addNote('香炉调查', '供案未积尘，近年有人来过。香炉底部有黑色水纹暗刻，与秦水德相关。');
       });
     });
-  }, { investigateImg: LV(0, '香炉特写.png'), skill: '观纹', skillHint: '香炉底部似乎有暗刻的痕迹，仔细观察或许能发现隐藏的纹样……' });
+  }, { hsId: 'incense', investigateImg: LV(0, '香炉特写.png'), skill: '观纹', skillHint: '香炉底部似乎有暗刻的痕迹，仔细观察或许能发现隐藏的纹样……' });
 
   // 地面水流
   addInteractive(180, 460, 480, 50, '', function() {
@@ -1595,7 +2129,7 @@ function prologueShrine() {
         addNote('地面水流', '屋顶漏下的雨水沿地面向北汇集，暗示"水向北方"。');
       });
     });
-  });
+  }, { hsId: 'waterflow' });
 
   // 北墙黑水门：需要先探索全部线索
   addInteractive(320, 60, 300, 200, '', function() {
@@ -1620,7 +2154,7 @@ function prologueShrine() {
     } else {
       showDialogue('沈砚', '黑水门已经清理干净。五行按钮和方位盘都已显露——需要正确的操作顺序。');
     }
-  }, { investigateImg: LV(0, '地表旧祠后面的北方黑水门.png') });
+  }, { hsId: 'north_wall', investigateImg: LV(0, '地表旧祠后面的北方黑水门.png') });
 
   if (G.completedPuzzles['north_clean'] && !G.completedPuzzles['black_gate']) {
     renderBlackWaterGate();
@@ -1646,18 +2180,21 @@ function renderBlackWaterGate() {
   }
 
   var colors = [
-    {x: 340, y: 90, bg: '#3a6a3a', id: '青', label: '青(木/东)'},
-    {x: 410, y: 90, bg: '#b04030', id: '赤', label: '赤(火/南)'},
-    {x: 480, y: 90, bg: '#c8a030', id: '黄', label: '黄(土/中)'},
-    {x: 550, y: 90, bg: '#c8c0b0', id: '白', label: '白(金/西)'},
-    {x: 620, y: 90, bg: '#1a1a1a', id: '黑', label: '黑(水/北)'}
+    {x: 340, y: 90, bg: '#3a6a3a', id: '青', label: '青(木/东)', hsId: 'gate_青'},
+    {x: 410, y: 90, bg: '#b04030', id: '赤', label: '赤(火/南)', hsId: 'gate_赤'},
+    {x: 480, y: 90, bg: '#c8a030', id: '黄', label: '黄(土/中)', hsId: 'gate_黄'},
+    {x: 550, y: 90, bg: '#c8c0b0', id: '白', label: '白(金/西)', hsId: 'gate_白'},
+    {x: 620, y: 90, bg: '#1a1a1a', id: '黑', label: '黑(水/北)', hsId: 'gate_黑'}
   ];
 
   colors.forEach(function(c) {
+    var pos = getHotspotPos(G.currentSceneId, c.hsId, c.x, c.y, 48, 48);
     var btn = document.createElement('div');
     btn.className = 'gate-btn-qin';
-    btn.style.left = c.x + 'px';
-    btn.style.top = c.y + 'px';
+    btn.style.left = pos.x + 'px';
+    btn.style.top = pos.y + 'px';
+    btn.dataset.hsId = c.hsId;
+    btn.dataset.hsScene = G.currentSceneId;
     btn.style.background = c.bg;
 
     btn.onclick = function() {
@@ -1716,6 +2253,7 @@ function renderBlackWaterGate() {
 function ch1Start() {
   G.chapter = 2; G.scene = 0;
   clearScene();
+  G.currentSceneId = 'ch1outer'; G._hsIndex = 0;
   G.sceneContent['ch1outer'] = {};
   setBg(LV(0, '外藏道概念图.png'));
   unlockSkill('听风', '判断墙体空腔与风道');
@@ -1736,7 +2274,7 @@ function ch1Start() {
     showDialogue('沈砚', '中央地砖下方有空响……空心的？承重可能不足，踩上去会塌。', function() {
       addNote('中空地砖', '外藏道中央地砖下方中空，承重不足，不能直接踩踏。');
     });
-  }, {icon: '⬜', skill: '探土', skillHint: '脚下的地砖传来空响，下方似乎是空的……或许该探查一下地面结构？'});
+  }, {hsId: 'floor', icon: '⬜', skill: '探土', skillHint: '脚下的地砖传来空响，下方似乎是空的……或许该探查一下地面结构？'});
 
   // 左侧墙缝（需听风）
   addInteractive(100, 200, 140, 200, '', function() {
@@ -1744,7 +2282,7 @@ function ch1Start() {
     showDialogue('沈砚', '墙缝中有微弱风声——后面有风道，树根也朝这个方向延伸。', function() {
       addNote('墙缝风道', '外藏道左侧墙缝后有风道，树根向左侧延伸，可以从这边绕行。');
     });
-  }, {icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……'});
+  }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……'});
 
   // 树根通道：需要先探索地砖和墙缝
   addInteractive(80, 400, 160, 60, '', function() {
@@ -1758,11 +2296,12 @@ function ch1Start() {
     showDialogue('沈砚', '拉动左侧树根，墙面打开了一条通路！', function() {
       transitionScene(function() { ch1ShrineFront(); });
     });
-  }, {icon: '🌿'});
+  }, {hsId: 'root', icon: '🌿'});
 }
 
 function ch1ShrineFront() {
   G.scene = 1;
+  G.currentSceneId = 'shrinefront'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['shrinefront'] = {};
   setBg(LV(1, '神木祠背景图.png'));
@@ -1778,7 +2317,7 @@ function ch1ShrineFront() {
     }
     if (!G.completedPuzzles['mural_order']) startMuralPuzzle();
     else showDialogue('沈砚', '壁画顺序已经正确排列。接下来需要去南壁祭灶取得朱丝。');
-  }, {icon: '🖼'});
+  }, {hsId: 'mural_panel', icon: '🖼'});
 
   // 主殿门（被树根缠住）
   addInteractive(620, 300, 200, 100, '', function() {
@@ -1786,17 +2325,17 @@ function ch1ShrineFront() {
     showDialogue('沈砚', '被树根缠住的主殿门，需要破解机关才能进入。壁画上似乎记载了伐树的经过……', function() {
       addNote('神木祠前殿', '主殿门被树根紧缠。壁画记载了秦文公伐南山大梓树的经过，或许隐藏了破解之法。');
     });
-  }, {icon: '🚪'});
+  }, {hsId: 'door', icon: '🚪'});
 
   if (G.completedPuzzles['mural_order'] && !G.inventory['朱丝']) {
     addInteractive(620, 420, 150, 50, '', function() {
       transitionScene(function() { ch1SouthWall(); });
-    }, {icon: '🔥'});
+    }, {hsId: 'south_door', icon: '🔥'});
   }
   if (G.inventory['朱丝']) {
     addInteractive(620, 420, 150, 50, '', function() {
       transitionScene(function() { ch1MainHall(); });
-    }, {icon: '🌳'});
+    }, {hsId: 'south_door', icon: '🌳'});
   }
 }
 
@@ -1866,6 +2405,7 @@ function startMuralPuzzle() {
 
 function ch1SouthWall() {
   G.scene = 2;
+  G.currentSceneId = 'southwall'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['southwall'] = {};
   setBg(LV(1, '神木祠背景图.png'));
@@ -1879,7 +2419,7 @@ function ch1SouthWall() {
     showDialogue('沈砚', '灶旁小碑："南火困灵，朱丝缚木"。需要用火点燃祭灶。', function() {
       addReasonClue('南火困灵', '南火困灵，朱丝缚木');
     });
-  }, {icon: '🪦'});
+  }, {hsId: 'tablet', icon: '🪦'});
 
   // 火盆：需要先读碑文
   addInteractive(500, 300, 100, 100, '', function() {
@@ -1897,15 +2437,16 @@ function ch1SouthWall() {
         });
       });
     } else { showDialogue('沈砚', '火盆中有残炭，但需要火折子来点燃。'); }
-  }, {icon: '🔥'});
+  }, {hsId: 'fire_pan', icon: '🔥'});
 
   if (G.inventory['朱丝']) {
-    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {icon: '🚪'});
+    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {hsId: 'mainhall_btn', icon: '🚪'});
   }
 }
 
 function ch1MainHall() {
   G.scene = 3;
+  G.currentSceneId = 'mainhall'; G._hsIndex = 0;
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
   showHint('按五行生克破解神木机关：朱丝困灵(火)→青铜断木(金)→木入土台(土)');
@@ -1919,7 +2460,7 @@ function ch1MainHall() {
       showDialogue('沈砚', '将朱丝绕在神木南侧火纹上，点亮火纹。红线沿树皮发亮，树身停止蠕动了！', function() { checkAllDone(); });
     } else if (steps.fire) { showDialogue('沈砚', '火纹已经点亮，朱丝正束缚着树神。'); }
     else { showDialogue('沈砚', '需要朱丝才能激活这个火纹。'); }
-  }, {icon: '🔥'});
+  }, {hsId: 'fire_seal', icon: '🔥'});
 
   addInteractive(100, 300, 100, 100, '', function() {
     if (steps.fire && !steps.gold) {
@@ -1929,7 +2470,7 @@ function ch1MainHall() {
       });
     } else if (!steps.fire) { showDialogue('沈砚', '青铜斧痕出现后迅速合拢……必须先困住树神。'); }
     else if (steps.gold) { showDialogue('沈砚', '斧痕已落下，神木正在断裂。'); }
-  }, {icon: '🪓'});
+  }, {hsId: 'axe', icon: '🪓'});
 
   addInteractive(350, 420, 150, 80, '', function() {
     if (steps.gold && !steps.earth) {
@@ -1938,18 +2479,19 @@ function ch1MainHall() {
         addReasonClue('木入土', '神木落入土台'); addReasonClue('秦以水德', '最终归水，水德归秦'); checkAllDone();
       });
     } else if (!steps.gold) { showDialogue('沈砚', '土台轻响但不开启……需要先让神木断裂。'); }
-  }, {icon: '⛰', skill: '探土', skillHint: '土台隐约发出沉闷的声响……探查一下它的承重结构或许有发现。'});
+  }, {hsId: 'earth_plat', icon: '⛰', skill: '探土', skillHint: '土台隐约发出沉闷的声响……探查一下它的承重结构或许有发现。'});
 }
 
 function ch1GreenOx() {
   G.scene = 4;
+  G.currentSceneId = 'greenox'; G._hsIndex = 0;
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
   showHint('推动青牛浮雕，确认正确水渠方向');
   var oxStep = 0;
 
-  addInteractive(100, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '东侧木渠：树根堵住，不适合。'); } }, {icon: '🌿'});
-  addInteractive(600, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '南侧火渠：水汽蒸腾，黑水会被蒸发。'); updateRisk(1); } }, {icon: '🔥'});
+  addInteractive(100, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '东侧木渠：树根堵住，不适合。'); } }, {hsId: 'east_ch', icon: '🌿'});
+  addInteractive(600, 300, 80, 50, '', function() { if (oxStep >= 1) { showDialogue('系统', '南侧火渠：水汽蒸腾，黑水会被蒸发。'); updateRisk(1); } }, {hsId: 'south_ch', icon: '🔥'});
   addInteractive(500, 250, 100, 100, '', function() {
     if (oxStep === 2) {
       showDialogue('沈砚', '将青牛推向北侧丰水渠。渠底黑水涌出，沿渠流向北门！', function() {
@@ -1971,19 +2513,20 @@ function ch1GreenOx() {
         });
       });
     } else if (oxStep < 2) { showDialogue('沈砚', '需要先用听风确认正确的水渠。'); }
-  }, {icon: '💧'});
-  addInteractive(400, 500, 120, 50, '', function() { if (oxStep === 1) { oxStep = 2; showDialogue('沈砚', '仔细聆听……北侧水渠有回声！北侧才是正确的方向。', function() { addNote('水渠回声', '北侧水渠有回声，青牛应该被推向北方。'); }); } }, {icon: '👂', skill: '听风', skillHint: '周围的水渠中似乎有隐约的回声……仔细听或许能判断哪条是正确的方向。'});
+  }, {hsId: 'north_ch', icon: '💧'});
+  addInteractive(400, 500, 120, 50, '', function() { if (oxStep === 1) { oxStep = 2; showDialogue('沈砚', '仔细聆听……北侧水渠有回声！北侧才是正确的方向。', function() { addNote('水渠回声', '北侧水渠有回声，青牛应该被推向北方。'); }); } }, {hsId: 'listen_wind', icon: '👂', skill: '听风', skillHint: '周围的水渠中似乎有隐约的回声……仔细听或许能判断哪条是正确的方向。'});
   addInteractive(300, 380, 160, 100, '', function() {
     if (oxStep === 0) { oxStep = 1; showDialogue('沈砚', '青牛浮雕半嵌在土中，底部可推动。需要确认推向哪条水渠。'); }
     else if (oxStep === 1) { showDialogue('沈砚', '青牛浮雕的底部可以推动，但需要先确认正确的方向。'); }
     else if (oxStep === 2) { showDialogue('沈砚', '北侧水渠有回声——应该把青牛推向北方！'); }
-  }, {icon: '🐂'});
+  }, {hsId: 'ox_statue', icon: '🐂'});
 }
 
 // ==================== 第三章：六国兵俑阵 ====================
 function ch3Start() {
   G.chapter = 3; G.scene = 0;
   clearScene(); setBg(LV(3, '主背景4.png'));
+  G.currentSceneId = 'ch3start'; G._hsIndex = 0;
   G.sceneContent['ch3start'] = {};
   unlockSkill('辨伪', '判断六国残片与秦制标准的差异'); renderSkills();
   showHint('探索兵俑长廊，调查六国门铭与兵俑差异');
@@ -1996,7 +2539,7 @@ function ch3Start() {
     showDialogue('沈砚', '六道石门分别刻韩、赵、魏、楚、燕、齐的旧字。文字各不相同。', function() {
       addNote('六国门铭', '六国石门铭文字体各异，暗示需要统一。');
     });
-  }, {icon: '🚪'});
+  }, {hsId: 'gates', icon: '🚪'});
 
   // 兵俑
   addInteractive(350, 300, 300, 100, '', function() {
@@ -2004,7 +2547,7 @@ function ch3Start() {
     showDialogue('沈砚', '兵俑朝向不一致，武器长度各不相同，车轨宽窄也不同。', function() {
       addNote('兵俑差异', '兵俑的武器长度、车轨宽度、朝向各不相同，需要统一标准。');
     });
-  }, {icon: '🗿'});
+  }, {hsId: 'soldiers', icon: '🗿'});
 
   // 残简：需要先调查门铭和兵俑
   addInteractive(550, 400, 200, 80, '', function() {
@@ -2019,11 +2562,12 @@ function ch3Start() {
       addNote('残简提示', '同书、同轨、同量，则兵归一。');
       transitionScene(function() { ch3Writing(); });
     });
-  }, {icon: '📏'});
+  }, {hsId: 'slip', icon: '📏'});
 }
 
 function ch3Writing() {
   G.scene = 1;
+  G.currentSceneId = 'ch3writing'; G._hsIndex = 0;
   clearScene(); setBg(LV(3, '主背景4.png'));
   showHint('书同文：选择秦小篆组成"六合同风，玄水归一"');
   var selectedChars = [];
@@ -2035,15 +2579,19 @@ function ch3Writing() {
     for (var i = 0; i < oldBtns.length; i++) oldBtns[i].remove();
     var positions = [{x:100,y:200},{x:200,y:200},{x:300,y:200},{x:400,y:200},{x:500,y:200},{x:600,y:200},{x:700,y:200},{x:800,y:200}];
     positions.forEach(function(p, i) {
+      var hsId = 'write_' + i;
+      var pos = getHotspotPos(G.currentSceneId, hsId, p.x, p.y, 68, 68);
       var btn = document.createElement('div');
       btn.className = 'interactive write-btn';
-      btn.style.left = p.x + 'px'; btn.style.top = p.y + 'px';
-      btn.style.width = '68px'; btn.style.height = '68px';
+      btn.style.left = pos.x + 'px'; btn.style.top = pos.y + 'px';
+      btn.style.width = pos.w + 'px'; btn.style.height = pos.h + 'px';
       btn.style.border = '2px solid var(--dark-bronze)';
       btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
       btn.style.fontSize = '25px'; btn.style.color = 'var(--bronze-bright)';
       btn.style.background = 'rgba(17,17,17,0.8)'; btn.style.cursor = 'pointer';
       btn.style.fontFamily = 'STKaiti, KaiTi, serif';
+      btn.dataset.hsId = hsId;
+      btn.dataset.hsScene = G.currentSceneId;
       btn.textContent = selectedChars[i] || '?';
       (function(idx) {
         btn.onclick = function() {
@@ -2080,16 +2628,20 @@ function ch3Writing() {
 
 function ch3Measure() {
   G.scene = 2; clearScene(); setBg(LV(3, '主背景4.png'));
+  G.currentSceneId = 'ch3measure'; G._hsIndex = 0;
   showHint('秦尺归一：校准六国石尺为秦制标准');
   var aligned = 0; var rulersCreated = false;
   addInteractive(300, 200, 300, 80, '', function() {
     showDialogue('沈砚', '秦尺黑线被泥封住，需要清理。', function() {
       if (rulersCreated) return; rulersCreated = true;
       for (var i = 0; i < 6; i++) {
+        var hsId = 'ruler_' + i;
+        var pos = getHotspotPos('ch3measure', hsId, 150 + i * 100, 350, 70, 120);
         var btn = document.createElement('div');
         btn.className = 'interactive';
-        btn.style.left = (150 + i * 100) + 'px'; btn.style.top = '350px';
-        btn.style.width = '70px'; btn.style.height = '120px';
+        btn.style.left = pos.x + 'px'; btn.style.top = pos.y + 'px';
+        btn.style.width = pos.w + 'px'; btn.style.height = pos.h + 'px';
+        btn.dataset.hsId = hsId; btn.dataset.hsScene = 'ch3measure';
         btn.style.border = '1px solid var(--dark-bronze)';
         btn.style.background = 'rgba(17,17,17,0.8)';
         btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
@@ -2100,17 +2652,21 @@ function ch3Measure() {
         sceneArea.appendChild(btn);
       }
     });
-  }, {icon: '📐'});
+  }, {hsId: 'ruler_main', icon: '📐'});
 }
 
 function ch3Track() {
   G.scene = 3; clearScene(); setBg(LV(3, '主背景4.png'));
+  G.currentSceneId = 'ch3track'; G._hsIndex = 0;
   showHint('车同轨：统一三段车轨为秦制标准');
   var tracksDone = 0;
   for (var i = 0; i < 3; i++) {
+    var hsId = 'track_' + i;
+    var pos = getHotspotPos('ch3track', hsId, 200 + i * 220, 250, 140, 80);
     var btn = document.createElement('div');
-    btn.className = 'interactive'; btn.style.left = (200 + i * 220) + 'px'; btn.style.top = '250px';
-    btn.style.width = '140px'; btn.style.height = '80px';
+    btn.className = 'interactive'; btn.style.left = pos.x + 'px'; btn.style.top = pos.y + 'px';
+    btn.style.width = pos.w + 'px'; btn.style.height = pos.h + 'px';
+    btn.dataset.hsId = hsId; btn.dataset.hsScene = 'ch3track';
     btn.style.border = '2px dashed var(--dark-bronze)';
     btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
     btn.style.color = 'var(--bronze)'; btn.style.fontSize = '18px'; btn.style.cursor = 'pointer'; btn.style.fontFamily = 'STKaiti, KaiTi, serif';
@@ -2118,20 +2674,23 @@ function ch3Track() {
     (function(b, idx) { b.onclick = function() { b.style.borderColor = '#60c060'; b.style.borderStyle = 'solid'; b.textContent = '轨段'+(idx+1)+' ✓'; tracksDone++; b.onclick = function(){}; if (tracksDone >= 3) { completePuzzle('track'); showDialogue('沈砚', '三段车轨已统一为秦制标准。第三段黑水线恢复！', function() { addNote('车同轨', '三段车轨统一为秦制。黑水线三段全通！'); transitionScene(function() { ch3TigerTally(); }); }); } }; })(btn, i);
     sceneArea.appendChild(btn);
   }
-  addInteractive(400, 380, 150, 60, '', function() { if (tracksDone < 3) showDialogue('沈砚', '秦轨模板背面刻有"同轨"。需要用这个来对齐轨距。'); }, {icon: '📋'});
+  addInteractive(400, 380, 150, 60, '', function() { if (tracksDone < 3) showDialogue('沈砚', '秦轨模板背面刻有"同轨"。需要用这个来对齐轨距。'); }, {hsId: 'track_template', icon: '📋'});
 }
 
 function ch3TigerTally() {
   G.scene = 4; clearScene(); setBg(LV(3, '主背景4.png'));
+  G.currentSceneId = 'ch3tiger'; G._hsIndex = 0;
   showHint('控制虎符，调遣六国兵俑归一');
   addInteractive(400, 250, 200, 150, '', function() {
     if (!G.inventory['断木神斧']) { showDialogue('沈砚', '虎符台缺失半枚虎符，外锁需要金属机关钥打开。'); return; }
     showDialogue('沈砚', '用断木神斧打开虎符龛外锁，取得半枚青铜虎符！', function() {
       gainItem('青铜虎符', '青铜虎符', '控制兵俑阵列方向', true);
       var order = ['韩','赵','魏','楚','燕','齐']; var step = 0;
+      var pos = getHotspotPos('ch3tiger', 'tiger_trigger', 350, 420, 320, 60);
       var triggerBtn = document.createElement('div');
-      triggerBtn.className = 'interactive'; triggerBtn.style.left = '350px'; triggerBtn.style.top = '420px';
-      triggerBtn.style.width = '320px'; triggerBtn.style.height = '60px';
+      triggerBtn.className = 'interactive'; triggerBtn.style.left = pos.x + 'px'; triggerBtn.style.top = pos.y + 'px';
+      triggerBtn.style.width = pos.w + 'px'; triggerBtn.style.height = pos.h + 'px';
+      triggerBtn.dataset.hsId = 'tiger_trigger'; triggerBtn.dataset.hsScene = 'ch3tiger';
       triggerBtn.style.border = '2px solid var(--bronze-bright)';
       triggerBtn.style.display = 'flex'; triggerBtn.style.alignItems = 'center'; triggerBtn.style.justifyContent = 'center';
       triggerBtn.style.color = 'var(--bronze-bright)'; triggerBtn.style.fontSize = '20px';
@@ -2143,12 +2702,13 @@ function ch3TigerTally() {
       };
       sceneArea.appendChild(triggerBtn);
     });
-  }, {icon: '🐯'});
+  }, {hsId: 'tiger_plat', icon: '🐯'});
 }
 
 // ==================== 第四章：水银江河 ====================
 function ch4Start() {
   G.chapter = 4; G.scene = 0; clearScene(); setBg(LV(4, '主背景5.png'));
+  G.currentSceneId = 'ch4start'; G._hsIndex = 0;
   G.sceneContent['ch4start'] = {};
   unlockSkill('封气', '临时封堵水银蒸汽孔和毒气孔'); renderSkills();
   showHint('探索水银地宫前庭，小心银雾');
@@ -2161,7 +2721,7 @@ function ch4Start() {
     showDialogue('沈砚', '墙碑："银为江，黑为归，气不可久闻"。银雾有毒！', function() {
       addNote('银雾风险', '水银蒸汽有毒，需要封堵喷气孔才能安全探索。');
     });
-  }, {icon: '🪦'});
+  }, {hsId: 'tablet', icon: '🪦'});
 
   // 喷气孔：需要先阅读墙碑
   addInteractive(550, 200, 80, 60, '', function() {
@@ -2174,35 +2734,44 @@ function ch4Start() {
       addNote('银雾封气', '喷气孔已被封堵，银雾消散，水银地宫的闸门可以操作了。');
       transitionScene(function() { ch4Astronomy(); });
     });
-  }, {icon: '💨', skill: '封气', skillHint: '银白色的雾气从孔中喷出……雾气有毒，需要想办法封住这个喷气孔。'});
+  }, {hsId: 'gas_hole', icon: '💨', skill: '封气', skillHint: '银白色的雾气从孔中喷出……雾气有毒，需要想办法封住这个喷气孔。'});
 }
 
 function ch4Astronomy() {
   G.scene = 1; clearScene(); setBg(LV(4, '主背景5.png'));
+  G.currentSceneId = 'ch4astro'; G._hsIndex = 0;
   showHint('点亮北斗七星，记录星图');
   var starsLit = 0;
   for (var i = 0; i < 7; i++) {
+    var hsId = 'star_' + i;
     var x = 300 + (i%4)*80; var y = 180 + Math.floor(i/4)*100 + (i===4?50:0)+(i===5?30:0)+(i===6?60:0);
+    var pos = getHotspotPos('ch4astro', hsId, x, y, 44, 44);
     var star = document.createElement('div');
     star.className = 'interactive';
-    star.style.left = x+'px'; star.style.top = y+'px';
-    star.style.width = '44px'; star.style.height = '44px';
+    star.style.left = pos.x+'px'; star.style.top = pos.y+'px';
+    star.style.width = pos.w+'px'; star.style.height = pos.h+'px';
     star.style.borderRadius = '50%'; star.style.border = '2px solid var(--dark-bronze)';
     star.style.background = 'rgba(17,17,17,0.6)'; star.style.cursor = 'pointer';
+    star.dataset.hsId = hsId; star.dataset.hsScene = 'ch4astro';
     star.onclick = function() { starsLit++; this.style.background = 'rgba(200,200,250,0.9)'; this.style.boxShadow = '0 0 18px rgba(200,200,250,0.7)'; this.style.borderColor = 'rgba(200,200,250,0.7)'; this.onclick = function(){}; if (starsLit >= 7) { completePuzzle('dipper'); showDialogue('沈砚', '北斗七星全部点亮！星图记录完成。"斗柄指北，玄水乃归"。', function() { addNote('北斗星图', '北斗七星的位置已记录。斗柄指北，需将此映射到地面水渠。'); transitionScene(function() { ch4Rivers(); }); }); } };
     sceneArea.appendChild(star);
   }
-  addInteractive(450, 350, 150, 40, '', function() { showDialogue('沈砚', '"斗柄指北，玄水乃归"——北方是水银的终点。'); }, {icon: '📜'});
+  addInteractive(450, 350, 150, 40, '', function() { showDialogue('沈砚', '"斗柄指北，玄水乃归"——北方是水银的终点。'); }, {hsId: 'star_hint', icon: '📜'});
 }
 
 function ch4Rivers() {
   G.scene = 2; clearScene(); setBg(LV(4, '主背景5.png'));
+  G.currentSceneId = 'ch4rivers'; G._hsIndex = 0;
   showHint('将三路水银全部导向北方黑水主渠');
   var gates = {south: true, west: true, east: true, north: false};
+  var dirMap = {0:'gate_south', 1:'gate_west', 2:'gate_east', 3:'gate_north'};
   ['南','西','东','北'].forEach(function(dir, i) {
+    var hsId = dirMap[i];
+    var pos = getHotspotPos('ch4rivers', hsId, 250+i*150, 300, 80, 80);
     var gate = document.createElement('div');
-    gate.className = 'interactive'; gate.style.left = (250+i*150)+'px'; gate.style.top = '300px';
-    gate.style.width = '80px'; gate.style.height = '80px';
+    gate.className = 'interactive'; gate.style.left = pos.x+'px'; gate.style.top = pos.y+'px';
+    gate.style.width = pos.w+'px'; gate.style.height = pos.h+'px';
+    gate.dataset.hsId = hsId; gate.dataset.hsScene = 'ch4rivers';
     gate.style.border = '2px solid var(--dark-bronze)';
     gate.style.display = 'flex'; gate.style.alignItems = 'center'; gate.style.justifyContent = 'center';
     gate.style.color = 'var(--bronze-bright)'; gate.style.fontSize = '18px';
@@ -2220,19 +2789,23 @@ function ch4Rivers() {
     };
     sceneArea.appendChild(gate);
   });
-  addInteractive(420, 200, 200, 30, '', function() { showDialogue('沈砚', '"百川不同源，归秦则一流"——将所有水银都导向北方。'); }, {icon: '📜'});
+  addInteractive(420, 200, 200, 30, '', function() { showDialogue('沈砚', '"百川不同源，归秦则一流"——将所有水银都导向北方。'); }, {hsId: 'river_hint', icon: '📜'});
 }
 
 function ch4Buoy() {
   G.scene = 3; clearScene(); setBg(LV(4, '主背景5.png'));
+  G.currentSceneId = 'ch4buoy'; G._hsIndex = 0;
   showHint('校准三枚浮标水位：斗口中、斗身高、斗柄低');
   var targets = {'斗口':'中','斗身':'高','斗柄':'低'};
   var current = {'斗口':'低','斗身':'低','斗柄':'低'};
   var levels = ['低','中','高'];
   ['斗口','斗身','斗柄'].forEach(function(part, idx) {
+    var hsId = 'buoy_' + idx;
+    var pos = getHotspotPos('ch4buoy', hsId, 200+idx*220, 250, 110, 130);
     var buoy = document.createElement('div');
-    buoy.className = 'interactive'; buoy.style.left = (200+idx*220)+'px'; buoy.style.top = '250px';
-    buoy.style.width = '110px'; buoy.style.height = '130px';
+    buoy.className = 'interactive'; buoy.style.left = pos.x+'px'; buoy.style.top = pos.y+'px';
+    buoy.style.width = pos.w+'px'; buoy.style.height = pos.h+'px';
+    buoy.dataset.hsId = hsId; buoy.dataset.hsScene = 'ch4buoy';
     buoy.style.border = '2px solid var(--dark-bronze)';
     buoy.style.display = 'flex'; buoy.style.flexDirection = 'column';
     buoy.style.alignItems = 'center'; buoy.style.justifyContent = 'center';
@@ -2243,11 +2816,12 @@ function ch4Buoy() {
     buoy.onclick = function() { var ci = levels.indexOf(current[part]); current[part] = levels[(ci+1)%3]; document.getElementById('buoy'+idx).textContent = current[part]; if (current['斗口']===targets['斗口'] && current['斗身']===targets['斗身'] && current['斗柄']===targets['斗柄']) { completePuzzle('buoy'); showDialogue('沈砚', '水位校准完成！北斗图案完整成形。', function() { addNote('水位校准', '三枚浮标调整正确。斗口中位、斗身高位、斗柄低位。'); transitionScene(function() { ch4BlackPool(); }); }); } };
     sceneArea.appendChild(buoy);
   });
-  addInteractive(420, 400, 250, 30, '', function() { showDialogue('沈砚', '"水不及，则星不明；水太过，则斗不成"——需根据渠宽调整水位。'); }, {icon: '📜'});
+  addInteractive(420, 400, 250, 30, '', function() { showDialogue('沈砚', '"水不及，则星不明；水太过，则斗不成"——需根据渠宽调整水位。'); }, {hsId: 'buoy_hint', icon: '📜'});
 }
 
 function ch4BlackPool() {
   G.scene = 4; clearScene(); setBg(LV(4, '主背景5.png'));
+  G.currentSceneId = 'ch4pool'; G._hsIndex = 0;
   showHint('使用黑水玉玦激活北方黑池，完成北斗水银星图');
   addInteractive(400, 180, 200, 150, '', function() {
     if (G.inventory['黑水玉玦']) {
@@ -2265,7 +2839,7 @@ function ch4BlackPool() {
         });
       });
     } else { showDialogue('沈砚', '黑池需要黑水玉玦来激活。'); }
-  }, {icon: '🌑'});
+  }, {hsId: 'black_pool', icon: '🌑'});
 }
 
 // ==================== 结局 ====================
@@ -2301,6 +2875,8 @@ var APP_VERSION = 'v2.1';
 function init() {
   try {
     console.log('【水德秦陵 ' + APP_VERSION + '】开始初始化...');
+    // 加载热区配置
+    loadHotspotConfig();
     // 检查关键元素
     var missing = [];
     ['risk-panel','scene-area','full-image-overlay','auto-hint','dialogue','transition'].forEach(function(id) {
@@ -2308,7 +2884,7 @@ function init() {
     });
     if (missing.length > 0) { console.warn('缺失元素:', missing.join(', ')); }
     renderRisk(); showTitle();
-    console.log('【水德秦陵 ' + APP_VERSION + '】游戏初始化完成');
+    console.log('【水德秦陵 ' + APP_VERSION + '】游戏初始化完成 (热区编辑器: Ctrl+E)');
   } catch (e) { alert('游戏加载失败: ' + e.message + '\\n\\n版本: ' + APP_VERSION); console.error(e); }
 }
 init();
