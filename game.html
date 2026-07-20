@@ -1474,14 +1474,8 @@ function useSkill(skillId) {
   // 重新渲染以高亮当前按钮
   renderSkillPopup();
 
-  showHint('已激活【' + skillId + '】，点击场景中高亮目标使用。');
-  var els = document.querySelectorAll('.interactive');
-  for (var n = 0; n < els.length; n++) {
-    var ds = els[n].dataset.skill;
-    if (ds && ds.split(',').indexOf(skillId) >= 0) {
-      els[n].classList.add('highlight');
-    }
-  }
+  showHint('已激活【' + skillId + '】，鼠标悬停在场景目标上使用。');
+  // 不再自动高亮目标热区，依靠鼠标悬停显示选框
 }
 
 // ==================== 场景管理 ====================
@@ -2045,6 +2039,12 @@ function prologueRestoration() {
       });
     } else if (!canStartSilkPuzzle()) {
       onClueInvestigated();
+      // 提示还差哪些线索未调查
+      var clueNames = { silk: '帛书残片', jade: '黑玉残玦', letter: '养父遗信', wuxing: '五行图', bamboo: '秦简拓本' };
+      var missing = REST_REQUIRED.filter(function(id) { return !(G.sceneContent[REST_SCENE] || {})[id]; }).map(function(id) { return clueNames[id]; });
+      if (missing.length > 0) {
+        showDialogue('沈砚', '帛书残缺严重，还缺少一些关键线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。', function() {});
+      }
     }
   }, { hsId: 'silk', investigateImg: LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') });
 
@@ -2096,23 +2096,32 @@ function prologueRestoration() {
   // 窗户热区（始终保留）
   addInteractive(830, 60, 110, 220, '', function() {
     if (G.completedPuzzles['silk_puzzle'] && !G.completedPuzzles['jade_dev']) {
-      showDialogue('沈砚', '窗台上有个水盏，雨水从窗缝汇聚其中。如果把水滴到黑玉残玦上……', function() {
-        completePuzzle('jade_dev');
-        showDialogue('系统', '水滴落在黑玉残玦上，残玦渗出黑色墨痕，墨痕沿帛书纹路缓缓流动。', function() {
-          showFullImage(LV(0, 'WD-PUZ-000-001-02（黑水玉显影）.png'), null, function() {
+      // 切换视角：雨水窗边氛围全屏展示
+      transitionScene(function() {
+        clearScene();
+        setBg(LV(0, '雨水窗边氛围图.png'));
+        G.interactionLock = true;
+        showDialogue('沈砚', '窗台上有个水盏，雨水从窗缝汇聚其中。如果把水滴到黑玉残玦上……', function() {
+          completePuzzle('jade_dev');
+          showDialogue('系统', '水滴落在黑玉残玦上，残玦渗出黑色墨痕，墨痕沿帛书纹路缓缓流动。', function() {
             showDialogue('系统', '帛书显现出隐藏文字："玄水在北，旧祠为门。"', function() {
               addNote('显现文字', '黑玉残玦遇水显影后，帛书显现"玄水在北，旧祠为门"。');
               addNote('黑水显影', '黑玉残玦遇水后渗出黑色墨痕，沿帛书纹路流动，最终指向北方旧祠。');
               gainItem('黑玉残玦显影', '黑玉残玦(已显影)', '可感应秦陵机关', true);
               showDialogue('沈砚', '旧祠……黑水指引的方向。地图上标出了地表旧祠的位置，我必须去看看。', function() {
-                // 在场景中放置"前往旧祠"按钮
-                var goBtn = document.createElement('div');
-                goBtn.style.cssText = 'position:absolute;bottom:80px;left:50%;transform:translateX(-50%);z-index:3000;background:var(--btn-default);border:2px solid var(--bronze-bright);color:var(--silk-bright);font-size:24px;padding:14px 50px;cursor:pointer;letter-spacing:8px;font-family:STKaiti,KaiTi,serif;box-shadow:0 0 24px rgba(180,140,60,0.4);transition:all 0.3s;opacity:0.95';
-                goBtn.textContent = '前往旧祠';
-                goBtn.onmouseenter = function() { this.style.background = 'var(--btn-hover)'; this.style.boxShadow = '0 0 30px rgba(180,140,60,0.6)'; };
-                goBtn.onmouseleave = function() { this.style.background = 'var(--btn-default)'; this.style.boxShadow = '0 0 24px rgba(180,140,60,0.4)'; };
-                goBtn.onclick = function() { goBtn.remove(); prologueShrine(); };
-                sceneArea.appendChild(goBtn);
+                // 切回修复室，并在右下角放置"前往旧祠"按钮
+                transitionScene(function() {
+                  setBg(LV(0, '古籍修复室.png'));
+                  G.interactionLock = false;
+                  // 在场景中右下角放置"前往旧祠"按钮
+                  var goBtn = document.createElement('div');
+                  goBtn.style.cssText = 'position:absolute;bottom:40px;right:40px;z-index:3000;background:var(--btn-default);border:2px solid var(--bronze-bright);color:var(--silk-bright);font-size:22px;padding:12px 36px;cursor:pointer;letter-spacing:6px;font-family:STKaiti,KaiTi,serif;box-shadow:0 0 24px rgba(180,140,60,0.4);transition:all 0.3s;opacity:0.95';
+                  goBtn.textContent = '前往旧祠';
+                  goBtn.onmouseenter = function() { this.style.background = 'var(--btn-hover)'; this.style.boxShadow = '0 0 30px rgba(180,140,60,0.6)'; };
+                  goBtn.onmouseleave = function() { this.style.background = 'var(--btn-default)'; this.style.boxShadow = '0 0 24px rgba(180,140,60,0.4)'; };
+                  goBtn.onclick = function() { goBtn.remove(); prologueShrine(); };
+                  sceneArea.appendChild(goBtn);
+                });
               });
             });
           });
@@ -2125,7 +2134,7 @@ function prologueRestoration() {
     } else if (G.completedPuzzles['jade_dev']) {
       showDialogue('沈砚', '水盏里还剩一些水，但残玦已经完成显影了。');
     }
-  }, { hsId: 'window_water', investigateImg: LV(0, '雨水窗边氛围图.png') });
+  }, { hsId: 'window_water' });
 
   // 暴露清理函数：帛书完成后只保留窗户
   window._cleanupRestorationClues = function() {
@@ -2221,13 +2230,15 @@ function startSilkPuzzle() {
         completePuzzle('silk_puzzle');
         // 修复完成 → 清理修复室中除窗户外所有热区
         if (window._cleanupRestorationClues) window._cleanupRestorationClues();
-        // 先关闭拼图面板，再进入文字叙述
+        // 先关闭拼图面板，再展示完整帛书图与文字叙述
         window._closeSilkPuzzle();
-        showDialogue('沈砚', '复原了——"黑水入陵，玄药不死。"', function() {
-          addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
-          showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
-            addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头缺了半枚玉玦形状。');
-            showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {});
+        showFullImage(LV(0, '帛书修复后的完整图.png'), '帛书修复完成："黑水入陵，玄药不死"', function() {
+          showDialogue('沈砚', '复原了——"黑水入陵，玄药不死。"', function() {
+            addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
+            showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
+              addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头缺了半枚玉玦形状。');
+              showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {});
+            });
           });
         });
       }, 500);
@@ -2264,7 +2275,7 @@ function prologueShrine() {
   G.scene = 2;
   G.currentSceneId = 'shrine'; G._hsIndex = 0;
   clearScene();
-  G.sceneContent['shrine'] = {};
+  if (!G.sceneContent['shrine']) G.sceneContent['shrine'] = {};
   setBg(LV(0, '背景图·地表旧祠.png'));
   playBGM('shrine');
   showHint('调查旧祠中的线索，找到黑水门的秘密');
@@ -2331,17 +2342,27 @@ function prologueShrine() {
     }
     if (!G.completedPuzzles['north_clean']) {
       G.completedPuzzles['north_clean'] = true;
-      showDialogue('沈砚', '泥灰下露出了黑色水纹！还有一道暗门轮廓，北侧有一个玉玦形状的凹槽。这就是黑水门。', function() {
-        showDialogue('沈砚', '门上还有五色按钮面板和方位盘——需要正确的操作顺序才能打开。', function() {
-          addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮、方位盘和玉玦形凹槽。');
-          addReasonClue('北墙黑水门', '北墙露出黑水门机关');
-          renderBlackWaterGate();
+      // 切换视角：黑水门全屏展示
+      transitionScene(function() {
+        clearScene();
+        setBg(LV(0, '地表旧祠后面的北方黑水门.png'));
+        G.interactionLock = true;
+        showDialogue('沈砚', '泥灰下露出了黑色水纹！还有一道暗门轮廓，北侧有一个玉玦形状的凹槽。这就是黑水门。', function() {
+          showDialogue('沈砚', '门上还有五色按钮面板和方位盘——需要正确的操作顺序才能打开。', function() {
+            addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮、方位盘和玉玦形凹槽。');
+            addReasonClue('北墙黑水门', '北墙露出黑水门机关');
+            // 切回旧祠场景，并渲染黑水门机关
+            transitionScene(function() {
+              G.interactionLock = false;
+              prologueShrine();
+            });
+          });
         });
       });
     } else {
       showDialogue('沈砚', '黑水门已经清理干净。五行按钮和方位盘都已显露——需要正确的操作顺序。');
     }
-  }, { hsId: 'north_wall', investigateImg: LV(0, '地表旧祠后面的北方黑水门.png') });
+  }, { hsId: 'north_wall' });
 
   if (G.completedPuzzles['north_clean'] && !G.completedPuzzles['black_gate']) {
     renderBlackWaterGate();
@@ -2388,21 +2409,19 @@ function renderBlackWaterGate() {
       if (c.id === '黑') {
         showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹开始发光了！', function() {
           if (G.inventory['黑玉残玦'] || G.inventory['黑玉残玦显影']) {
-            showFullImage(LV(0, '黑水门.png'), null, function() {
-              showDialogue('系统', '黑玉残玦靠近北方槽位……虽然无法完全嵌入，但它引出了真正的"黑水玉玦"！', function() {
-                completePuzzle('black_gate');
-                gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
-                addNote('黑水门开启', '按下黑色按钮、将黑玉残玦靠近北方方位槽后，黑水门开启。获得了完整的黑水玉玦。');
-                addNote('黑水玉玦', '从黑水门获得的水德秘宝，是后续秦陵水德机关的基础钥匙。');
-                showFullImage(LV(0, '黑水门开启（露出外藏道）.png'), null, function() {
-                  showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
-                    showDialogue('系统', '阶梯两侧刻着秦篆："持半玦者，慎入。"', function() {
-                      showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
-                        G.chapterUnlocked[2] = true;
-                        showDialogue('系统', '序章完成！第一章已解锁。', function() {
-                          transitionScene(function() { ch1Start(); });
-                        });
-                      });
+            completePuzzle('black_gate');
+            gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
+            addNote('黑水门开启', '按下黑色按钮、将黑玉残玦靠近北方方位槽后，黑水门开启。获得了完整的黑水玉玦。');
+            addNote('黑水玉玦', '从黑水门获得的水德秘宝，是后续秦陵水德机关的基础钥匙。');
+            // 切换视角：黑水门开启后露出外藏道
+            transitionScene(function() {
+              setBg(LV(0, '黑水门开启（露出外藏道）.png'));
+              showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
+                showDialogue('系统', '阶梯两侧刻着秦篆："持半玦者，慎入。"', function() {
+                  showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
+                    G.chapterUnlocked[2] = true;
+                    showDialogue('系统', '序章完成！第一章已解锁。', function() {
+                      transitionScene(function() { ch1Start(); });
                     });
                   });
                 });
@@ -2441,7 +2460,7 @@ function ch1Start() {
   G.chapter = 2; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, 2);
   clearScene();
   G.currentSceneId = 'ch1outer'; G._hsIndex = 0;
-  G.sceneContent['ch1outer'] = {};
+  if (!G.sceneContent['ch1outer']) G.sceneContent['ch1outer'] = {};
   setBg(LV(0, '外藏道概念图.png'));
   playBGM('ch1outer');
   unlockSkill('听风', '判断墙体空腔与风道');
@@ -2456,8 +2475,48 @@ function ch1Start() {
     return allContentFound(C1_SCENE, C1_REQUIRED);
   }
 
+  // 主角选择：前进 / 停留
+  var choiceWrap = document.createElement('div');
+  choiceWrap.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:3000;text-align:center;';
+  var choiceTxt = document.createElement('div');
+  choiceTxt.textContent = '前方地砖看起来不太稳固，是否直接前进？';
+  choiceTxt.style.cssText = 'color:var(--silk-bright);font-size:20px;margin-bottom:12px;letter-spacing:2px;';
+  var choiceBtns = document.createElement('div');
+  choiceBtns.style.cssText = 'display:flex;gap:20px;justify-content:center;';
+  var forwardBtn = document.createElement('button');
+  forwardBtn.className = 'qin-btn';
+  forwardBtn.style.fontSize = '20px';
+  forwardBtn.style.padding = '10px 36px';
+  forwardBtn.textContent = '前进';
+  forwardBtn.onclick = function() {
+    if (G.interactionLock) return;
+    if (!G.sceneContent[C1_SCENE]['forwardTried']) {
+      G.sceneContent[C1_SCENE]['forwardTried'] = true;
+      updateRisk(1);
+      showDialogue('系统', '地砖突然下沉，灰尘簌簌落下。幸好退得快，没有掉下去。', function() {
+        showDialogue('沈砚', '不能硬闯，得先把周围调查清楚。');
+      });
+    } else {
+      showDialogue('沈砚', '我后退了一步，这里承不住。');
+    }
+  };
+  var stayBtn = document.createElement('button');
+  stayBtn.className = 'qin-btn';
+  stayBtn.style.fontSize = '20px';
+  stayBtn.style.padding = '10px 36px';
+  stayBtn.textContent = '停留';
+  stayBtn.onclick = function() {
+    if (G.interactionLock) return;
+    showDialogue('沈砚', '先停下来观察四周，贸然前进太危险了。');
+  };
+  choiceBtns.appendChild(forwardBtn);
+  choiceBtns.appendChild(stayBtn);
+  choiceWrap.appendChild(choiceTxt);
+  choiceWrap.appendChild(choiceBtns);
+  sceneArea.appendChild(choiceWrap);
+
   // 中央地砖（需探土）
-  addInteractive(300, 250, 200, 200, '', function() {
+  addInteractive(500, 550, 200, 120, '', function() {
     markContent(C1_SCENE, 'floor');
     showDialogue('沈砚', '中央地砖下方有空响……空心的？承重可能不足，踩上去会塌。', function() {
       addNote('中空地砖', '外藏道中央地砖下方中空，承重不足，不能直接踩踏。');
@@ -2465,15 +2524,20 @@ function ch1Start() {
   }, {hsId: 'floor', icon: '⬜', skill: '探土', skillHint: '脚下的地砖传来空响，下方似乎是空的……或许该探查一下地面结构？'});
 
   // 左侧墙缝（需听风）
-  addInteractive(100, 200, 140, 200, '', function() {
+  addInteractive(100, 250, 160, 300, '', function() {
     markContent(C1_SCENE, 'wall');
     showDialogue('沈砚', '墙缝中有微弱风声——后面有风道，树根也朝这个方向延伸。', function() {
       addNote('墙缝风道', '外藏道左侧墙缝后有风道，树根向左侧延伸，可以从这边绕行。');
     });
   }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……'});
 
-  // 树根通道：需要先探索地砖和墙缝
-  addInteractive(300, 250, 200, 100, '', function() {
+  // 右侧墙缝（需听风，但听不到任何声音）
+  addInteractive(1200, 250, 160, 300, '', function() {
+    showDialogue('沈砚', '仔细听了听，右侧墙缝后没有任何风声。这面墙是实心的。');
+  }, {hsId: 'wall_right', icon: '🧱', skill: '听风', skillHint: '右侧墙壁也有缝隙，可以听听看是否有风道。'});
+
+  // 左侧树根（正确）
+  addInteractive(200, 600, 180, 100, '', function() {
     if (!canPullRoot()) {
       var missing = [];
       if (!(G.sceneContent[C1_SCENE] || {})['floor']) missing.push('中央的空心地砖');
@@ -2484,8 +2548,19 @@ function ch1Start() {
     showDialogue('沈砚', '拉动左侧树根，墙面打开了一条通路！', function() {
       transitionScene(function() { ch1ShrineFront(); });
     });
-  }, {hsId: 'root', icon: '🌿'});
+  }, {hsId: 'root_left', icon: '🌿'});
+
+  // 右侧枯根（错误）
+  addInteractive(1150, 600, 180, 100, '', function() {
+    if (!G.sceneContent[C1_SCENE]['rightRootTried']) {
+      G.sceneContent[C1_SCENE]['rightRootTried'] = true;
+      showDialogue('沈砚', '这根枯根一拉就断了，只发出轻微的声响。');
+    } else {
+      showDialogue('沈砚', '枯根已经断了，不能再用。');
+    }
+  }, {hsId: 'root_right', icon: '🌿'});
 }
+
 
 function ch1ShrineFront() {
   G.scene = 1;
