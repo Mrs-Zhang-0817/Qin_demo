@@ -2215,10 +2215,10 @@ function startSilkPuzzle() {
   // 4块残片：黑水(A)、入陵(B)、玄药(C)、不死(D)
   // 正确布局：左上=玄药(C)、右上=黑水(A)、左下=不死(D)、右下=入陵(B)
   var pieces = [
-    {id: 'A', name: '黑水', img: LV(0, '残片A-黑水.png'), correct: 1},
-    {id: 'B', name: '入陵', img: LV(0, '残片B-入陵.png'), correct: 3},
-    {id: 'C', name: '玄药', img: LV(0, '残片C-玄药.png'), correct: 0},
-    {id: 'D', name: '不死', img: LV(0, '残片D-不死.png'), correct: 2}
+    {id: 'A', name: '黑水', img: LV(0, '残片更新-黑水.png'), correct: 1},
+    {id: 'B', name: '入陵', img: LV(0, '残片更新-入陵.png.png'), correct: 3},
+    {id: 'C', name: '玄药', img: LV(0, '残片更新-玄药.png'), correct: 0},
+    {id: 'D', name: '不死', img: LV(0, '残片更新-不死.png'), correct: 2}
   ];
   var slots = [null, null, null, null];  // 0:左上, 1:右上, 2:左下, 3:右下
   var availablePieces = pieces.slice();
@@ -2540,9 +2540,6 @@ function ch1Start() {
   // 主角选择：前进 / 停留
   var choiceWrap = document.createElement('div');
   choiceWrap.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);z-index:3000;text-align:center;';
-  var choiceTxt = document.createElement('div');
-  choiceTxt.textContent = '前方地砖看起来不太稳固，是否直接前进？';
-  choiceTxt.style.cssText = 'color:var(--silk-bright);font-size:20px;margin-bottom:12px;letter-spacing:2px;';
   var choiceBtns = document.createElement('div');
   choiceBtns.style.cssText = 'display:flex;gap:20px;justify-content:center;';
   var forwardBtn = document.createElement('button');
@@ -2573,7 +2570,6 @@ function ch1Start() {
   };
   choiceBtns.appendChild(forwardBtn);
   choiceBtns.appendChild(stayBtn);
-  choiceWrap.appendChild(choiceTxt);
   choiceWrap.appendChild(choiceBtns);
   sceneArea.appendChild(choiceWrap);
 
@@ -2629,25 +2625,25 @@ function ch1ShrineFront() {
   G.currentSceneId = 'shrinefront'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['shrinefront'] = {};
-  setBg(LV(1, '神木祠背景图.png'));
+  setBg(LV(1, '神木祠前殿.png'));
   playBGM('shrinefront');
   showHint('调查神木祠前殿，使用壁画机关找到前往神木主殿的方法');
 
   var SF_SCENE = 'shrinefront';
 
-  // 壁画：需要先调查主殿门
+  // 壁画：直接开始排序关卡
   addInteractive(100, 150, 500, 300, '', function() {
-    if (!(G.sceneContent[SF_SCENE] || {})['door']) {
-      showHint('先查看一下前方被树根缠住的主殿门，了解这里的情况再处理壁画。');
-      return;
-    }
     if (!G.completedPuzzles['mural_order']) startMuralPuzzle();
     else showDialogue('沈砚', '壁画顺序已经正确排列。接下来需要去南壁祭灶取得朱丝。');
   }, {hsId: 'mural_panel', icon: '🖼'});
 
-  // 主殿门（被树根缠住）
+  // 主殿门（被树根缠住）= 神树
   addInteractive(620, 300, 200, 100, '', function() {
     markContent(SF_SCENE, 'door');
+    if (!G.completedPuzzles['mural_order']) {
+      showHint('先点击壁画，修复壁画以寻找伐树之法……');
+      return;
+    }
     showDialogue('沈砚', '被树根缠住的主殿门，需要破解机关才能进入。壁画上似乎记载了伐树的经过……', function() {
       addNote('神木祠前殿', '主殿门被树根紧缠。壁画记载了秦文公伐南山大梓树的经过，或许隐藏了破解之法。');
     });
@@ -2683,7 +2679,7 @@ function startMuralPuzzle() {
   var panel = document.createElement('div');
   panel.className = 'qin-panel';
   panel.id = 'muralPanel';
-  panel.style.width = '95%'; panel.style.maxWidth = '1100px'; panel.style.height = 'auto'; panel.style.maxHeight = '90%';
+  panel.style.width = '100%'; panel.style.maxWidth = '1800px'; panel.style.height = '100%'; panel.style.maxHeight = '100%';
 
   function render() {
     var h = '<h2>风雨自合壁画排序</h2>';
@@ -2693,7 +2689,7 @@ function startMuralPuzzle() {
       var selected = (selectedMural === i);
       h += '<div class="puzzle-piece' + (selected ? ' selected' : '') + '"';
       h += ' onclick="window._swapMural(' + i + ')"';
-      h += ' style="width:150px;height:110px;display:flex;align-items:center;justify-content:center;padding:4px;flex-shrink:0;overflow:hidden' + (selected ? ';border-color:var(--bronze-bright);box-shadow:0 0 12px rgba(180,140,60,0.6)' : '') + '">';
+      h += ' style="width:270px;height:230px;display:flex;align-items:center;justify-content:center;padding:8px;flex-shrink:0;overflow:hidden' + (selected ? ';border-color:var(--bronze-bright);box-shadow:0 0 12px rgba(180,140,60,0.6)' : '') + '">';
       h += '<img src="' + muralImages[id] + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none">';
       h += '</div>';
     });
