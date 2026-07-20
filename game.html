@@ -2024,11 +2024,9 @@ function prologueRestoration() {
     if (G.completedPuzzles['silk_puzzle']) return;
     if (canStartSilkPuzzle() && !silkHighlighted) {
       silkHighlighted = true;
-      // 高亮原有的帛书热区
+      // 与其他热区一致，使用统一的 highlight 弱闪光框
       if (clueHotspots['silk']) {
-        clueHotspots['silk'].style.border = '2px solid var(--bronze-bright)';
-        clueHotspots['silk'].style.background = 'rgba(180,140,60,0.25)';
-        clueHotspots['silk'].style.boxShadow = '0 0 20px rgba(180,140,60,0.5)';
+        clueHotspots['silk'].classList.add('highlight');
       }
       showHint('线索已全部收集！点击桌上的帛书开始拼合复原。');
     }
@@ -2223,13 +2221,13 @@ function startSilkPuzzle() {
         completePuzzle('silk_puzzle');
         // 修复完成 → 清理修复室中除窗户外所有热区
         if (window._cleanupRestorationClues) window._cleanupRestorationClues();
+        // 先关闭拼图面板，再进入文字叙述
+        window._closeSilkPuzzle();
         showDialogue('沈砚', '复原了——"黑水入陵，玄药不死。"', function() {
           addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
           showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
             addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头缺了半枚玉玦形状。');
-            showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {
-              window._closeSilkPuzzle();
-            });
+            showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {});
           });
         });
       }, 500);
