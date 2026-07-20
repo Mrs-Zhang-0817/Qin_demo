@@ -774,7 +774,7 @@ var G = {
   completedPuzzles: {},
   dialogueQueue: [],
   activeSkill: null,
-  chapterUnlocked: {1:true, 2:false, 3:false, 4:false},
+  chapterUnlocked: {1:true, 2:false, 3:false, 4:false, 5:false, 6:false, 7:false},
   lastChapter: 1,  // 玩家最后到达的章节
   selectedPiece: null,
   gameStarted: false,
@@ -840,7 +840,14 @@ var BGM_MAP = {
   'ch4astro':      '地宫探索.ogg',
   'ch4rivers':     '地宫探索.ogg',
   'ch4buoy':       '地宫探索.ogg',
-  'ch4pool':       '地宫探索.ogg'
+  'ch4pool':       '地宫探索.ogg',
+  // 第二章 / 第五章 / 第六章
+  'ch2tomb':       '地宫探索.ogg',
+  'ch2projection': '地宫探索.ogg',
+  'ch5room':       '地宫探索.ogg',
+  'ch6tomb':       '地宫探索.ogg',
+  'ch6combine':    '地宫探索.ogg',
+  'ch6choice':     '地宫探索.ogg'
 };
 
 var BGM_CURRENT = ''; // 当前播放的 BGM 文件名
@@ -1711,6 +1718,7 @@ function startGame() {
   G.chapter = 1; G.scene = 0; G.lastChapter = 1;
   G.inventory = {}; G.risk = 0; G.notes = []; G.reasoningClues = [];
   G.completedPuzzles = {}; G.skills = {}; G.sceneContent = {};
+  G.finalChoice = null;
   G.interactionLock = false;
   selectedClues = [];
   ['火折子','蜡封','洛阳铲','墨线','绳钩','拓包','铜镜','朱砂'].forEach(function(t) { gainItem(t, t, '盗墓工具'); });
@@ -1727,10 +1735,13 @@ function showChapterSelect() {
   var chapters = [
     {n: 1, t: '序章：黑水残简', d: '修复残简，破解黑水门，获得黑水玉玦', unlocked: true},
     {n: 2, t: '第一章：文公伐树', d: '探索神木祠，破解五行机关，获得断木神斧', unlocked: G.chapterUnlocked[2]},
+    {n: 5, t: '第二章：玄鸟生秦', d: '拓印铭文，拼出秦族起源谱系，令玄鸟投影指路', unlocked: G.chapterUnlocked[5]},
     {n: 3, t: '第三章：六国兵俑阵', d: '统一文字度量车轨，让兵俑归一', unlocked: G.chapterUnlocked[3]},
-    {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗星图', unlocked: G.chapterUnlocked[4]}
+    {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗星图', unlocked: G.chapterUnlocked[4]},
+    {n: 6, t: '第五章：方士丹室', d: '辨别不死药真伪，取得方士丹匣机关钥', unlocked: G.chapterUnlocked[6]},
+    {n: 7, t: '第六章：秦王墓室', d: '万流归秦，面对取药、封药、毁药的最终抉择', unlocked: G.chapterUnlocked[7]}
   ];
-  var cnNames = ['', '零', '一', '三', '四'];
+  var cnNames = ['', '零', '一', '三', '四', '二', '五', '六'];
 
   var h = '' +
     '<div style="text-align:center;margin-bottom:40px">' +
@@ -1761,6 +1772,7 @@ function loadChapter(n) {
   G.chapter = n; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, n);
   G.risk = 0; G.reasoningClues = []; selectedClues = [];
   G.completedPuzzles = {}; G.notes = []; G.skills = {}; G.sceneContent = {};
+  G.finalChoice = null;
   G.interactionLock = false;
   renderRisk(); renderSkills();
   G.inventory = {};
@@ -1798,6 +1810,41 @@ function loadChapter(n) {
     unlockSkill('封气', '临时封堵毒气和水银蒸汽');
     renderSkills();
     ch4Start();
+  } else if (n === 5) {
+    gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝', true);
+    gainItem('断木神斧', '断木神斧', '第一章核心秘宝', true);
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox'].forEach(function(p) { completePuzzle(p); });
+    unlockSkill('听风', '判断墙体空腔与风道');
+    unlockSkill('探土', '判断地面结构与承重');
+    unlockSkill('辨伪', '判断铭文器物真假');
+    renderSkills();
+    ch2Start();
+  } else if (n === 6) {
+    gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝', true);
+    gainItem('断木神斧', '断木神斧', '第一章核心秘宝', true);
+    gainItem('青铜虎符', '青铜虎符', '控制兵俑', true);
+    gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','writing','measure','track','tiger'].forEach(function(p) { completePuzzle(p); });
+    unlockSkill('听风', '判断墙体空腔与风道');
+    unlockSkill('探土', '判断地面结构与承重');
+    unlockSkill('辨伪', '判断铭文器物真假');
+    unlockSkill('封气', '临时封堵毒气和水银蒸汽');
+    renderSkills();
+    ch5Start();
+  } else if (n === 7) {
+    gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝', true);
+    gainItem('断木神斧', '断木神斧', '第一章核心秘宝', true);
+    gainItem('青铜虎符', '青铜虎符', '控制兵俑', true);
+    gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
+    gainItem('方士丹匣', '方士丹匣', '第五章秘宝，含机关钥', true);
+    gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true);
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','writing','measure','track','tiger','pill_fake','lockbox_key','wan_liu_gui_qin'].forEach(function(p) { completePuzzle(p); });
+    unlockSkill('听风', '判断墙体空腔与风道');
+    unlockSkill('探土', '判断地面结构与承重');
+    unlockSkill('辨伪', '判断铭文器物真假');
+    unlockSkill('封气', '临时封堵毒气和水银蒸汽');
+    renderSkills();
+    ch6Start();
   }
 }
 
@@ -1810,12 +1857,15 @@ function showChapterPanel() {
   var chapters = [
     {n: 1, t: '序章：黑水残简', d: '修复残简，破解黑水门', scene: 'restoration'},
     {n: 2, t: '第一章：文公伐树', d: '探索神木祠，破解五行机关', scene: 'shrine'},
+    {n: 5, t: '第二章：玄鸟生秦', d: '拓印铭文，拼出秦族起源谱系', scene: 'ch2tomb'},
     {n: 3, t: '第三章：六国兵俑阵', d: '统一文字度量车轨', scene: 'ch3start'},
-    {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗', scene: 'ch4start'}
+    {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗', scene: 'ch4start'},
+    {n: 6, t: '第五章：方士丹室', d: '辨别不死药真伪，取得机关钥', scene: 'ch5room'},
+    {n: 7, t: '第六章：秦王墓室', d: '万流归秦，最终抉择', scene: 'ch6tomb'}
   ];
-  var cnNames = ['', '零', '一', '三', '四'];
+  var cnNames = ['', '零', '一', '三', '四', '二', '五', '六'];
   var maxUnlocked = 1;
-  for (var i = 4; i >= 1; i--) { if (G.chapterUnlocked[i]) { maxUnlocked = i; break; } }
+  for (var i = 7; i >= 1; i--) { if (G.chapterUnlocked[i]) { maxUnlocked = i; break; } }
 
   var overlay = document.createElement('div');
   overlay.className = 'qin-panel-overlay';
@@ -1899,6 +1949,12 @@ function quickLoadChapter(n) {
     if (!G.inventory['青铜虎符']) gainItem('青铜虎符', '青铜虎符', '控制兵俑', true);
     if (!G.skills['封气']) unlockSkill('封气', '临时封堵毒气和水银蒸汽');
   }
+  if (n >= 5) {
+    if (!G.inventory['玄鸟骨简']) gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
+  }
+  if (n >= 6) {
+    if (!G.inventory['方士丹匣']) gainItem('方士丹匣', '方士丹匣', '第五章秘宝，含机关钥', true);
+  }
 
   renderRisk();
   renderSkills();
@@ -1914,6 +1970,12 @@ function quickLoadChapter(n) {
     ch3Start();
   } else if (n === 4) {
     ch4Start();
+  } else if (n === 5) {
+    ch2Start();
+  } else if (n === 6) {
+    ch5Start();
+  } else if (n === 7) {
+    ch6Start();
   }
 }
 
@@ -2785,11 +2847,13 @@ function ch1GreenOx() {
           addNote('断木神斧', '文公伐树后获得的秘宝。青牛入水，水德归秦。');
           showDialogue('沈砚', '秦文公伐树，树断而青牛入水。可这座祠真正记下的，是教后来者如何读懂秦陵的规则。', function() {
             showDialogue('沈砚', '墙上浮现秦篆："持玦者已归其一，玄鸟当启其二。"', function() {
-              G.chapterUnlocked[3] = true;
-              showDialogue('系统', '第一章完成！第三章已解锁。', function() {
+              G.chapterUnlocked[5] = true;
+              showDialogue('系统', '第一章完成！第二章「玄鸟生秦」已解锁。', function() {
                 addReasonClue('木入土', '木入土导向黑水');
                 transitionScene(function() {
-                  showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。');
+                  showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。', function() {
+                    showChapterPanel();
+                  });
                 });
               });
             });
@@ -3126,7 +3190,10 @@ function ch4BlackPool() {
           showDialogue('沈砚', '水银不是为了防盗才流在这里。它在替这座陵墓记住天下的形状。', function() {
             showDialogue('沈砚', '百川江河，最终都被引向同一个黑色的北方。', function() {
               showDialogue('沈砚', '如果水银是秦陵的江河，那么不死药也许不是药。它更像是这套机关的心脏。', function() {
-                showDialogue('系统', '第四章完成！前四章全破！', function() { showEnding(); });
+                showDialogue('系统', '第四章完成！第五章「方士丹室」已解锁。', function() {
+                  G.chapterUnlocked[6] = true;
+                  showChapterPanel();
+                });
               });
             });
           });
@@ -3136,18 +3203,437 @@ function ch4BlackPool() {
   }, {hsId: 'black_pool', icon: '🌑'});
 }
 
+// ==================== 第二章：玄鸟生秦 ====================
+function ch2Start() {
+  G.chapter = 5; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, 5);
+  clearScene();
+  G.currentSceneId = 'ch2tomb'; G._hsIndex = 0;
+  setBg(LV(2, '主背景3.png'));
+  playBGM('ch2tomb');
+  unlockSkill('辨伪', '判断铭文与器物真假');
+  renderSkills();
+  showHint('调查玄鸟墓道，拓印残缺铭文，拼出秦族起源谱系');
+
+  var C2 = 'ch2tomb';
+  var REQ = ['mural', 'egg', 'stars', 'gene1', 'gene2', 'gene3', 'gene4'];
+  function canSort() { return allContentFound(C2, REQ); }
+
+  // 玄鸟壁画（拓印）
+  addInteractive(120, 120, 260, 240, '', function() {
+    markContent(C2, 'mural');
+    showDialogue('沈砚', '壁画上玄鸟展翅，自空中衔下一枚金卵，落于女修面前。这是秦族"玄鸟陨卵"的图腾。', function() {
+      showDialogue('沈砚', '秦人自认玄鸟之后——天命所归，以水德承统，皆由此起。', function() {
+        addNote('玄鸟传说', '玄鸟衔卵而生秦族始祖。秦以玄鸟为天命象征，与"玄水"同源。');
+        addReasonClue('玄鸟起源', '玄鸟为秦族天命图腾');
+      });
+    });
+  }, { hsId: 'xuanniao_mural', icon: '🕊', skill: '拓印', skillHint: '壁画上的玄鸟纹样与残缺铭文似乎可拓印保存……' });
+
+  // 卵形石
+  addInteractive(560, 420, 140, 120, '', function() {
+    markContent(C2, 'egg');
+    showDialogue('沈砚', '石形如卵，表面刻着细密的星纹。卵，是秦族起源的母题。', function() {
+      addNote('卵形石', '墓道中的卵形石刻有星纹，呼应玄鸟陨卵的传说。');
+    });
+  }, { hsId: 'egg_stone', icon: '🥚' });
+
+  // 星象孔洞（观纹）
+  addInteractive(820, 120, 200, 200, '', function() {
+    markContent(C2, 'stars');
+    showDialogue('沈砚', '穹顶星象孔洞与地面的玄鸟投影一一对应。星位指向北方——"斗柄指北，玄水乃归"在此重现。', function() {
+      addNote('星象孔洞', '玄鸟墓道顶部的星象孔洞，与北斗、北方玄水呼应。');
+      addReasonClue('玄鸟星象', '星象孔洞指向北方玄水');
+    });
+  }, { hsId: 'star_holes', icon: '✨', skill: '观纹', skillHint: '孔洞后的星象隐约可辨，细看或有发现……' });
+
+  // 残缺祖先谱系（拓印，四段）
+  var genes = [
+    {id:'gene1', txt:'女修吞卵，感而生子'},
+    {id:'gene2', txt:'玄鸟陨卵，降于秦野'},
+    {id:'gene3', txt:'大业初生，因水得名'},
+    {id:'gene4', txt:'大费佐舜，嬴姓始封'}
+  ];
+  genes.forEach(function(g, i) {
+    addInteractive(160 + (i % 2) * 440, 430 + Math.floor(i / 2) * 150, 170, 100, '', function() {
+      markContent(C2, g.id);
+      showDialogue('沈砚', '残简："' + g.txt + '"。这是秦族起源谱系的一段，需与其它残简拼合。', function() {
+        addNote('谱系残简', '拓得秦族起源谱系残句：' + g.txt);
+      });
+    }, { hsId: 'gene_' + g.id, icon: '📜', skill: '拓印', skillHint: '残简字迹模糊，拓印后可比对。' });
+  });
+
+  // 谱系石台：集齐后开启排序
+  addInteractive(560, 250, 160, 120, '', function() {
+    if (!canSort()) {
+      var miss = [];
+      if (!(G.sceneContent[C2] || {})['mural']) miss.push('玄鸟壁画');
+      if (!(G.sceneContent[C2] || {})['egg']) miss.push('卵形石');
+      if (!(G.sceneContent[C2] || {})['stars']) miss.push('星象孔洞');
+      ['gene1','gene2','gene3','gene4'].forEach(function(g) { if (!(G.sceneContent[C2] || {})[g]) miss.push('谱系残简'); });
+      showHint('还缺线索：' + miss.join('、') + '。先全部调查、拓印完毕。');
+      return;
+    }
+    if (!G.completedPuzzles['xuanniao_lineage']) startXuanniaoLineage();
+    else { showDialogue('沈砚', '谱系已经排好。玄鸟石像已经展翅，前往光影机关处。', function() { ch2Projection(); }); }
+  }, { hsId: 'lineage_desk', icon: '🗿' });
+}
+
+function startXuanniaoLineage() {
+  dismissFullImage();
+  var correct = ['B','A','C','D']; // 玄鸟陨卵→女修吞卵→大业初生→大费佐舜
+  var current = ['C','D','A','B'];
+  var geneText = {
+    A: '女修吞卵，感而生子',
+    B: '玄鸟陨卵，降于秦野',
+    C: '大业初生，因水得名',
+    D: '大费佐舜，嬴姓始封'
+  };
+  var selected = -1;
+  var panel = document.createElement('div');
+  panel.className = 'qin-panel'; panel.id = 'lineagePanel';
+  panel.style.width = '95%'; panel.style.maxWidth = '1000px'; panel.style.height = 'auto'; panel.style.maxHeight = '90%';
+  function render() {
+    var h = '<h2>秦族起源谱系排序</h2>';
+    h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:12px;letter-spacing:2px">按时间顺序排列谱系残简（点击交换）</p>';
+    h += '<div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap">';
+    current.forEach(function(id, i) {
+      var sel = selected === i;
+      h += '<div class="puzzle-piece' + (sel ? ' selected' : '') + '" onclick="window._swapGene(' + i + ')" style="width:180px;height:120px;display:flex;align-items:center;justify-content:center;padding:8px;flex-shrink:0;overflow:hidden;text-align:center' + (sel ? ';border-color:var(--bronze-bright);box-shadow:0 0 12px rgba(180,140,60,0.6)' : '') + '">';
+      h += '<span style="font-size:18px;line-height:1.5">' + geneText[id] + '</span></div>';
+    });
+    h += '</div>';
+    h += '<div style="text-align:center;color:var(--dark-bronze);font-size:13px;margin-top:6px">提示：玄鸟先陨卵 → 女修吞卵 → 大业初生 → 大费佐舜</div>';
+    h += '<div style="display:flex;gap:10px;justify-content:center;margin-top:14px"><button class="qin-btn" onclick="window._checkGene()">确认顺序</button></div>';
+    h += '<button class="close-btn" onclick="window._closeGene()">返回探索</button>';
+    panel.innerHTML = h;
+  }
+  window._swapGene = function(idx) {
+    if (selected === -1) { selected = idx; render(); }
+    else { var t = current[selected]; current[selected] = current[idx]; current[idx] = t; selected = -1; render(); }
+  };
+  window._checkGene = function() {
+    if (current.join(',') === correct.join(',')) {
+      completePuzzle('xuanniao_lineage');
+      showDialogue('沈砚', '谱系正确！玄鸟石像应声展翅——天命所归，水德将启。', function() {
+        addNote('秦族谱系', '玄鸟陨卵→女修吞卵→大业初生→大费佐舜。秦族以玄鸟为天命，以水德承统。');
+        addReasonClue('秦以水德', '秦族起源由玄鸟天命导向水德');
+        window._closeGene();
+        ch2Projection();
+      });
+    } else {
+      showHint('顺序不对……玄鸟先陨卵，才有女修吞卵，其后大业、大费相承。');
+    }
+  };
+  window._closeGene = function() { panel.parentElement && panel.parentElement.remove(); };
+  render();
+  var overlay = document.createElement('div');
+  overlay.className = 'qin-panel-overlay'; overlay.style.display = 'flex';
+  overlay.onclick = function(e) { if (e.target === overlay) { window._closeGene(); } };
+  overlay.appendChild(panel); $('game').appendChild(overlay);
+}
+
+function ch2Projection() {
+  G.scene = 1;
+  G.currentSceneId = 'ch2projection'; G._hsIndex = 0;
+  clearScene();
+  setBg(LV(2, '主背景3.png'));
+  playBGM('ch2projection');
+  showHint('转动鸟翼石像，使玄鸟投影对准北方星象孔洞');
+
+  var angle = 0; // 0=东, 1=中, 2=北
+  var dirs = ['东', '中', '北'];
+  var statue = document.createElement('div');
+  statue.id = 'xuanniaoStatue';
+  statue.style.cssText = 'position:absolute;left:540px;top:300px;width:200px;height:200px;border:2px solid var(--dark-bronze);display:flex;align-items:center;justify-content:center;color:var(--bronze-bright);font-size:20px;background:rgba(17,17,17,0.8);cursor:pointer;letter-spacing:3px;text-align:center';
+  statue.textContent = '鸟翼石像（朝向：' + dirs[angle] + '）';
+  statue.onclick = function() {
+    if (G.completedPuzzles['xuanniao_projection']) { takeBoneSlip(); return; }
+    angle = (angle + 1) % 3;
+    statue.textContent = '鸟翼石像（朝向：' + dirs[angle] + '）';
+    if (angle === 2) {
+      completePuzzle('xuanniao_projection');
+      showDialogue('沈砚', '鸟翼转向北方！星象孔洞透下光柱，玄鸟投影投射到北壁——那里正是通往下一层的门。', function() {
+        addNote('玄鸟投影', '转动鸟翼石像对准北方星象，玄鸟投影指向玄鸟墓道深处的门。');
+        showHint('投影落处出现一枚骨简，上前取走。');
+      });
+    } else {
+      showHint('投影偏向' + dirs[angle] + '，尚未对准北方星象孔洞。再转动试试。');
+    }
+  };
+  sceneArea.appendChild(statue);
+
+  function takeBoneSlip() {
+    if (G.inventory['玄鸟骨简']) { ch2End(); return; }
+    showDialogue('沈砚', '从投影落处拾得一枚骨简——玄鸟骨简！其上刻着秦族密谱的开篇。', function() {
+      gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
+      addNote('玄鸟骨简', '玄鸟墓道所得。记载秦族起源密谱，与黑玉残玦同为守药一脉的凭证。');
+      ch2End();
+    });
+  }
+
+  if (G.completedPuzzles['xuanniao_projection'] && !G.inventory['玄鸟骨简']) {
+    addInteractive(560, 360, 160, 80, '', function() { takeBoneSlip(); }, { hsId: 'bone_slip', icon: '🦴' });
+  }
+}
+
+function ch2End() {
+  showDialogue('沈砚', '玄鸟生秦——原来秦陵记下的，不只是帝王，还有一族自玄水而起的来历。', function() {
+    G.chapterUnlocked[3] = true;
+    showDialogue('系统', '第二章完成！第三章「六国兵俑阵」已解锁。', function() {
+      showChapterPanel();
+    });
+  });
+}
+
+// ==================== 第五章：方士丹室 ====================
+function ch5Start() {
+  G.chapter = 6; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, 6);
+  clearScene();
+  G.currentSceneId = 'ch5room'; G._hsIndex = 0;
+  setBg(LV(5, '主背景6.png'));
+  playBGM('ch5room');
+  showHint('调查炼丹密室，辨别三枚不死药与三份丹方的真伪');
+
+  var C5 = 'ch5room';
+  var pills = {p1:false, p2:false, p3:false};
+  var readHand = false;
+
+  // 丹炉
+  addInteractive(140, 300, 160, 140, '', function() {
+    showDialogue('沈砚', '丹炉久熄，灰中残留三枚丹丸，色泽各异——赤、青、白。', function() {
+      addNote('三枚丹丸', '丹炉灰中有赤、青、白三枚丹丸，需辨明真伪。');
+    });
+  }, { hsId: 'furnace', icon: '🔥' });
+
+  // 药柜（辨伪）
+  addInteractive(420, 280, 160, 180, '', function() {
+    showDialogue('沈砚', '药柜多格，药材与丹方所列并不全符。徐福东渡求药，带走的只怕是方士的传说，而非真丹。', function() {
+      addNote('药柜异常', '药柜药材与丹方不符，暗示不死药记载或有偏差。');
+    });
+  }, { hsId: 'cabinet', icon: '🗄', skill: '辨伪', skillHint: '药材与丹方记载的差异，需用辨伪之法细查……' });
+
+  // 丹方残页（拓印，三份）
+  var recipes = [
+    {id:'r1', txt:'丹方一：朱砂、铅汞、云母——火炼而成'},
+    {id:'r2', txt:'丹方二：玉粉、雄黄、曾青——需九转'},
+    {id:'r3', txt:'丹方三：不死之药，实乃"机枢之钥"的讳称'}
+  ];
+  recipes.forEach(function(r, i) {
+    addInteractive(700 + (i % 2) * 60, 160 + Math.floor(i / 2) * 160, 160, 90, '', function() {
+      showDialogue('沈砚', '丹方残页：' + r.txt, function() {
+        if (r.id === 'r3') {
+          addNote('丹方三', '第三份丹方称"不死之药"实是机枢之钥的讳称——不死药可能并非药物。');
+          addReasonClue('丹药非药', '不死药是机关钥的讳称');
+        } else {
+          addNote('丹方', r.txt);
+        }
+      });
+    }, { hsId: 'recipe_' + r.id, icon: '📜', skill: '拓印', skillHint: '丹方字迹漶漫，拓印以存。' });
+  });
+
+  // 海外仙山图
+  addInteractive(840, 440, 160, 140, '', function() {
+    showDialogue('沈砚', '图绘海外仙山与楼船——徐福奉命出海寻仙。可史载方士多托辞遁去，药从未来。', function() {
+      addNote('徐福出海', '徐福出海寻仙，史载未归，不死药传说疑为方士遁走的托辞。');
+    });
+  }, { hsId: 'immortal_map', icon: '🗺' });
+
+  // 三枚丹药（辨伪，皆伪）
+  var pillInfo = [
+    {id:'p1', name:'赤丹', fake:'以朱砂染石，非炼丹所成'},
+    {id:'p2', name:'青丹', fake:'以铜绿充作曾青，遇水即散'},
+    {id:'p3', name:'白丹', fake:'以滑石伪玉粉，轻浮无质'}
+  ];
+  pillInfo.forEach(function(p, i) {
+    addInteractive(160 + i * 180, 480, 130, 90, '', function() {
+      showDialogue('沈砚', p.name + '：' + p.fake + '。这枚丹药是诱饵。', function() {
+        pills[p.id] = true;
+        addNote(p.name, p.name + '经辨伪为诱饵：' + p.fake);
+        if (pills.p1 && pills.p2 && pills.p3) {
+          completePuzzle('pill_fake');
+          showDialogue('系统', '三枚丹药皆伪！真正关键物并非丹药本身。', function() {
+            addReasonClue('三丹皆伪', '三枚丹药都是诱饵');
+            showHint('调查方士手札，寻找真正的关键。');
+          });
+        }
+      });
+    }, { hsId: 'pill_' + p.id, icon: '💊', skill: '辨伪', skillHint: '丹药形色可疑，以辨伪察其本。' });
+  });
+
+  // 方士手札
+  addInteractive(440, 480, 150, 90, '', function() {
+    readHand = true;
+    showDialogue('沈砚', '方士手札："世人求不死之药，不知药即机枢。黑玉药匣之底，藏开棺之钥。"', function() {
+      addNote('方士手札', '方士手札揭示：不死药实为秦陵机枢的讳称，真正关键是黑玉药匣底部的机关钥。');
+      if (G.completedPuzzles['pill_fake']) showHint('三丹已辨伪，去开启黑玉药匣。');
+    });
+  }, { hsId: 'handscroll', icon: '📖' });
+
+  // 黑玉药匣（需先辨伪 + 手札）
+  addInteractive(640, 300, 160, 140, '', function() {
+    if (!G.completedPuzzles['pill_fake'] || !readHand) {
+      showHint('需先辨明三枚丹药皆为诱饵，并读通方士手札，才能确认药匣才是关键。');
+      return;
+    }
+    if (G.inventory['方士丹匣']) { ch5End(); return; }
+    showDialogue('沈砚', '黑玉药匣底部有一道暗槽——与黑玉残玦的形制同源！用拓印/观纹查其底，取出机关钥。', function() {
+      if (G.inventory['黑玉残玦']) {
+        completePuzzle('lockbox_key');
+        gainItem('方士丹匣', '方士丹匣', '第五章秘宝，匣底藏机关钥', true);
+        addNote('方士丹匣', '以黑玉残玦为识别符开启药匣，取得匣底机关钥。不死药原是机关代号。');
+        ch5End();
+      } else {
+        showDialogue('沈砚', '药匣底槽与黑玉残玦同源，却无残玦可引——看来残玦是开启它的识别符。');
+      }
+    });
+  }, { hsId: 'lockbox', icon: '🗝', skill: '观纹', skillHint: '药匣底部有暗槽隐纹，细察其构。' });
+}
+
+function ch5End() {
+  showDialogue('沈砚', '所谓不死药，也许从来不是药，而是这套以"玄水"为名的秩序的心脏。', function() {
+    G.chapterUnlocked[7] = true;
+    showDialogue('系统', '第五章完成！第六章「秦王墓室」已解锁。', function() {
+      showChapterPanel();
+    });
+  });
+}
+
+// ==================== 第六章：秦王墓室 ====================
+function ch6Start() {
+  G.chapter = 7; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, 7);
+  clearScene();
+  G.currentSceneId = 'ch6tomb'; G._hsIndex = 0;
+  setBg(LV(6, '主背景7.png'));
+  playBGM('ch6tomb');
+  showHint('综合一路所学，完成"万流归秦"，并面对最终抉择');
+
+  function canCombine() { return G.inventory['黑玉残玦'] && G.inventory['方士丹匣']; }
+
+  // 天顶星象
+  addInteractive(160, 120, 240, 200, '', function() {
+    showDialogue('沈砚', '天顶悬着玄鸟，周围七星环绕——上一章的玄鸟投影、水银北斗，皆汇于此处。', function() {
+      addNote('天顶星象', '秦王墓室天顶玄鸟与北斗同悬，呼应玄鸟生秦与水银星图。');
+    });
+  }, { hsId: 'ceiling_star', icon: '🌌' });
+
+  // 地面水银江河
+  addInteractive(520, 480, 300, 120, '', function() {
+    showDialogue('沈砚', '"上具天文，下具地理"——地面水银江河正是百川归秦的缩影，与方士丹室的药炉、方士的机枢同源。', function() {
+      addNote('地面江河', '墓室地面水银模拟天下江河，万流归秦于此收束。');
+    });
+  }, { hsId: 'ground_river', icon: '🌊' });
+
+  // 十二金人环立
+  addInteractive(160, 420, 160, 180, '', function() {
+    if (G.inventory['十二金人残片']) {
+      showDialogue('沈砚', '十二金人环立，手中残片与我所得正合——这是隐藏机枢的凭证。', function() {
+        addNote('十二金人', '十二金人残片齐备，隐藏机枢已现端倪。');
+      });
+    } else {
+      showDialogue('沈砚', '十二金人环立墓室四周，手中空有残缺之位——似乎还缺一块残片。');
+    }
+  }, { hsId: 'twelve_jin', icon: '🗿' });
+
+  // 五行盘
+  addInteractive(880, 300, 160, 160, '', function() {
+    showDialogue('沈砚', '五行盘缓缓旋转：水胜火、金克木、木入土……一路的机关规则，在此凝成一枚同心圆。', function() {
+      addNote('五行盘', '墓室五行盘循环相生相克，是此前所有谜题规则的总结。');
+    });
+  }, { hsId: 'wuxing_pan', icon: '☯' });
+
+  // 中央黑玉棺椁（合并残玦与丹匣）
+  addInteractive(480, 240, 220, 220, '', function() {
+    if (!canCombine()) {
+      var miss = [];
+      if (!G.inventory['黑玉残玦']) miss.push('黑玉残玦');
+      if (!G.inventory['方士丹匣']) miss.push('方士丹匣');
+      showHint('还需：' + miss.join('、') + '。二者合一，方能开启棺椁机枢。');
+      return;
+    }
+    if (!G.completedPuzzles['wan_liu_gui_qin']) startCombineRite();
+    else ch6Choice();
+  }, { hsId: 'black_coffin', icon: '⚰' });
+}
+
+function startCombineRite() {
+  dismissFullImage();
+  var panel = document.createElement('div');
+  panel.className = 'qin-panel'; panel.id = 'combinePanel';
+  panel.style.width = '95%'; panel.style.maxWidth = '760px'; panel.style.height = 'auto'; panel.style.maxHeight = '90%';
+  panel.innerHTML = '<h2>万流归秦 · 合玦之仪</h2>' +
+    '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:12px;letter-spacing:2px">将黑玉残玦与方士丹匣底部的机关钥合并</p>' +
+    '<p style="text-align:center;color:var(--silk-yellow);font-size:20px;line-height:1.9">秦以水德 · 水克火 · 北方属水<br>黑色为秦正色 · 玄鸟起源 · 六国归一<br>水银江河 · 方士丹药</p>' +
+    '<div style="display:flex;gap:12px;justify-content:center;margin-top:18px">' +
+    '<button class="qin-btn" onclick="window._doCombine()">合并残玦与机关钥</button>' +
+    '<button class="close-btn" onclick="window._closeCombine()">返回探索</button></div>';
+  window._closeCombine = function() { panel.parentElement && panel.parentElement.remove(); };
+  window._doCombine = function() {
+    completePuzzle('wan_liu_gui_qin');
+    window._closeCombine();
+    showDialogue('沈砚', '残玦与机关钥合而为一——黑玉并未打开棺椁，而是浮现一行被水银浸没的秦篆：', function() {
+      showDialogue('系统', '"持玦归陵者，非取药人，乃守药人。"', function() {
+        addNote('守药人真相', '黑玉残玦是守药方士的识别符。主角是守药一脉遗孤，归陵是为承接守药之责，而非取药。');
+        showDialogue('沈砚', '原来养父当年失踪，是替我承担了这场归陵的命运。我找的从来不是钥匙，而是秦陵召回守药者的凭证。', function() {
+          ch6Choice();
+        });
+      });
+    });
+  };
+  var overlay = document.createElement('div');
+  overlay.className = 'qin-panel-overlay'; overlay.style.display = 'flex';
+  overlay.onclick = function(e) { if (e.target === overlay) { window._closeCombine(); } };
+  overlay.appendChild(panel); $('game').appendChild(overlay);
+}
+
+function ch6Choice() {
+  clearScene();
+  G.currentSceneId = 'ch6choice'; G._hsIndex = 0;
+  setBg(LV(6, '主背景7.png'));
+  playBGM('ch6choice');
+  showHint('面对黑玉棺椁，你做出抉择');
+
+  var hidden = !!G.inventory['十二金人残片'];
+  var wrap = document.createElement('div');
+  wrap.style.cssText = 'position:absolute;bottom:60px;left:50%;transform:translateX(-50%);z-index:3000;text-align:center';
+  var txt = document.createElement('div');
+  txt.textContent = '黑玉棺椁前，你决定如何处置这不死药核心？';
+  txt.style.cssText = 'color:var(--silk-bright);font-size:22px;margin-bottom:18px;letter-spacing:2px';
+  var btns = document.createElement('div');
+  btns.style.cssText = 'display:flex;gap:16px;justify-content:center;flex-wrap:wrap';
+
+  function mkBtn(label, cb) {
+    var b = document.createElement('button'); b.className = 'qin-btn'; b.style.fontSize = '19px'; b.style.padding = '12px 26px';
+    b.textContent = label; b.onclick = function() { if (G.interactionLock) return; cb(); }; return b;
+  }
+  btns.appendChild(mkBtn('取走不死药', function() { G.finalChoice = 'take'; showEnding(); }));
+  btns.appendChild(mkBtn('重新封印', function() { G.finalChoice = 'seal'; showEnding(); }));
+  btns.appendChild(mkBtn('摧毁核心', function() { G.finalChoice = 'destroy'; showEnding(); }));
+  if (hidden) btns.appendChild(mkBtn('继承守药之责', function() { G.finalChoice = 'inherit'; showEnding(); }));
+  wrap.appendChild(txt); wrap.appendChild(btns); sceneArea.appendChild(wrap);
+
+  if (hidden) showHint('你集齐了十二金人残片——出现了第四种选择：继承守药之责。');
+}
+
 // ==================== 结局 ====================
 function showEnding() {
   clearScene(); setBg('');
   var endingType;
-  if (G.risk <= 3) endingType = 'hidden';
-  else if (G.risk <= 6) endingType = 'seal';
-  else endingType = 'take';
+  if (G.finalChoice) {
+    endingType = G.finalChoice;
+  } else if (G.risk <= 3) {
+    endingType = 'hidden';
+  } else if (G.risk <= 6) {
+    endingType = 'seal';
+  } else {
+    endingType = 'take';
+  }
 
   var endings = {
     seal: { title: '结局：封药', text: '你重新封印了不死药。秦陵重新沉入地下，你带走了拓片与真相。\n\n真正的不朽，是文明记忆。', extra: '黑水声在身后逐渐远去。那些刻在石壁上的文字，比任何不死药都更长久。' },
     take: { title: '结局：取药', text: '你取走了不死药，逃出秦陵。\n\n但袖口渗出了黑色的水痕……对永生的贪欲，延续了秦皇的执念。', extra: '那滴水痕再也没有干过。' },
-    hidden: { title: '隐藏结局：黑水不息', text: '你没有取药，也没有毁药。\n\n你把黑玉残玦留在了秦王墓室，秦陵不再召唤后人。\n\n黑水声逐渐远去……你终于读懂了这座陵墓。', extra: '历史不是死亡，而是循环。\n\n你走出了秦陵，但黑玉残玦留在了那里——等待下一个读懂水德的人。' }
+    destroy: { title: '结局：毁药', text: '你摧毁了不死药核心。玄鸟坠地，水银倒流，秦陵开始缓缓崩解。\n\n你以毁灭终结了这场千年的执念。', extra: '机关停转的寂静里，你听见自己的心跳——这一次，是为活人而跳。' },
+    hidden: { title: '隐藏结局：黑水不息', text: '你没有取药，也没有毁药。\n\n你把黑玉残玦留在了秦王墓室，秦陵不再召唤后人。\n\n黑水声逐渐远去……你终于读懂了这座陵墓。', extra: '历史不是死亡，而是循环。\n\n你走出了秦陵，但黑玉残玦留在了那里——等待下一个读懂水德的人。' },
+    inherit: { title: '隐藏结局：守药', text: '你以十二金人残片为凭，承接了守药之责。\n\n既不取、不封、不毁，而是让机关继续运行，由你守着这方玄水。', extra: '养父当年替你承担的命运，此刻回到你肩上。\n\n黑水不息，守药不灭——你成了新的"持玦归陵者"。' }
   };
   var e = endings[endingType];
   var stars = '';
