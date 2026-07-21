@@ -2146,7 +2146,7 @@ function prologueRestoration() {
   // 五行图
   clueHotspots['wuxing'] = addInteractive(720, 320, 140, 140, '', function() {
     markContent(REST_SCENE, 'wuxing');
-    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北。' , '东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
+    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北，东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
       addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
       addReasonClue('北方属水', '北方属水');
       addReasonClue('水色为黑', '水色为黑');
@@ -2765,7 +2765,7 @@ function startMuralPuzzle() {
       window._closeMural(); // 拼合完成后直接关闭面板，不再回到排序界面
       // 显示完整壁画
       showFullImage(LV(1, '风雨自合壁画.png'), '壁画修复完成', function() {
-        showDialogue('沈砚', '壁画顺序正确！单用斧头无法断木，需要先用朱丝困住树神。', function() {
+        showDialogue('沈砚', '壁画显示，秦人初次伐树时，风雨骤起，树身伤口会重新合拢。单靠斧头无法断木。', function() {
           addNote('神木自合', '壁画显示秦人初次伐树时，风雨骤起，树身伤口会重新合拢。');
           addNote('朱丝破法', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。');
           addReasonClue('树创复合', '树身伤口会自合');
