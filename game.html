@@ -767,7 +767,7 @@ var G = {
   completedPuzzles: {},
   dialogueQueue: [],
   activeSkill: null,
-  chapterUnlocked: {1:true, 2:false, 3:false, 4:false, 5:false, 6:false, 7:false},
+  chapterUnlocked: {1:true, 2:true, 3:true, 4:true, 5:true, 6:true, 7:true},
   lastChapter: 1,  // 玩家最后到达的章节
   selectedPiece: null,
   gameStarted: false,
@@ -787,7 +787,7 @@ var G = {
   hsDragData: null,           // 拖拽数据
   // ===== 开发模式：跳过序章，直接进入第一章（神木祠） =====
   // 改为 false 即可恢复正常完整流程
-  DEV_SKIP_PROLOGUE: true
+  DEV_SKIP_PROLOGUE: false
 };
 
 // 标记场景内容已发现
@@ -1410,7 +1410,6 @@ function addNote(title, text) {
   }
 }
 // ==================== 渲染技能入口与弹出列表 ====================
-var SKILL_BG_IMAGE = '黑水门五色按钮.png';  // 技能面板底层全屏背景图
 var SKILL_DEFS = [
   {id: '观纹', img: IMG('技能标识', '观纹.png')},
   {id: '拓印', img: IMG('技能标识', '拓印.png')},
@@ -1451,7 +1450,6 @@ function renderSkillPopup() {
 function toggleSkillPanel() {
   var popup = $('skillPopup');
   var entry = $('skillEntry');
-  var bgImg = $('skill-bg-image');
   if (!popup || !entry) return;
   if (popup.classList.contains('show')) {
     closeSkillPanel();
@@ -1459,11 +1457,6 @@ function toggleSkillPanel() {
     renderSkillPopup();
     popup.classList.add('show');
     entry.classList.add('active-entry');
-    // 显示技能面板底层全屏背景图
-    if (bgImg) {
-      bgImg.style.backgroundImage = 'url("' + SKILL_BG_IMAGE + '")';
-      bgImg.classList.add('show');
-    }
   }
 }
 
