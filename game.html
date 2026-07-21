@@ -2623,7 +2623,7 @@ function ch1Start() {
   // 中央地砖（需探土）
   addInteractive(500, 550, 200, 120, '', function() {
     markContent(C1_SCENE, 'floor');
-    showDialogue('沈砚', '中央地砖下方有空响……空心的？' , '承重可能不足，踩上去会塌。', function() {
+    showDialogue('沈砚', '中央地砖下方有空响……空心的？承重可能不足，踩上去会塌。', function() {
       addNote('中空地砖', '外藏道中央地砖下方中空，承重不足，不能直接踩踏。');
     });
   }, {hsId: 'floor', icon: '⬜', skill: '探土', skillHint: '脚下的地砖传来空响，下方似乎是空的……或许该探查一下地面结构？'});
