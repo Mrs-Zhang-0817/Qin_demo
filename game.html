@@ -464,22 +464,6 @@ body {
 .artifact-card.key-item { border-color: var(--bronze); box-shadow: 0 0 12px rgba(154,123,69,0.25); }
 .artifact-card.key-item:hover { outline-color: var(--verdigris); }
 
-/* ========== 推理板 ========== */
-.reason-area {
-  position: relative; min-height: 200px; border: 1px solid var(--dark-bronze);
-  padding: 16px; margin: 12px 0;
-  background: rgba(5,3,0,0.5);
-}
-.reason-board { display: flex; flex-wrap: wrap; gap: 10px; align-items: flex-start; position: relative; z-index: 1; }
-.reason-slot {
-  background: rgba(64,55,34,0.4); border: 1px solid var(--dark-bronze);
-  padding: 8px 18px; cursor: pointer; font-size: 20px; color: var(--silk-yellow);
-  transition: all 0.18s; letter-spacing: 2px;
-}
-.reason-slot:hover { border-color: var(--bronze); background: rgba(64,55,34,0.6); }
-.reason-slot.selected-slot { border-color: var(--bronze-bright); box-shadow: 0 0 12px rgba(176,138,69,0.3); }
-.reason-result { color: var(--silk-bright); font-size: 20px; text-align: center; padding: 12px; margin-top: 10px; border-top: 1px solid var(--dark-bronze); }
-
 /* ========== 拼图元素 ========== */
 .puzzle-grid { display: grid; gap: 8px; margin: 0 auto; }
 .puzzle-slot {
@@ -575,20 +559,6 @@ body {
   pointer-events: none;
 }
 .transition-overlay.active { opacity: 1; }
-
-/* ========== 黑水门按钮 ========== */
-.gate-btn-qin {
-  position: absolute; z-index: 30; border-radius: 50%;
-  width: 48px; height: 48px; cursor: pointer;
-  border: 2px solid var(--dark-bronze);
-  transition: all 0.3s;
-  outline: 1px solid transparent; outline-offset: -3px;
-}
-.gate-btn-qin:hover {
-  border-color: var(--bronze-bright);
-  box-shadow: 0 0 18px rgba(154,123,69,0.4);
-  outline-color: var(--verdigris);
-}
 
 /* ========== 热区编辑器 ========== */
 #hs-editor-bar {
@@ -752,7 +722,6 @@ body {
   <!-- 左侧面板 -->
   <div id="left-panel">
     <div class="panel-entry" onclick="openQinPanel('notes')">帛书笔记</div>
-    <div class="panel-entry" onclick="openQinPanel('reason')">推理板</div>
     <div class="divider"></div>
     <div class="panel-entry" onclick="showChapterPanel()" id="chapterPanelBtn">章 节</div>
     <div class="divider"></div>
@@ -781,7 +750,6 @@ var G = {
   inventory: {},
   skills: {},
   notes: [],
-  reasoningClues: [],
   completedPuzzles: {},
   dialogueQueue: [],
   activeSkill: null,
@@ -1347,6 +1315,18 @@ function dismissFullImage() {
   G.interactionLock = false;
   if (cb) { cb(); }
 }
+// 调查线索：先全屏展示图片，点击关闭后回到主界面，再显示文字框
+function showInvestigateImage(imgSrc, text, callback) {
+  showFullImage(imgSrc, '', function() {
+    if (text) {
+      // 延迟到本次点击（关闭图片）事件冒泡结束后再显示对话，
+      // 避免被 game 全局 click 监听器的 advanceDialogue 立即关闭
+      setTimeout(function() { showDialogue('', text, callback); }, 50);
+    } else if (callback) {
+      callback();
+    }
+  });
+}
 function clearHints() {
   if (G.hintTimer) { clearTimeout(G.hintTimer); G.hintTimer = null; }
   G.hintQueue = [];
@@ -1385,8 +1365,7 @@ $('game').addEventListener('click', function(e) {
   if (G.dialogueQueue.length === 0) return;
   if (dialogueEl.contains(e.target)) return;
   if (e.target.closest('.interactive')) return;
-  if (e.target.closest('#gatePuzzleOverlay')) return;
-  if (e.target.closest('#gateDetailOverlay')) return;
+  if (e.target.closest('#gatePuzzleText')) return;
   if (e.target.closest('.qin-panel-overlay')) return;
   if (e.target.closest('#rootChoice')) return;
   advanceDialogue();
@@ -1411,13 +1390,6 @@ function addNote(title, text) {
     showHint('已记录：' + title);
   }
 }
-function addReasonClue(id, text) {
-  if (!G.reasoningClues.some(function(c) { return c.id === id; })) {
-    G.reasoningClues.push({id: id, text: text});
-    showHint('已获得线索：' + text);
-  }
-}
-
 // ==================== 渲染技能入口与弹出列表 ====================
 var SKILL_DEFS = [
   {id: '观纹', img: IMG('技能标识', '观纹.png')},
@@ -1566,7 +1538,7 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
     if (opts.once && el.dataset.investigated) {
       showHint('已经调查过了');
       if (opts.investigateImg) {
-        showFullImage(opts.investigateImg, opts.investigateText || '', function() {
+        showInvestigateImage(opts.investigateImg, opts.investigateText || '', function() {
           if (onClick) onClick();
         });
       } else if (onClick) {
@@ -1579,7 +1551,7 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
       var skillName = G.activeSkill;
       if (opts.once) el.dataset.investigated = '1';
       if (opts.investigateImg) {
-        showFullImage(opts.investigateImg, opts.investigateText || '', function() {
+        showInvestigateImage(opts.investigateImg, opts.investigateText || '', function() {
           if (opts.onSkill) { opts.onSkill(skillName); }
           else if (onClick) { onClick(); }
         });
@@ -1608,7 +1580,7 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
     // 普通调查模式：有调查图 → 全屏展示图，点击后执行回调
     else if (opts.investigateImg) {
       if (opts.once) el.dataset.investigated = '1';
-      showFullImage(opts.investigateImg, opts.investigateText || '', function() {
+      showInvestigateImage(opts.investigateImg, opts.investigateText || '', function() {
         if (onClick) onClick();
       });
     } else if (onClick) {
@@ -1659,73 +1631,11 @@ function openQinPanel(type) {
       content += '</div>';
     }
 
-  } else if (type === 'reason') {
-    content = '<h2>推理板</h2>';
-    content += '<p style="font-size:18px;color:var(--bronze);margin-bottom:14px;letter-spacing:2px">将相关线索点击选中，组合推理出结论。</p>';
-    content += '<div class="reason-area">';
-    content += '<div class="reason-board" id="reasonBoard"></div>';
-    content += '</div>';
-    content += '<div class="reason-result" id="reasonResult"></div>';
-    content += '<div style="display:flex;gap:12px;justify-content:center;margin-top:14px">';
-    content += '<button class="qin-btn" onclick="checkReasoning()">验证推理</button>';
-    content += '<button class="qin-btn" onclick="clearReasoning()">清空选择</button></div>';
   }
 
   panel.innerHTML = content + '<button class="close-btn" onclick="this.closest(\'.qin-panel-overlay\').remove()">返回探索</button>';
   overlay.appendChild(panel);
   $('game').appendChild(overlay);
-
-  if (type === 'reason') {
-    setTimeout(function() { renderReasoningClues(); }, 50);
-  }
-}
-
-// ==================== 推理板逻辑 ====================
-var selectedClues = [];
-function renderReasoningClues() {
-  var board = $('reasonBoard');
-  if (!board) return;
-  var h = '';
-  G.reasoningClues.forEach(function(c) {
-    var sel = selectedClues.indexOf(c.id) >= 0 ? ' selected-slot' : '';
-    h += '<span class="reason-slot' + sel + '" onclick="toggleClue(\'' + c.id + '\')">' + c.text + '</span>';
-  });
-  if (G.reasoningClues.length === 0) h = '<span style="color:var(--dark-bronze);font-size:18px">当前无可用线索</span>';
-  board.innerHTML = h;
-}
-function toggleClue(id) {
-  var idx = selectedClues.indexOf(id);
-  if (idx >= 0) selectedClues.splice(idx, 1);
-  else selectedClues.push(id);
-  renderReasoningClues();
-}
-function clearReasoning() { selectedClues = []; renderReasoningClues(); var r = $('reasonResult'); if (r) r.innerHTML = ''; }
-function checkReasoning() {
-  var result = $('reasonResult');
-  if (!result) return;
-  var ids = selectedClues.sort().join(',');
-
-  if (ids === '北方属水,水色为黑,秦承玄水') {
-    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：秦承玄水 + 水色为黑 + 北方属水 → <b>机关应在北方黑水门</b></span>';
-    if (!G.completedPuzzles['reasoning_done']) {
-      completePuzzle('reasoning_done');
-      addNote('推理结论', '秦以水德代周火德。水为黑色，对应北方。秦陵入口——黑水门，必在北方。');
-      showHint('推理完成：机关应在北方黑水门');
-    }
-  } else if (ids === '朱丝缚木,树创复合,南方属火') {
-    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：需先以火困木灵，再以金断木形</span>';
-    addNote('神木推理', '朱丝属火，可困树神。火克木，朱丝缚木后方可用斧伐树。');
-  } else if (ids === '金克木,青铜属金') {
-    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：青铜斧属金，金可克木</span>';
-  } else if (ids === '木入土,秦以水德') {
-    result.innerHTML = '<span style="color:#60c060;font-size:21px">✓ 推理正确：木入土后，最终导向黑水，水德归秦</span>';
-  } else if (selectedClues.length === 1) {
-    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">需要选择多条线索组合推理。秦为水德、水对应哪些要素？</span>';
-  } else if (selectedClues.length === 2) {
-    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">两条线索的关联还不够完整，试着再加入一条。</span>';
-  } else {
-    result.innerHTML = '<span style="color:var(--bronze-bright);font-size:19px">这些线索的关联尚不明确，试试其他组合。</span>';
-  }
 }
 
 // ==================== 标题画面 ====================
@@ -1755,11 +1665,10 @@ function startGame() {
   titleScreen.style.display = 'none';
   G.gameStarted = true;
   G.chapter = 1; G.scene = 0; G.lastChapter = 1;
-  G.inventory = {}; G.risk = 0; G.notes = []; G.reasoningClues = [];
+  G.inventory = {}; G.risk = 0; G.notes = [];
   G.completedPuzzles = {}; G.skills = {}; G.sceneContent = {};
   G.finalChoice = null;
   G.interactionLock = false;
-  selectedClues = [];
   ['火折子','蜡封','洛阳铲','墨线','绳钩','拓包','铜镜','朱砂'].forEach(function(t) { gainItem(t, t, '盗墓工具'); });
   gainItem('黑玉残玦', '黑玉残玦', '主角自幼佩戴的命运凭证', true);
   unlockSkill('观纹', '观察纹样暗纹');
@@ -1809,7 +1718,7 @@ function showChapterSelect() {
 function loadChapter(n) {
   titleScreen.style.display = 'none';
   G.chapter = n; G.scene = 0; G.lastChapter = Math.max(G.lastChapter, n);
-  G.risk = 0; G.reasoningClues = []; selectedClues = [];
+  G.risk = 0;
   G.completedPuzzles = {}; G.notes = []; G.skills = {}; G.sceneContent = {};
   G.finalChoice = null;
   G.interactionLock = false;
@@ -1969,10 +1878,9 @@ function quickLoadChapter(n) {
   G.scene = 0;
   G.lastChapter = Math.max(G.lastChapter, n);
   G.interactionLock = false;
-  // 保留 completedPuzzles / inventory / notes / reasoningClues / skills / risk / chapterUnlocked
+  // 保留 completedPuzzles / inventory / notes / skills / risk / chapterUnlocked
   // 只重置场景探索状态
   G.sceneContent = {};
-  selectedClues = [];
 
   // 补发前期章节的固定物品和技能
   if (n >= 2) {
@@ -2141,52 +2049,39 @@ function prologueRestoration() {
       var missing = REST_REQUIRED.filter(function(id) { return !(G.sceneContent[REST_SCENE] || {})[id]; }).map(function(id) { return clueNames[id]; });
       showFullImage(LV(0, '帛书底图（水渍、虫蛀、缺口版）.png'), '', function() {
         if (missing.length > 0) {
-          showDialogue('沈砚', '帛书残缺严重，还缺少一些关键线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。');
+          showDialogue('沈砚', '古籍修复室中还有一些线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。');
         }
       });
     }
   }, { hsId: 'silk' });
 
-  // 黑玉残玦
+  // 黑玉残玦：点击图片上文字框查看线索，关闭后计入笔记
   clueHotspots['jade'] = addInteractive(620, 130, 150, 140, '', function() {
     markContent(REST_SCENE, 'jade');
-    showDialogue('沈砚', '这枚残玦我自幼佩戴，每当不慎沾上水便会渗出淡淡的墨痕', function() {
-      addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，遇水会出现墨痕。');
-      onClueInvestigated();
-    });
-  }, { hsId: 'jade', investigateImg: LV(0, '黑玉残玦特写（单独物品图）.png') });
+    addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，<b>遇水会出现墨痕。</b>');
+    onClueInvestigated();
+  }, { hsId: 'jade', investigateImg: LV(0, '黑玉残玦特写（单独物品图）.png'), investigateText: '这枚残玦我自幼佩戴，每当不慎沾上水便会渗出淡淡的墨痕。' });
 
   // 养父遗信
   clueHotspots['letter'] = addInteractive(380, 280, 200, 120, '', function() {
     markContent(REST_SCENE, 'letter');
-    showDialogue('沈砚', '"若黑水再响，莫入陵；若你非入不可，记得不要取药。"', function() {
-      showDialogue('系统', '信尾署名：父  沈伯安。落款时间是十年前，正是他最后一次出发前。', function() {
-        addNote('养父遗信', '养父沈伯安留下的最后信件。警告不要入陵，更不要取药。十年前在探索中失踪。');
-        onClueInvestigated();
-      });
-    });
-  }, { hsId: 'letter', investigateImg: LV(0, '养父遗信.png') });
+    addNote('养父遗信', '养父沈伯安留下的最后信件。警告不要入陵，更不要取药。十年前在探索中失踪。');
+    onClueInvestigated();
+  }, { hsId: 'letter', investigateImg: LV(0, '养父遗信.png'), investigateText: '"若黑水再响，莫入陵；若你非入不可，记得不要取药。"信尾署名：父 沈伯安，落款时间是十年前，正是他最后一次出发前。' });
 
   // 五行图
   clueHotspots['wuxing'] = addInteractive(720, 320, 140, 140, '', function() {
     markContent(REST_SCENE, 'wuxing');
-    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北，东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
-      addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
-      addReasonClue('北方属水', '北方属水');
-      addReasonClue('水色为黑', '水色为黑');
-      onClueInvestigated();
-    });
-  }, { hsId: 'wuxing', investigateImg: LV(0, '五行图.png') });
+    addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。<b>秦尚黑，属水德。</b>');
+    onClueInvestigated();
+  }, { hsId: 'wuxing', investigateImg: LV(0, '五行图.png'), investigateText: '五行图：木火土金水，对应东南中西北，东方青色、南方赤色、中央黄色、西方白色、北方黑色。' });
 
   // 秦简拓本
   clueHotspots['bamboo'] = addInteractive(120, 320, 140, 130, '', function() {
     markContent(REST_SCENE, 'bamboo');
-    showDialogue('沈砚', '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。', function() {
-      addNote('秦简拓本', '秦以水德，尚黑色。"水胜火"——秦代周，水克火。玄水在北方，旧祠可能作为入口。');
-      addReasonClue('秦承玄水', '秦承玄水');
-      onClueInvestigated();
-    });
-  }, { hsId: 'bamboo', investigateImg: LV(0, '秦简拓本.png') });
+    addNote('秦简拓本', '秦以水德，尚黑色。"水胜火"——秦代周，水克火。玄水在北方，旧祠可能作为入口。');
+    onClueInvestigated();
+  }, { hsId: 'bamboo', investigateImg: LV(0, '秦简拓本.png'), investigateText: '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。' });
 
   // 窗户热区（始终保留）
   addInteractive(830, 60, 110, 220, '', function() {
@@ -2398,12 +2293,11 @@ function showSteleFullImage() {
   addInteractive(620, 120, 320, 560, '', function() {}, {
     hsId: 'stele_text',
     skill: '拓印',
-    skillHint: '碑文上的文字风化模糊，需用拓印才能辨认……',
+    skillHint: '碑文上的文字风化模糊，或许有什么办法可以仔细辨认……',
     once: true,
     onSkill: function(skillName) {
       showFullImage(LV(0, '分镜3·碑文放大图.png'), '周火既衰，秦承玄水', function() {
         addNote('残碑铭文', '残碑记载"周火既衰，秦承玄水"，印证秦以水德代周火德。');
-        addReasonClue('秦承玄水', '秦承玄水');
         markContent('shrine', 'stela');
       });
     }
@@ -2427,17 +2321,39 @@ function showSteleFullImage() {
     }
   });
 
-  // 黑水门（残碑后方大门）拆为三个热区，点击任意一个进入五色按钮机关；完全通关后失效
-  function tryOpenGateFromStele() {
-    if (G.completedPuzzles['black_gate']) {
-      showDialogue('沈砚', '黑水门已经开启，暗阶已露。');
-    } else {
-      openGatePuzzle();
-    }
+}
+
+// 北墙黑水门全屏图：点击 north-wall 任意热区后进入
+function showNorthWallFullImage() {
+  var savedSceneId = G.currentSceneId;
+  var savedBg = sceneBg.style.backgroundImage;
+  clearScene();
+  G.currentSceneId = 'north_wall_fullscreen';
+  setBg(LV(0, '地表旧祠后面的北方黑水门.png'));
+
+  function returnToShrine() {
+    G.currentSceneId = savedSceneId;
+    clearScene();
+    sceneBg.style.backgroundImage = savedBg;
+    prologueShrine();
   }
-  addInteractive(80, 120, 500, 650, '', tryOpenGateFromStele, { hsId: 'stele_gate_left' });
-  addInteractive(450, 50, 660, 100, '', tryOpenGateFromStele, { hsId: 'stele_gate_top' });
-  addInteractive(1000, 120, 500, 650, '', tryOpenGateFromStele, { hsId: 'stele_gate_right' });
+
+  // 返回探索
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.textContent = '返回探索';
+  closeBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;';
+  closeBtn.onclick = returnToShrine;
+  sceneArea.appendChild(closeBtn);
+
+  // 五色机关热区：点击后显示五色按钮放大图
+  addInteractive(500, 260, 200, 140, '', function() {
+    G.interactionLock = false;
+    openGatePuzzle(returnToShrine);
+  }, { hsId: 'north_wall_buttons' });
+
+  // 解锁交互（本场景的热区需要可点击）
+  G.interactionLock = false;
 }
 
 function prologueShrine() {
@@ -2462,7 +2378,6 @@ function prologueShrine() {
     showDialogue('沈砚', '南墙的朱雀壁画颜色鲜明，火纹完整。', function() {
       showDialogue('沈砚', '但秦代周而立，秦为水德、周为火德。这朱雀代表的应该是被水德取代的周火。', function() {
         addNote('朱雀壁画', '南墙朱雀火纹，颜色鲜明，是提示还是误导？');
-        addReasonClue('南墙朱雀', '南墙朱雀火纹');
       });
     });
   }, { hsId: 'mural', investigateImg: LV(0, '南墙朱雀壁画.png'), once: true });
@@ -2483,8 +2398,8 @@ function prologueShrine() {
     });
   }, { hsId: 'waterflow', once: true });
 
-  // 北墙黑水门：需要先探索全部线索
-  addInteractive(320, 60, 300, 200, '', function() {
+  // 北墙黑水门：需要先探索全部线索；拆为左/上/右三个热区
+  function enterNorthWall() {
     if (!canCleanNorthWall()) {
       var missing = [];
       if (!(G.sceneContent[SHR_SCENE] || {})['mural']) missing.push('南墙朱雀壁画');
@@ -2496,174 +2411,130 @@ function prologueShrine() {
     }
     if (!G.completedPuzzles['north_clean']) {
       G.completedPuzzles['north_clean'] = true;
-      // 切换视角：黑水门全屏展示
-      transitionScene(function() {
-        clearScene();
-        setBg(LV(0, '地表旧祠后面的北方黑水门.png'));
-        G.interactionLock = true;
-        showDialogue('沈砚', '旧祠的正北方……竟是一道黑水门。', function() {
-          addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮。');
-          addReasonClue('北墙黑水门', '北墙露出黑水门机关');
-          // 切回旧祠场景，并打开五色按钮关卡
-          transitionScene(function() {
-            G.interactionLock = false;
-            prologueShrine();
-            openGatePuzzle();
-          });
-        });
+      showDialogue('沈砚', '旧祠的正北方……竟是一道黑水门。', function() {
+        addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮。');
+        transitionScene(function() { showNorthWallFullImage(); });
       });
     } else if (!G.completedPuzzles['black_gate']) {
-      openGatePuzzle();
+      transitionScene(function() { showNorthWallFullImage(); });
     } else {
       showDialogue('沈砚', '黑水门已经开启，暗阶通向地下。');
     }
-  }, { hsId: 'north_wall' });
+  }
+  addInteractive(200, 60, 160, 200, '', enterNorthWall, { hsId: 'north_wall_left' });
+  addInteractive(360, 30, 220, 80, '', enterNorthWall, { hsId: 'north_wall_top' });
+  addInteractive(580, 60, 160, 200, '', enterNorthWall, { hsId: 'north_wall_right' });
 }
 
-// 黑水门五色按钮关卡：全屏显示"黑水门五色按钮.png"，五色按钮直接覆盖在图上对应颜色处
-function openGatePuzzle() {
+// 黑水门五色按钮关卡：转为普通场景，五个颜色按钮为可编辑热区
+function openGatePuzzle(onClose) {
   if (G.completedPuzzles['black_gate']) return;
   if (G.interactionLock) return;
   dismissFullImage();
-  var overlay = document.getElementById('gatePuzzleOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'gatePuzzleOverlay';
-    overlay.style.cssText = 'position:absolute;inset:0;background:rgba(5,5,5,0.92);z-index:3800;display:none;align-items:center;justify-content:center;flex-direction:column;';
-    $('game').appendChild(overlay);
-  }
-  // 五色按钮在图上的位置（百分比，对应图中五色区域，可按实际图微调）
-  var colors = [
-    {id:'青', bg:'#3a6a3a', label:'青(木/东)', left:'13%'},
-    {id:'赤', bg:'#b04030', label:'赤(火/南)', left:'31%'},
-    {id:'黄', bg:'#c8a030', label:'黄(土/中)', left:'50%'},
-    {id:'白', bg:'#c8c0b0', label:'白(金/西)', left:'69%'},
-    {id:'黑', bg:'#1a1a1a', label:'黑(水/北)', left:'87%'}
-  ];
-  var html = '<div style="position:relative;display:inline-block;max-width:92%;" id="gatePuzzleImgWrap">';
-  html += '<img src="' + LV(0, '黑水门五色按钮.png') + '" style="max-width:100%;max-height:78vh;display:block;border:4px solid var(--bronze);outline:1px solid var(--verdigris);outline-offset:-11px;box-shadow:0 0 60px rgba(0,0,0,0.8);pointer-events:none;">';
-  colors.forEach(function(c) {
-    html += '<div class="gate-btn-qin" data-color="' + c.id + '" title="' + c.label + '" style="position:absolute;top:52%;left:' + c.left + ';transform:translate(-50%,-50%);background:' + c.bg + ';width:60px;height:60px;"></div>';
-  });
-  // 门上纹样热区：点击后全屏显示黑水门细节大图
-  html += '<div class="gate-detail-trigger" title="细察门纹" style="position:absolute;top:30%;left:50%;transform:translate(-50%,-50%);width:220px;height:140px;cursor:pointer;border-radius:8px;transition:all 0.3s;"></div>';
-  html += '</div>';
-  html += '<div style="color:var(--verdigris);font-size:17px;letter-spacing:3px;margin-top:16px;">— 点击图上对应颜色的按钮 —</div>';
-  html += '<button class="close-btn" id="gatePuzzleClose" style="position:absolute;bottom:30px;right:30px;">返回探索</button>';
-  overlay.innerHTML = html;
-  overlay.style.display = 'flex';
-  G.interactionLock = true;
 
-  overlay.querySelectorAll('.gate-btn-qin').forEach(function(btn) {
-    btn.onclick = function(e) { e.stopPropagation(); if (G.dialogueQueue.length > 0) return; gateButtonClicked(btn.dataset.color); };
-  });
-  var detailTrigger = overlay.querySelector('.gate-detail-trigger');
-  detailTrigger.onmouseenter = function() { this.style.background = 'rgba(180,140,60,0.12)'; this.style.boxShadow = '0 0 20px rgba(180,140,60,0.25)'; };
-  detailTrigger.onmouseleave = function() { this.style.background = 'transparent'; this.style.boxShadow = 'none'; };
-  detailTrigger.onclick = function(e) { e.stopPropagation(); if (G.dialogueQueue.length > 0) return; showGateDetail(); };
-  document.getElementById('gatePuzzleClose').onclick = function() {
-    if (G.dialogueQueue.length > 0) return;
-    overlay.style.display = 'none';
-    G.interactionLock = false;
-  };
-}
+  // 清理旧版 overlay（若存在）
+  var oldOverlay = document.getElementById('gatePuzzleOverlay');
+  if (oldOverlay) oldOverlay.parentNode.removeChild(oldOverlay);
 
-// 黑水门纹样全屏详情：五个颜色区域为隐形热区，点击后文字框展示 5 秒自动消失
-function showGateDetail() {
-  var overlay = document.getElementById('gateDetailOverlay');
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'gateDetailOverlay';
-    overlay.style.cssText = 'position:absolute;inset:0;background:rgba(5,5,5,0.94);z-index:3900;display:none;align-items:center;justify-content:center;flex-direction:column;';
-    $('game').appendChild(overlay);
-  }
-  var colors = [
-    {id:'青', top:'55%', left:'13%', text:'青色属木，位在东方。'},
-    {id:'赤', top:'55%', left:'31%', text:'赤色属火，位在南方。朱雀为周火之兆，按下则会引动误导机关。'},
-    {id:'黄', top:'55%', left:'50%', text:'黄色属土，位居中央。'},
-    {id:'白', top:'55%', left:'69%', text:'白色属金，位在西方。'},
-    {id:'黑', top:'55%', left:'87%', text:'黑色属水，位在北方。秦承水德，尚黑，此乃开门之钥。'}
-  ];
-  var html = '<div style="position:relative;display:inline-block;max-width:92%;">';
-  html += '<img src="' + LV(0, '地表旧祠后面的北方黑水门.png') + '" style="max-width:100%;max-height:78vh;display:block;border:4px solid var(--bronze);outline:1px solid var(--verdigris);outline-offset:-11px;box-shadow:0 0 60px rgba(0,0,0,0.8);pointer-events:none;">';
-  colors.forEach(function(c) {
-    html += '<div class="gate-detail-hotspot" data-color="' + c.id + '" title="' + c.id + '" style="position:absolute;top:' + c.top + ';left:' + c.left + ';transform:translate(-50%,-50%);width:70px;height:70px;cursor:pointer;border-radius:50%;transition:all 0.3s;"></div>';
-  });
-  html += '</div>';
-  html += '<div style="color:var(--verdigris);font-size:17px;letter-spacing:3px;margin-top:16px;">— 点击门上五色纹样查看含义 —</div>';
-  html += '<button class="close-btn" id="gateDetailClose" style="position:absolute;bottom:30px;right:30px;">返回</button>';
-  overlay.innerHTML = html;
+  // 保存旧场景状态
+  var savedSceneId = G.currentSceneId;
+  var savedBg = sceneBg.style.backgroundImage;
 
+  clearScene();
+  G.currentSceneId = 'gate_puzzle';
+  G.scene = 1;
+  setBg(LV(0, '黑水门五色按钮.png'));
+
+  // 底部文字框
   var textBox = document.createElement('div');
-  textBox.id = 'gateDetailText';
-  textBox.style.cssText = 'position:absolute;bottom:110px;left:50%;transform:translateX(-50%);max-width:80%;text-align:center;color:var(--silk-bright);font-size:22px;letter-spacing:2px;line-height:1.6;background:rgba(11,17,24,0.96);border:2px solid var(--dark-bronze);outline:1px solid var(--verdigris);outline-offset:-5px;padding:14px 40px;display:none;z-index:3910;';
-  overlay.appendChild(textBox);
+  textBox.id = 'gatePuzzleText';
+  textBox.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);max-width:80%;text-align:center;color:var(--silk-bright);font-size:22px;letter-spacing:2px;line-height:1.6;background:rgba(11,17,24,0.96);border:2px solid var(--dark-bronze);outline:1px solid var(--verdigris);outline-offset:-5px;padding:14px 40px;display:none;z-index:3810;pointer-events:none;';
+  $('game').appendChild(textBox);
 
-  overlay.style.display = 'flex';
+  var colors = [
+    {id:'青', text:'东侧木龛轻响但无门开启……'},
+    {id:'赤', text:'南墙朱雀发亮，祠内温度升高！', risk:1},
+    {id:'黄', text:'地面尘土震动，供案下沉了一点'},
+    {id:'白', text:'西侧铜铃轻轻响起……'},
+    {id:'黑', text:'黑色属水，位在北方。秦承水德，尚黑，此乃开门之钥。'}
+  ];
 
   function showColorText(id) {
     var info = colors.find(function(c) { return c.id === id; });
     textBox.textContent = info ? info.text : '';
     textBox.style.display = 'block';
-    if (G._gateDetailTimer) clearTimeout(G._gateDetailTimer);
-    G._gateDetailTimer = setTimeout(function() { textBox.style.display = 'none'; }, 5000);
+    if (G._gatePuzzleTimer) clearTimeout(G._gatePuzzleTimer);
+    G._gatePuzzleTimer = setTimeout(function() { textBox.style.display = 'none'; }, 5000);
   }
 
-  overlay.querySelectorAll('.gate-detail-hotspot').forEach(function(hs) {
-    hs.onmouseenter = function() { this.style.background = 'rgba(180,140,60,0.15)'; this.style.boxShadow = '0 0 16px rgba(180,140,60,0.3)'; };
-    hs.onmouseleave = function() { this.style.background = 'transparent'; this.style.boxShadow = 'none'; };
-    hs.onclick = function(e) { e.stopPropagation(); showColorText(hs.dataset.color); };
+  function removeTextBox() {
+    if (textBox && textBox.parentNode) textBox.parentNode.removeChild(textBox);
+    textBox = null;
+  }
+
+  colors.forEach(function(c) {
+    addInteractive(0, 0, 90, 90, '', function() {
+      showColorText(c.id);
+      if (c.risk) {
+        updateRisk(c.risk);
+        showHint('风险值 +' + c.risk + '，朱雀火纹是误导');
+      }
+      if (c.id === '黑') {
+        if (G._gatePuzzleTimer) clearTimeout(G._gatePuzzleTimer);
+        G._gatePuzzleTimer = setTimeout(function() {
+          if (textBox) textBox.style.display = 'none';
+          removeTextBox();
+          openBlackGate();
+        }, 5000);
+      }
+    }, { hsId: 'gate_' + c.id });
   });
-  document.getElementById('gateDetailClose').onclick = function() { overlay.style.display = 'none'; };
+
+  // 返回按钮
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.textContent = '返回';
+  closeBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;z-index:3900;';
+  closeBtn.onclick = function() {
+    if (G.dialogueQueue.length > 0) return;
+    returnToShrine();
+  };
+  sceneArea.appendChild(closeBtn);
+
+  function returnToShrine() {
+    G.currentSceneId = savedSceneId;
+    removeTextBox();
+    clearScene();
+    sceneBg.style.backgroundImage = savedBg;
+    prologueShrine();
+    if (typeof onClose === 'function') onClose();
+  }
 }
 
-function gateButtonClicked(id) {
-  var overlay = document.getElementById('gatePuzzleOverlay');
-  if (id === '黑') {
-    showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹像是收到了感应，散发出若隐若现的光', function() {
-      if (G.inventory['黑玉残玦'] || G.inventory['黑玉残玦显影']) {
-        if (overlay) overlay.style.display = 'none';
-        completePuzzle('black_gate');
-        gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
-        addNote('黑水门开启', '按下黑色按钮、将黑玉残玦靠近北方方位槽后，黑水门开启。获得了完整的黑水玉玦。');
-        addNote('黑水玉玦', '从黑水门获得的水德秘宝，是后续秦陵水德机关的基础钥匙。');
-        // 切换视角：黑水门开启后露出外藏道（先清理旧热区，避免遗留可点击区域）
-        transitionScene(function() {
-          clearScene();
-          setBg(LV(0, '黑水门开启（露出外藏道）.png'));
-          showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
-            showDialogue('系统', '阶梯两侧刻着秦篆："持玉玦者，慎入。"', function() {
-              showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
-                G.chapterUnlocked[2] = true;
-                showDialogue('系统', '序章完成！第一章已解锁。', function() {
-                  transitionScene(function() { ch1Start(); });
-                });
-              });
+// 点击黑色按钮后，文字框消失，触发开门
+function openBlackGate() {
+  if (G.inventory['黑玉残玦'] || G.inventory['黑玉残玦显影']) {
+    completePuzzle('black_gate');
+    gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
+    addNote('黑水门开启', '按下黑色按钮、将黑玉残玦靠近北方方位槽后，黑水门开启。获得了完整的黑水玉玦。');
+    addNote('黑水玉玦', '从黑水门获得的水德秘宝，是后续秦陵水德机关的基础钥匙。');
+    // 切换视角：黑水门开启后露出外藏道（先清理旧热区，避免遗留可点击区域）
+    transitionScene(function() {
+      clearScene();
+      setBg(LV(0, '黑水门开启（露出外藏道）.png'));
+      showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
+        showDialogue('系统', '阶梯两侧刻着秦篆："持玉玦者，慎入。"', function() {
+          showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
+            G.chapterUnlocked[2] = true;
+            showDialogue('系统', '序章完成！第一章已解锁。', function() {
+              transitionScene(function() { ch1Start(); });
             });
           });
         });
-      } else {
-        showDialogue('沈砚', '黑水纹亮了……但玉玦槽还需要黑玉残玦来激活。');
-      }
-    });
-  } else if (id === '赤') {
-    updateRisk(1);
-    showDialogue('系统', '南墙的朱雀壁画突然发亮！祠内温度骤然升高……', function() {
-      showDialogue('沈砚', '赤色在南，对应火德。朱雀是周火的象征——秦以水代火，这南墙果然在误导人！', function() {
-        addNote('朱雀警示', '按赤色按钮后南墙朱雀发亮，温度升高——南墙火纹是误导机关，真正的门在北方。');
       });
     });
-  } else if (id === '青') {
-    showDialogue('系统', '按下青色按钮，东侧龛位发出微光，但没有进一步变化。');
-  } else if (id === '黄') {
-    showDialogue('系统', '按下黄色按钮，地面微微震动，但门依然紧闭。');
-  } else if (id === '白') {
-    showDialogue('系统', '按下白色按钮，西侧龛位有金属回响，但门没有任何反应。');
-  }
-  if (id !== '黑' && id !== '赤') {
-    setTimeout(function() {
-      showHint('秦为水德，水在北方、色为黑。也许应该按黑色的按钮？');
-    }, 2000);
+  } else {
+    showDialogue('沈砚', '黑色属水，是开门之钥……但玉玦槽还需要黑玉残玦来激活。');
   }
 }
 
@@ -2755,7 +2626,7 @@ function ch1Start() {
     var box = document.createElement('div');
     box.style.cssText = 'background:rgba(11,17,24,0.96);border:2px solid var(--dark-bronze);outline:1px solid var(--verdigris);outline-offset:-5px;padding:18px 30px;display:flex;flex-direction:column;gap:14px;align-items:center;box-shadow:0 0 24px rgba(0,0,0,0.6);';
     var title = document.createElement('div');
-    title.textContent = (side === 'left' ? '左侧树根' : '右侧枯根') + '似乎可以牵拉，要怎么做？';
+    title.textContent = (side === 'left' ? '左侧树根' : '右侧枯根') + '这里的树根似乎可以牵拉……';
     title.style.cssText = 'color:var(--silk-bright);font-size:21px;letter-spacing:2px;';
     var btns = document.createElement('div');
     btns.style.cssText = 'display:flex;gap:18px;';
@@ -2907,9 +2778,6 @@ function startMuralPuzzle() {
           showDialogue('沈砚', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。', function() {
             addNote('神木自合', '壁画显示秦人初次伐树时，风雨骤起，树身伤口会重新合拢。');
           addNote('朱丝破法', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。');
-          addReasonClue('树创复合', '树身伤口会自合');
-          addReasonClue('朱丝缚木', '朱丝可困树神');
-          addReasonClue('南方属火', '朱色属火，南方属火');
             ch1SouthWall();
           });
         });
@@ -2944,9 +2812,7 @@ function ch1SouthWall() {
   // 灶旁小碑
   addInteractive(400, 200, 200, 150, '', function() {
     markContent(SW_SCENE, 'tablet');
-    showDialogue('沈砚', '灶旁小碑："南火困灵，朱丝缚木"。需要用火点燃祭灶。', function() {
-      addReasonClue('南火困灵', '南火困灵，朱丝缚木');
-    });
+    showDialogue('沈砚', '灶旁小碑："南火困灵，朱丝缚木"。需要用火点燃祭灶。');
   }, {hsId: 'tablet', icon: '🪦'});
 
   // 火盆：需要先读碑文
@@ -2995,7 +2861,7 @@ function ch1MainHall() {
     if (steps.fire && !steps.gold) {
       steps.gold = true;
       showDialogue('系统', '青铜斧影劈入树身——斧痕不再愈合！神木开始断裂。', function() {
-        addReasonClue('金克木', '金可克木'); addReasonClue('青铜属金', '青铜斧属金'); checkAllDone();
+        checkAllDone();
       });
     } else if (!steps.fire) { showDialogue('沈砚', '青铜斧痕出现后迅速合拢……必须先困住树神。'); }
     else if (steps.gold) { showDialogue('沈砚', '斧痕已落下，神木正在断裂。'); }
@@ -3005,7 +2871,7 @@ function ch1MainHall() {
     if (steps.gold && !steps.earth) {
       steps.earth = true;
       showDialogue('沈砚', '断木落入中央土台。土台裂开，露出青牛浮雕与黑水声。', function() {
-        addReasonClue('木入土', '神木落入土台'); addReasonClue('秦以水德', '最终归水，水德归秦'); checkAllDone();
+        checkAllDone();
       });
     } else if (!steps.gold) { showDialogue('沈砚', '土台轻响但不开启……需要先让神木断裂。'); }
   }, {hsId: 'earth_plat', icon: '⛰', skill: '探土', skillHint: '土台隐约发出沉闷的声响……探查一下它的承重结构或许有发现。'});
@@ -3033,7 +2899,6 @@ function ch1GreenOx() {
             showDialogue('沈砚', '墙上浮现秦篆："持玦者已归其一，玄鸟当启其二。"', function() {
               G.chapterUnlocked[5] = true;
               showDialogue('系统', '第一章完成！第二章「玄鸟生秦」已解锁。', function() {
-                addReasonClue('木入土', '木入土导向黑水');
                 transitionScene(function() {
                   showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。', function() {
                     showChapterPanel();
@@ -3408,7 +3273,6 @@ function ch2Start() {
     showDialogue('沈砚', '壁画上玄鸟展翅，自空中衔下一枚金卵，落于女修面前。这是秦族"玄鸟陨卵"的图腾。', function() {
       showDialogue('沈砚', '秦人自认玄鸟之后——天命所归，以水德承统，皆由此起。', function() {
         addNote('玄鸟传说', '玄鸟衔卵而生秦族始祖。秦以玄鸟为天命象征，与"玄水"同源。');
-        addReasonClue('玄鸟起源', '玄鸟为秦族天命图腾');
       });
     });
   }, { hsId: 'xuanniao_mural', icon: '🕊', skill: '拓印', skillHint: '壁画上的玄鸟纹样与残缺铭文似乎可拓印保存……' });
@@ -3426,7 +3290,6 @@ function ch2Start() {
     markContent(C2, 'stars');
     showDialogue('沈砚', '穹顶星象孔洞与地面的玄鸟投影一一对应。星位指向北方——"斗柄指北，玄水乃归"在此重现。', function() {
       addNote('星象孔洞', '玄鸟墓道顶部的星象孔洞，与北斗、北方玄水呼应。');
-      addReasonClue('玄鸟星象', '星象孔洞指向北方玄水');
     });
   }, { hsId: 'star_holes', icon: '✨', skill: '观纹', skillHint: '孔洞后的星象隐约可辨，细看或有发现……' });
 
@@ -3500,7 +3363,6 @@ function startXuanniaoLineage() {
       completePuzzle('xuanniao_lineage');
       showDialogue('沈砚', '谱系正确！玄鸟石像应声展翅——天命所归，水德将启。', function() {
         addNote('秦族谱系', '玄鸟陨卵→女修吞卵→大业初生→大费佐舜。秦族以玄鸟为天命，以水德承统。');
-        addReasonClue('秦以水德', '秦族起源由玄鸟天命导向水德');
         window._closeGene();
         ch2Projection();
       });
@@ -3607,7 +3469,6 @@ function ch5Start() {
       showDialogue('沈砚', '丹方残页：' + r.txt, function() {
         if (r.id === 'r3') {
           addNote('丹方三', '第三份丹方称"不死之药"实是机枢之钥的讳称——不死药可能并非药物。');
-          addReasonClue('丹药非药', '不死药是机关钥的讳称');
         } else {
           addNote('丹方', r.txt);
         }
@@ -3636,7 +3497,6 @@ function ch5Start() {
         if (pills.p1 && pills.p2 && pills.p3) {
           completePuzzle('pill_fake');
           showDialogue('系统', '三枚丹药皆伪！真正关键物并非丹药本身。', function() {
-            addReasonClue('三丹皆伪', '三枚丹药都是诱饵');
             showHint('调查方士手札，寻找真正的关键。');
           });
         }
