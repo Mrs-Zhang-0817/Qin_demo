@@ -2078,11 +2078,9 @@ function prologueRestoration() {
     } else if (!canStartSilkPuzzle()) {
       var clueNames = { silk: '帛书残片', jade: '黑玉残玦', letter: '养父遗信', wuxing: '五行图', bamboo: '秦简拓本' };
       var missing = REST_REQUIRED.filter(function(id) { return !(G.sceneContent[REST_SCENE] || {})[id]; }).map(function(id) { return clueNames[id]; });
-      showFullImage(LV(0, '帛书底图（水渍、虫蛀、缺口版）.png'), '', function() {
-        if (missing.length > 0) {
-          showDialogue('沈砚', '古籍修复室中还有一些线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。');
-        }
-      });
+      if (missing.length > 0) {
+        showDialogue('沈砚', '古籍修复室中还有一些线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。');
+      }
     }
   }, { hsId: 'silk' });
 
