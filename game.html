@@ -198,7 +198,8 @@ body {
   z-index: 2200;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  justify-content: center;
   pointer-events: auto;
   width: 220px;
 }
@@ -1538,9 +1539,15 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
     }
     // 交互锁：图片/文字展示期间阻止其他点击
     if (G.interactionLock) return;
+    // 仅展示一次 guard
+    if (opts.once && el.dataset.investigated) {
+      showHint('这里已经调查过了。');
+      return;
+    }
     // 技能模式：已激活正确技能 → 展现答案
     if (G.activeSkill && opts.skill && opts.skill.split(',').indexOf(G.activeSkill) >= 0) {
       var skillName = G.activeSkill;
+      if (opts.once) el.dataset.investigated = '1';
       if (opts.investigateImg) {
         showFullImage(opts.investigateImg, opts.investigateText || '', function() {
           if (opts.onSkill) { opts.onSkill(skillName); }
@@ -1570,10 +1577,12 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
     }
     // 普通调查模式：有调查图 → 全屏展示图，点击后执行回调
     else if (opts.investigateImg) {
+      if (opts.once) el.dataset.investigated = '1';
       showFullImage(opts.investigateImg, opts.investigateText || '', function() {
         if (onClick) onClick();
       });
     } else if (onClick) {
+      if (opts.once) el.dataset.investigated = '1';
       onClick();
     }
   };
@@ -2068,47 +2077,45 @@ function prologueRestoration() {
   var REST_SCENE = 'restoration';
   var REST_REQUIRED = ['silk', 'jade', 'letter', 'wuxing', 'bamboo'];
   var clueHotspots = {};  // 存储5个线索热区DOM元素引用
-  var silkHighlighted = false; // 帛书热区是否已高亮
+  var silkReadyDialogueShown = false; // 五线索齐后提示语是否已展示
 
   // 检查是否所有前置内容已探索
   function canStartSilkPuzzle() {
     return allContentFound(REST_SCENE, REST_REQUIRED);
   }
 
-  // 每次探索后进行统一检查：五线索齐全 → 高亮帛书热区
+  // 每次探索后进行统一检查：五线索齐全 → 弹出提示
   function onClueInvestigated() {
     if (G.completedPuzzles['silk_puzzle']) return;
-    if (canStartSilkPuzzle() && !silkHighlighted) {
-      silkHighlighted = true;
-      // 与其他热区一致，使用统一的 highlight 弱闪光框
-      if (clueHotspots['silk']) {
-        clueHotspots['silk'].classList.add('highlight');
-      }
-      showHint('线索已全部收集！点击桌上的帛书开始拼合复原。');
+    if (canStartSilkPuzzle() && !silkReadyDialogueShown) {
+      silkReadyDialogueShown = true;
+      showDialogue('沈砚', '线索已收集齐全。现在可以开始修复这卷帛书了。');
     }
   }
 
-  // 帛书热区：五个线索齐后点击直接进入拼图
+  // 帛书热区：未集齐时展示未拼凑图，集齐后先弹出提示，再点击直接进入拼图
   clueHotspots['silk'] = addInteractive(160, 100, 240, 180, '', function() {
     if (!(G.sceneContent[REST_SCENE] || {})['silk']) {
       markContent(REST_SCENE, 'silk');
       addNote('残破帛书', '帛书上反复出现"黑水""玄药"等字样，似乎与秦陵传说中的不死药有关。帛书残缺严重，需要拼合复原。');
     }
     if (canStartSilkPuzzle() && !G.completedPuzzles['silk_puzzle']) {
-      // 五线索齐全，直接进入拼图
-      showDialogue('沈砚', '线索已收集齐全。现在可以开始修复这卷帛书了。', function() {
-        setTimeout(function() { startSilkPuzzle(); }, 500);
-      });
+      if (!silkReadyDialogueShown) {
+        silkReadyDialogueShown = true;
+        showDialogue('沈砚', '线索已收集齐全。现在可以开始修复这卷帛书了。');
+      } else {
+        startSilkPuzzle();
+      }
     } else if (!canStartSilkPuzzle()) {
-      onClueInvestigated();
-      // 提示还差哪些线索未调查
       var clueNames = { silk: '帛书残片', jade: '黑玉残玦', letter: '养父遗信', wuxing: '五行图', bamboo: '秦简拓本' };
       var missing = REST_REQUIRED.filter(function(id) { return !(G.sceneContent[REST_SCENE] || {})[id]; }).map(function(id) { return clueNames[id]; });
-      if (missing.length > 0) {
-        showDialogue('沈砚', '帛书残缺严重，还缺少一些关键线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。', function() {});
-      }
+      showFullImage(LV(0, '帛书底图（水渍、虫蛀、缺口版）.png'), '', function() {
+        if (missing.length > 0) {
+          showDialogue('沈砚', '帛书残缺严重，还缺少一些关键线索：' + missing.join('、') + '。先把它们调查清楚，再来修复这卷帛书吧。');
+        }
+      });
     }
-  }, { hsId: 'silk', investigateImg: LV(0, '帛书底图（水渍、虫蛀、缺口版）.png') });
+  }, { hsId: 'silk' });
 
   // 黑玉残玦
   clueHotspots['jade'] = addInteractive(620, 130, 150, 140, '', function() {
@@ -2134,12 +2141,10 @@ function prologueRestoration() {
   clueHotspots['wuxing'] = addInteractive(720, 320, 140, 140, '', function() {
     markContent(REST_SCENE, 'wuxing');
     showDialogue('沈砚', '五行图：木火土金水，对应东南中西北。东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
-      showDialogue('沈砚', '秦代周而立，周为火德，秦以水德代之。水在五行中对应北方、黑色。', function() {
-        addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
-        addReasonClue('北方属水', '北方属水');
-        addReasonClue('水色为黑', '水色为黑');
-        onClueInvestigated();
-      });
+      addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
+      addReasonClue('北方属水', '北方属水');
+      addReasonClue('水色为黑', '水色为黑');
+      onClueInvestigated();
     });
   }, { hsId: 'wuxing', investigateImg: LV(0, '五行图.png') });
 
@@ -2333,6 +2338,60 @@ function startSilkPuzzle() {
 }
 
 
+function showSteleFullImage() {
+  G.interactionLock = true;
+  var savedSceneId = G.currentSceneId;
+  var savedBg = sceneBg.style.backgroundImage;
+  clearScene();
+  G.currentSceneId = 'stele_fullscreen';
+  setBg(LV(0, 'ChatGPT Image 2026年7月20日 23_58_59.png'));
+
+  // 返回按钮
+  var closeBtn = document.createElement('div');
+  closeBtn.textContent = '— 点击画面继续 —';
+  closeBtn.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:18px;letter-spacing:4px;cursor:pointer;z-index:4000;text-shadow:0 0 10px rgba(0,0,0,0.8)';
+  closeBtn.onclick = function() {
+    G.currentSceneId = savedSceneId;
+    clearScene();
+    sceneBg.style.backgroundImage = savedBg;
+    prologueShrine();
+  };
+  sceneArea.appendChild(closeBtn);
+
+  // 碑文热区：需拓印
+  addInteractive(480, 120, 240, 480, '', function() {}, {
+    hsId: 'stele_text',
+    skill: '拓印',
+    skillHint: '碑文上的文字风化模糊，需用拓印才能辨认……',
+    once: true,
+    onSkill: function(skillName) {
+      showFullImage(LV(0, '分镜3·碑文放大图.png'), '周火既衰，秦承玄水', function() {
+        addNote('残碑铭文', '残碑记载"周火既衰，秦承玄水"，印证秦以水德代周火德。');
+        addReasonClue('秦承玄水', '秦承玄水');
+        markContent('shrine', 'stela');
+      });
+    }
+  });
+
+  // 香炉热区：需观纹
+  addInteractive(480, 580, 260, 120, '', function() {}, {
+    hsId: 'incense_full',
+    skill: '观纹',
+    skillHint: '香炉底部有暗刻痕迹，需用观纹细察……',
+    once: true,
+    onSkill: function(skillName) {
+      showFullImage(LV(0, '香炉特写.png'), '', function() {
+        showDialogue('系统', '香炉没有积灰，铜面光洁——近年有人来过这里。', function() {
+          showDialogue('沈砚', '香炉底部有暗刻的黑色水纹……这不是普通装饰，是水德崇拜者的标记。', function() {
+            addNote('香炉调查', '供案未积尘，近年有人来过。香炉底部有黑色水纹暗刻，与秦水德相关。');
+            markContent('shrine', 'incense');
+          });
+        });
+      });
+    }
+  });
+}
+
 function prologueShrine() {
   G.scene = 2;
   G.currentSceneId = 'shrine'; G._hsIndex = 0;
@@ -2358,28 +2417,13 @@ function prologueShrine() {
         addReasonClue('南墙朱雀', '南墙朱雀火纹(误导)');
       });
     });
-  }, { hsId: 'mural', investigateImg: LV(0, '南墙朱雀壁画.png') });
+  }, { hsId: 'mural', investigateImg: LV(0, '南墙朱雀壁画.png'), once: true });
 
-  // 残碑（需拓印技能）
+  // 残碑：点击进入全屏碑文/香炉调查图
   addInteractive(80, 200, 160, 260, '', function() {
-    markContent(SHR_SCENE, 'stela');
-    showDialogue('沈砚', '残碑风化严重，上半已不可读。下半依稀可见"周火既衰……秦承玄水……"', function() {
-      showDialogue('沈砚', '残碑印证了五行交替：周火衰微，秦以水德承继天命。', function() {
-        addNote('残碑铭文', '残碑记载"周火既衰，秦承玄水"，印证秦以水德代周火德。');
-        addReasonClue('秦承玄水', '秦承玄水');
-      });
-    });
-  }, { hsId: 'stela', investigateImg: LV(0, '分镜3·碑文放大图.png'), skill: '拓印', skillHint: '残碑上的文字已经风化模糊，但似乎可以通过某种方式记录下这些铭文……' });
+    showSteleFullImage();
+  }, { hsId: 'stela' });
 
-  // 香炉（需观纹技能）
-  addInteractive(320, 280, 140, 100, '', function() {
-    markContent(SHR_SCENE, 'incense');
-    showDialogue('系统', '香炉没有积灰，铜面光洁——近年有人来过这里。', function() {
-      showDialogue('沈砚', '香炉底部有暗刻的黑色水纹……这不是普通装饰，是水德崇拜者的标记。', function() {
-        addNote('香炉调查', '供案未积尘，近年有人来过。香炉底部有黑色水纹暗刻，与秦水德相关。');
-      });
-    });
-  }, { hsId: 'incense', investigateImg: LV(0, '香炉特写.png'), skill: '观纹', skillHint: '香炉底部似乎有暗刻的痕迹，仔细观察或许能发现隐藏的纹样……' });
 
   // 地面水流
   addInteractive(180, 460, 480, 50, '', function() {
@@ -2389,7 +2433,7 @@ function prologueShrine() {
         addNote('地面水流', '屋顶漏下的雨水沿地面向北汇集，暗示"水向北方"。');
       });
     });
-  }, { hsId: 'waterflow' });
+  }, { hsId: 'waterflow', once: true });
 
   // 北墙黑水门：需要先探索全部线索
   addInteractive(320, 60, 300, 200, '', function() {
@@ -2587,7 +2631,7 @@ function ch1Start() {
     showDialogue('沈砚', '墙缝中有微弱风声——后面有风道，树根也朝这个方向延伸。', function() {
       addNote('墙缝风道', '外藏道左侧墙缝后有风道，树根向左侧延伸，可以从这边绕行。');
     });
-  }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……'});
+  }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……', once: true});
 
   // 右侧墙缝（需听风，但听不到任何声音）
   addInteractive(1200, 250, 160, 300, '', function() {
@@ -2682,14 +2726,14 @@ function startMuralPuzzle() {
   panel.style.width = '100%'; panel.style.maxWidth = '1800px'; panel.style.height = '100%'; panel.style.maxHeight = '100%';
 
   function render() {
-    var h = '<h2>风雨自合壁画排序</h2>';
+    var h = '<h2>壁画修复</h2>';
     h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:12px;letter-spacing:2px">按正确顺序排列壁画残片（点击交换）</p>';
-    h += '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:wrap">';
+    h += '<div style="display:flex;gap:6px;justify-content:center;flex-wrap:nowrap">';
     current.forEach(function(id, i) {
       var selected = (selectedMural === i);
       h += '<div class="puzzle-piece' + (selected ? ' selected' : '') + '"';
       h += ' onclick="window._swapMural(' + i + ')"';
-      h += ' style="width:270px;height:230px;display:flex;align-items:center;justify-content:center;padding:8px;flex-shrink:0;overflow:hidden' + (selected ? ';border-color:var(--bronze-bright);box-shadow:0 0 12px rgba(180,140,60,0.6)' : '') + '">';
+      h += ' style="width:250px;height:210px;display:flex;align-items:center;justify-content:center;padding:8px;flex-shrink:0;overflow:hidden' + (selected ? ';border-color:var(--bronze-bright);box-shadow:0 0 12px rgba(180,140,60,0.6)' : '') + '">';
       h += '<img src="' + muralImages[id] + '" style="width:100%;height:100%;object-fit:contain;pointer-events:none">';
       h += '</div>';
     });
@@ -2714,6 +2758,7 @@ function startMuralPuzzle() {
   window._checkMural = function() {
     if (current.join(',') === correct.join(',')) {
       completePuzzle('mural_order');
+      window._closeMural(); // 拼合完成后直接关闭面板，不再回到排序界面
       // 显示完整壁画
       showFullImage(LV(1, '风雨自合壁画.png'), '壁画拼合完成！', function() {
         showDialogue('沈砚', '壁画顺序正确！单用斧头无法断木，需要先用朱丝困住树神。', function() {
@@ -2722,7 +2767,6 @@ function startMuralPuzzle() {
           addReasonClue('树创复合', '树身伤口会自合');
           addReasonClue('朱丝缚木', '朱丝可困树神');
           addReasonClue('南方属火', '朱色属火，南方属火');
-          window._closeMural();
           ch1SouthWall();
         });
       });
