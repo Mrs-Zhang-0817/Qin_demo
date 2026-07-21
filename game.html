@@ -820,30 +820,37 @@ var bgmPlayer = $('bgm-player');
 
 // BGM 映射：sceneId → 音频文件名
 var BGM_MAP = {
-  'restoration':   '修复室.ogg',
-  'shrine':        '祠堂探索.ogg',
-  'ch1outer':      '祠堂探索.ogg',
-  'shrinefront':   '祠堂探索.ogg',
-  'southwall':     '祠堂探索.ogg',
-  'mainhall':      '祠堂探索.ogg',
-  'greenox':       '祠堂探索.ogg',
-  'ch3start':      '地宫探索.ogg',
-  'ch3writing':    '地宫探索.ogg',
-  'ch3measure':    '地宫探索.ogg',
-  'ch3track':      '地宫探索.ogg',
-  'ch3tiger':      '地宫探索.ogg',
-  'ch4start':      '地宫探索.ogg',
-  'ch4astro':      '地宫探索.ogg',
-  'ch4rivers':     '地宫探索.ogg',
-  'ch4buoy':       '地宫探索.ogg',
-  'ch4pool':       '地宫探索.ogg',
-  // 第二章 / 第五章 / 第六章
-  'ch2tomb':       '地宫探索.ogg',
-  'ch2projection': '地宫探索.ogg',
-  'ch5room':       '地宫探索.ogg',
-  'ch6tomb':       '地宫探索.ogg',
-  'ch6combine':    '地宫探索.ogg',
-  'ch6choice':     '地宫探索.ogg'
+  // 序章 - 修复室
+  'restoration':          '修复室.ogg',
+  // 序章 - 旧祠探索（残碑/香炉/黑水门/五色按钮）
+  'shrine':               '祠堂探索.ogg',
+  'stele_area':           '祠堂探索.ogg',
+  'south_stove':          '祠堂探索.ogg',
+  'north_wall_fullscreen':'祠堂探索.ogg',
+  'gate_puzzle':          '祠堂探索.ogg',
+  // 第一章 - 神木祠
+  'ch1outer':             '祠堂探索.ogg',
+  'shrinefront':          '祠堂探索.ogg',
+  'southwall':            '祠堂探索.ogg',
+  'mainhall':             '祠堂探索.ogg',
+  'greenox':              '祠堂探索.ogg',
+  // 第三 / 四章 + 第二 / 五 / 六章 - 地宫
+  'ch3start':             '地宫探索.ogg',
+  'ch3writing':           '地宫探索.ogg',
+  'ch3measure':           '地宫探索.ogg',
+  'ch3track':             '地宫探索.ogg',
+  'ch3tiger':             '地宫探索.ogg',
+  'ch4start':             '地宫探索.ogg',
+  'ch4astro':             '地宫探索.ogg',
+  'ch4rivers':            '地宫探索.ogg',
+  'ch4buoy':              '地宫探索.ogg',
+  'ch4pool':              '地宫探索.ogg',
+  'ch2tomb':              '地宫探索.ogg',
+  'ch2projection':        '地宫探索.ogg',
+  'ch5room':              '地宫探索.ogg',
+  'ch6tomb':              '地宫探索.ogg',
+  'ch6combine':           '地宫探索.ogg',
+  'ch6choice':            '地宫探索.ogg'
 };
 
 var BGM_CURRENT = ''; // 当前播放的 BGM 文件名
@@ -2300,8 +2307,9 @@ function showSteleFullImage() {
   var savedSceneId = G.currentSceneId;
   var savedBg = sceneBg.style.backgroundImage;
   clearScene();
-  G.currentSceneId = 'stele_fullscreen';
+  G.currentSceneId = 'stele_area';
   setBg(LV(0, 'ChatGPT Image 2026年7月20日 23_58_59.png'));
+  playBGM('stele_area');
 
   function returnToShrine() {
     G.currentSceneId = savedSceneId;
@@ -2310,10 +2318,11 @@ function showSteleFullImage() {
     prologueShrine();
   }
 
-  // 返回按钮
-  var closeBtn = document.createElement('div');
-  closeBtn.textContent = '— 点击画面继续 —';
-  closeBtn.style.cssText = 'position:absolute;bottom:40px;left:50%;transform:translateX(-50%);color:var(--verdigris);font-size:18px;letter-spacing:4px;cursor:pointer;z-index:4000;text-shadow:0 0 10px rgba(0,0,0,0.8)';
+  // 返回探索
+  var closeBtn = document.createElement('button');
+  closeBtn.className = 'close-btn';
+  closeBtn.textContent = '返回探索';
+  closeBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;';
   closeBtn.onclick = returnToShrine;
   sceneArea.appendChild(closeBtn);
 
@@ -2349,6 +2358,30 @@ function showSteleFullImage() {
     }
   });
 
+  // 灶火热区：切换到南壁祭灶图
+  addInteractive(50, 350, 200, 200, '', function() {
+    var steleSceneId = G.currentSceneId;
+    var steleBgImg = sceneBg.style.backgroundImage;
+    clearScene();
+    G.currentSceneId = 'south_stove';
+    setBg(LV(1, '南壁祭灶 (1)红线被覆盖.png'));
+    playBGM('south_stove');
+
+    function returnToStele() {
+      G.currentSceneId = steleSceneId;
+      clearScene();
+      sceneBg.style.backgroundImage = steleBgImg;
+      showSteleFullImage();
+    }
+
+    var stoveCloseBtn = document.createElement('button');
+    stoveCloseBtn.className = 'close-btn';
+    stoveCloseBtn.textContent = '返回';
+    stoveCloseBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;';
+    stoveCloseBtn.onclick = returnToStele;
+    sceneArea.appendChild(stoveCloseBtn);
+  }, { hsId: 'stove' });
+
 }
 
 // 北墙黑水门全屏图：点击 north-wall 任意热区后进入
@@ -2358,6 +2391,7 @@ function showNorthWallFullImage() {
   clearScene();
   G.currentSceneId = 'north_wall_fullscreen';
   setBg(LV(0, '地表旧祠后面的北方黑水门.png'));
+  playBGM('north_wall_fullscreen');
 
   function returnToShrine() {
     G.currentSceneId = savedSceneId;
@@ -2472,6 +2506,7 @@ function openGatePuzzle(onClose) {
   G.currentSceneId = 'gate_puzzle';
   G.scene = 1;
   setBg(LV(0, '黑水门五色按钮.png'));
+  playBGM('gate_puzzle');
 
   // 底部文字框
   var textBox = document.createElement('div');
@@ -2831,114 +2866,41 @@ function ch1SouthWall() {
   G.currentSceneId = 'southwall'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['southwall'] = {};
-  // 南壁祭灶场景与上一关（神木祠前殿）共用同一张背景
-  setBg(LV(1, '神木祠前殿.png'));
+  // 南壁祭灶图作为场景背景直接展示
+  setBg(LV(1, '南壁祭灶 (1)红线被覆盖.png'));
   playBGM('southwall');
   showHint('在南壁祭灶取得朱丝以破神木自合之力');
 
   var SW_SCENE = 'southwall';
 
-  // 灶旁小碑：点击全屏展示祭灶画面
-  addInteractive(400, 200, 200, 150, '', function() {
-    markContent(SW_SCENE, 'tablet');
-    openSouthWallOverlay();
-  }, {hsId: 'tablet', icon: '🪦'});
+  // 返回前殿
+  var backBtn = document.createElement('button');
+  backBtn.className = 'close-btn';
+  backBtn.textContent = '返回前殿';
+  backBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;';
+  backBtn.onclick = function() { transitionScene(function() { ch1ShrineFront(); }); };
+  sceneArea.appendChild(backBtn);
 
-  if (G.inventory['朱丝']) {
-    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {hsId: 'mainhall_btn', icon: '🚪'});
-  }
-}
-
-// ==================== 南壁祭灶调查覆盖层 ====================
-function openSouthWallOverlay() {
-  dismissFullImage();
-  clearHints();
-  G.interactionLock = true;
-
-  // 保存当前激活的技能
-  var savedSkill = G.activeSkill;
-
-  var overlay = document.createElement('div');
-  overlay.id = 'southwallOverlay';
-  overlay.style.cssText = 'position:absolute;inset:0;background:rgba(5,5,5,0.92);z-index:3800;display:flex;align-items:center;justify-content:center;flex-direction:column;';
-  overlay.onclick = function(e) {
-    if (e.target === overlay) { closeOverlay(); }
-  };
-
-  // 底部文字框
-  var textBox = document.createElement('div');
-  textBox.id = 'southwallText';
-  textBox.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);max-width:80%;text-align:center;color:var(--silk-bright);font-size:22px;letter-spacing:2px;line-height:1.6;background:rgba(11,17,24,0.96);border:2px solid var(--dark-bronze);outline:1px solid var(--verdigris);outline-offset:-5px;padding:14px 40px;display:none;z-index:3810;pointer-events:none;';
-  overlay.appendChild(textBox);
-
-  function showSouthText(msg) {
-    textBox.textContent = msg;
-    textBox.style.display = 'block';
-    if (G._southwallTextTimer) clearTimeout(G._southwallTextTimer);
-    G._southwallTextTimer = setTimeout(function() { textBox.style.display = 'none'; }, 5000);
-  }
-
-  function clearActiveSkill() {
-    G.activeSkill = null;
-    var ints = document.querySelectorAll('.interactive');
-    for (var i = 0; i < ints.length; i++) ints[i].classList.remove('highlight');
-    var btns = document.querySelectorAll('.skill-popup-btn');
-    for (var j = 0; j < btns.length; j++) btns[j].classList.remove('active-skill');
-  }
-
-  function closeOverlay() {
-    if (G._southwallTextTimer) clearTimeout(G._southwallTextTimer);
-    overlay.remove();
-    G.interactionLock = false;
-  }
-
-  // 图片容器
-  var imgWrap = document.createElement('div');
-  imgWrap.style.cssText = 'position:relative;display:inline-block;max-width:92%;';
-  var img = document.createElement('img');
-  img.src = LV(1, '南壁祭灶 (1)红线被覆盖.png');
-  img.style.cssText = 'max-width:100%;max-height:78vh;display:block;border:4px solid var(--bronze);outline:1px solid var(--verdigris);outline-offset:-11px;box-shadow:0 0 60px rgba(0,0,0,0.8);pointer-events:none;';
-
-  // ---- 碑文热区：需要拓印技能 ----
-  var tabletHotspot = document.createElement('div');
-  tabletHotspot.style.cssText = 'position:absolute;left:8%;top:18%;width:34%;height:42%;cursor:pointer;border:2px solid transparent;background:transparent;border-radius:8px;transition:all 0.3s;z-index:10;';
-  tabletHotspot.title = '碑文';
-  tabletHotspot.onmouseenter = function() {
-    this.style.borderColor = 'rgba(180,140,60,0.35)'; this.style.background = 'rgba(180,140,60,0.06)'; this.style.boxShadow = '0 0 12px rgba(180,140,60,0.15)';
-  };
-  tabletHotspot.onmouseleave = function() {
-    this.style.borderColor = 'transparent'; this.style.background = 'transparent'; this.style.boxShadow = 'none';
-  };
-  tabletHotspot.onclick = function(e) {
-    e.stopPropagation();
-    if (G.activeSkill === '拓印') {
-      showSouthText('南火困灵，朱丝缚木');
+  // 碑文热区：需拓印
+  addInteractive(100, 130, 435, 300, '', function() {}, {
+    hsId: 'tablet',
+    skill: '拓印',
+    skillHint: '碑文被尘土覆盖，看不清字迹。或许需要【拓印】技能来显影。',
+    once: true,
+    onSkill: function() {
+      showHint('南火困灵，朱丝缚木');
       G._tabletRead = true;
-      clearActiveSkill();
-    } else if (G.activeSkill) {
-      showSouthText('【' + G.activeSkill + '】在这里没有发现什么。');
-      clearActiveSkill();
-    } else {
-      showSouthText('碑文被尘土覆盖，看不清字迹。或许需要【拓印】技能来显影。');
+      markContent(SW_SCENE, 'tablet');
     }
-  };
+  });
 
-  // ---- 香灰热区：需要观纹技能 ----
-  var ashHotspot = document.createElement('div');
-  ashHotspot.style.cssText = 'position:absolute;left:55%;top:40%;width:36%;height:44%;cursor:pointer;border:2px solid transparent;background:transparent;border-radius:8px;transition:all 0.3s;z-index:10;';
-  ashHotspot.title = '香灰';
-  ashHotspot.onmouseenter = function() {
-    this.style.borderColor = 'rgba(180,140,60,0.35)'; this.style.background = 'rgba(180,140,60,0.06)'; this.style.boxShadow = '0 0 12px rgba(180,140,60,0.15)';
-  };
-  ashHotspot.onmouseleave = function() {
-    this.style.borderColor = 'transparent'; this.style.background = 'transparent'; this.style.boxShadow = 'none';
-  };
-  ashHotspot.onclick = function(e) {
-    e.stopPropagation();
-    if (G.activeSkill === '观纹') {
-      clearActiveSkill();
-      closeOverlay();
-      // 展示第二张图片（红线显现）
+  // 香灰热区：需观纹
+  addInteractive(700, 288, 460, 316, '', function() {}, {
+    hsId: 'ash',
+    skill: '观纹',
+    skillHint: '香灰上似乎有某种纹理……但肉眼难以看清。或许【观纹】技能可以辨识。',
+    once: true,
+    onSkill: function() {
       showFullImage(LV(1, '南壁祭灶 (2)出现红线.png'), '', function() {
         showDialogue('沈砚', '灰层之下竟藏着红线——是朱丝！获得朱丝，属火。', function() {
           gainItem('朱丝', '朱丝', '火属前置道具，可困树神', true);
@@ -2948,28 +2910,12 @@ function openSouthWallOverlay() {
           });
         });
       });
-    } else if (G.activeSkill) {
-      showSouthText('【' + G.activeSkill + '】在这里没有发现什么。');
-      clearActiveSkill();
-    } else {
-      showSouthText('香灰上似乎有某种纹理……但肉眼难以看清。或许【观纹】技能可以辨识。');
     }
-  };
+  });
 
-  imgWrap.appendChild(img);
-  imgWrap.appendChild(tabletHotspot);
-  imgWrap.appendChild(ashHotspot);
-  overlay.appendChild(imgWrap);
-
-  // 关闭按钮
-  var closeBtn = document.createElement('button');
-  closeBtn.className = 'close-btn';
-  closeBtn.textContent = '返回';
-  closeBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;z-index:3900;';
-  closeBtn.onclick = function() { closeOverlay(); };
-  overlay.appendChild(closeBtn);
-
-  $('game').appendChild(overlay);
+  if (G.inventory['朱丝']) {
+    addInteractive(600, 420, 150, 50, '', function() { ch1MainHall(); }, {hsId: 'mainhall_btn', icon: '🚪'});
+  }
 }
 
 function ch1MainHall() {
