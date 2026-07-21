@@ -346,7 +346,7 @@ body {
   pointer-events: none;
 }
 
-/* ========== 对话系统 ========== */
+/* ========== 对话系统（纯文字底部提示，无发言者名） ========== */
 #dialogue {
   position: absolute; bottom: 24px; left: 50%; transform: translateX(-50%);
   background: rgba(11,17,24,0.92); border: 2px solid var(--dark-bronze);
@@ -357,7 +357,7 @@ body {
   box-shadow: 0 0 30px rgba(0,0,0,0.7);
   font-family: FangSong, STFangsong, SimSun, serif;
 }
-#dialogue .speaker { color: var(--bronze-bright); font-weight: bold; margin-bottom: 6px; font-size: 23px; letter-spacing: 4px; }
+#dialogue .speaker { display: none; }
 #dialogue .continue { color: var(--verdigris); font-size: 18px; margin-top: 10px; animation: hintBlink 1.2s infinite; }
 @keyframes hintBlink { 0%,100%{opacity:0.5} 50%{opacity:1} }
 
@@ -1359,7 +1359,6 @@ function nextDialogue() {
     return;
   }
   var d = G.dialogueQueue[0];
-  dialogueEl.querySelector('.speaker').textContent = d.s;
   dialogueEl.querySelector('.text').textContent = d.t;
   dialogueEl.style.display = 'block';
 }
@@ -1539,9 +1538,16 @@ function addInteractive(x, y, w, h, label, onClick, opts) {
     }
     // 交互锁：图片/文字展示期间阻止其他点击
     if (G.interactionLock) return;
-    // 仅展示一次 guard
+    // 已调查热区：提示后可再次查看，但不再使用技能
     if (opts.once && el.dataset.investigated) {
-      showHint('这里已经调查过了。');
+      showHint('已经调查过了');
+      if (opts.investigateImg) {
+        showFullImage(opts.investigateImg, opts.investigateText || '', function() {
+          if (onClick) onClick();
+        });
+      } else if (onClick) {
+        onClick();
+      }
       return;
     }
     // 技能模式：已激活正确技能 → 展现答案
@@ -2053,7 +2059,7 @@ function prologueDream() {
             transitionScene(function() {
               prologueRestoration();
               clearHints();
-              showDialogue('沈砚', '从梦境中醒来……又是这个梦。黑玉残玦上残留了一滴黑水。', function() {
+              showDialogue('沈砚', '从梦境中醒来……又是这个梦', function() {
                 showHint('修复黑水残简，寻找秦陵入口的线索');
               });
             });
@@ -2120,7 +2126,7 @@ function prologueRestoration() {
   // 黑玉残玦
   clueHotspots['jade'] = addInteractive(620, 130, 150, 140, '', function() {
     markContent(REST_SCENE, 'jade');
-    showDialogue('沈砚', '只有半枚……边缘像被人为切断，不是天然断裂。这枚残玦我自幼佩戴。', function() {
+    showDialogue('沈砚', '这枚残玦我自幼佩戴，【每当不慎沾上水便会渗出淡淡的墨渍】', function() {
       addNote('黑玉残玦', '主角自幼佩戴的半枚玉玦。边缘像是人为切断，遇水会出现墨痕。');
       onClueInvestigated();
     });
@@ -2140,7 +2146,7 @@ function prologueRestoration() {
   // 五行图
   clueHotspots['wuxing'] = addInteractive(720, 320, 140, 140, '', function() {
     markContent(REST_SCENE, 'wuxing');
-    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北。东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
+    showDialogue('沈砚', '五行图：木火土金水，对应东南中西北。' , '东方青色、南方赤色、中央黄色、西方白色、北方黑色。', function() {
       addNote('五行方位', '木东青、火南赤、土中黄、金西白、水北黑。秦尚黑，属水德。');
       addReasonClue('北方属水', '北方属水');
       addReasonClue('水色为黑', '水色为黑');
@@ -2152,11 +2158,9 @@ function prologueRestoration() {
   clueHotspots['bamboo'] = addInteractive(120, 320, 140, 130, '', function() {
     markContent(REST_SCENE, 'bamboo');
     showDialogue('沈砚', '秦简拓本记载："秦尚黑""水胜火"。周为火德，秦以水德代之。', function() {
-      showDialogue('沈砚', '拓本还提到："玄水在北，旧祠为门"——与养父研究的秦陵入口说法一致。', function() {
-        addNote('秦简拓本', '秦以水德，尚黑色。"水胜火"——秦代周，水克火。玄水在北方，旧祠可能作为入口。');
-        addReasonClue('秦承玄水', '秦承玄水');
-        onClueInvestigated();
-      });
+      addNote('秦简拓本', '秦以水德，尚黑色。"水胜火"——秦代周，水克火。玄水在北方，旧祠可能作为入口。');
+      addReasonClue('秦承玄水', '秦承玄水');
+      onClueInvestigated();
     });
   }, { hsId: 'bamboo', investigateImg: LV(0, '秦简拓本.png') });
 
@@ -2235,7 +2239,7 @@ function startSilkPuzzle() {
 
   function renderPuzzle() {
     var h = '<h2>帛书复原</h2>';
-    h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:14px;letter-spacing:2px">点击下方残片，再点击上方空位放入，拼出"黑水入陵，玄药不死"</p>';
+    h += '<p style="text-align:center;color:var(--bronze);font-size:18px;margin-bottom:14px;letter-spacing:2px">点击下方残片，再点击上方空位放入';
 
     // 2x2 拼图格（左列：玄药+不死，右列：黑水+入陵）
     h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;max-width:500px;margin:0 auto 16px">';
@@ -2303,8 +2307,8 @@ function startSilkPuzzle() {
           showDialogue('沈砚', '复原了——"黑水入陵，玄药不死。"', function() {
             addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
             showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
-              addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头缺了半枚玉玦形状。');
-              showDialogue('沈砚', '路径尽头有一个半枚玉玦形状的缺口——和我的黑玉残玦完全吻合。也许需要用水来激活它。', function() {});
+              addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头竟有一枚玉玦形状。');
+              showDialogue('沈砚', '路径尽头有一个一枚玉玦形状的缺口——和我的黑玉残玦完全吻合。', function() {});
             });
           });
         });
@@ -2411,10 +2415,10 @@ function prologueShrine() {
   // 南墙朱雀壁画
   addInteractive(560, 80, 160, 180, '', function() {
     markContent(SHR_SCENE, 'mural');
-    showDialogue('沈砚', '南墙的朱雀壁画颜色鲜明，火纹完整。赤色过于显眼……像是故意引导人看向南方的。', function() {
+    showDialogue('沈砚', '南墙的朱雀壁画颜色鲜明，火纹完整。', function() {
       showDialogue('沈砚', '但秦代周而立，秦为水德、周为火德。这朱雀代表的应该是被水德取代的周火。', function() {
-        addNote('朱雀壁画', '南墙朱雀火纹，颜色鲜明但应是周火遗迹或秦陵设计者的误导。');
-        addReasonClue('南墙朱雀', '南墙朱雀火纹(误导)');
+        addNote('朱雀壁画', '南墙朱雀火纹，颜色鲜明，是提示还是误导？');
+        addReasonClue('南墙朱雀', '南墙朱雀火纹');
       });
     });
   }, { hsId: 'mural', investigateImg: LV(0, '南墙朱雀壁画.png'), once: true });
@@ -2453,9 +2457,9 @@ function prologueShrine() {
         clearScene();
         setBg(LV(0, '地表旧祠后面的北方黑水门.png'));
         G.interactionLock = true;
-        showDialogue('沈砚', '泥灰下露出了黑色水纹！还有一道暗门轮廓，北侧有一个玉玦形状的凹槽。这就是黑水门。', function() {
-          showDialogue('沈砚', '门上还有五色按钮面板和方位盘——需要正确的操作顺序才能打开。', function() {
-            addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮、方位盘和玉玦形凹槽。');
+        showDialogue('沈砚', '旧祠的正北方……竟是一道黑水门。', function() {
+          showDialogue('沈砚', '或许需要我【选择正确的按钮】才能开门。', function() {
+            addNote('黑水门发现', '北墙泥灰下发现了黑水门。门上有五色按钮。');
             addReasonClue('北墙黑水门', '北墙露出黑水门机关');
             // 切回旧祠场景，并渲染黑水门机关
             transitionScene(function() {
@@ -2513,7 +2517,7 @@ function renderBlackWaterGate() {
 
     btn.onclick = function() {
       if (c.id === '黑') {
-        showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹开始发光了！', function() {
+        showDialogue('沈砚', '黑色——水德之色。北墙的黑水纹像是收到了感应，散发出若隐若现的光', function() {
           if (G.inventory['黑玉残玦'] || G.inventory['黑玉残玦显影']) {
             completePuzzle('black_gate');
             gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝，开启后续水德机关的基础钥匙', true);
@@ -2523,7 +2527,7 @@ function renderBlackWaterGate() {
             transitionScene(function() {
               setBg(LV(0, '黑水门开启（露出外藏道）.png'));
               showDialogue('沈砚', '黑水门缓缓开启，露出了通往地下的暗阶……', function() {
-                showDialogue('系统', '阶梯两侧刻着秦篆："持半玦者，慎入。"', function() {
+                showDialogue('系统', '阶梯两侧刻着秦篆："持玉玦者，慎入。"', function() {
                   showDialogue('沈砚', '这不是入口。更像是在等某个人回来。', function() {
                     G.chapterUnlocked[2] = true;
                     showDialogue('系统', '序章完成！第一章已解锁。', function() {
@@ -2545,11 +2549,11 @@ function renderBlackWaterGate() {
           });
         });
       } else if (c.id === '青') {
-        showDialogue('系统', '按下青色(木/东)按钮，东侧龛位发出微光，但没有进一步变化。');
+        showDialogue('系统', '按下青色按钮，东侧龛位发出微光，但没有进一步变化。');
       } else if (c.id === '黄') {
-        showDialogue('系统', '按下黄色(土/中)按钮，地面微微震动，但门依然紧闭。');
+        showDialogue('系统', '按下黄色按钮，地面微微震动，但门依然紧闭。');
       } else if (c.id === '白') {
-        showDialogue('系统', '按下白色(金/西)按钮，西侧龛位有金属回响，但门没有任何反应。');
+        showDialogue('系统', '按下白色按钮，西侧龛位有金属回响，但门没有任何反应。');
       }
       if (c.id !== '黑' && c.id !== '赤') {
         setTimeout(function() {
@@ -2620,7 +2624,7 @@ function ch1Start() {
   // 中央地砖（需探土）
   addInteractive(500, 550, 200, 120, '', function() {
     markContent(C1_SCENE, 'floor');
-    showDialogue('沈砚', '中央地砖下方有空响……空心的？承重可能不足，踩上去会塌。', function() {
+    showDialogue('沈砚', '中央地砖下方有空响……空心的？' , '承重可能不足，踩上去会塌。', function() {
       addNote('中空地砖', '外藏道中央地砖下方中空，承重不足，不能直接踩踏。');
     });
   }, {hsId: 'floor', icon: '⬜', skill: '探土', skillHint: '脚下的地砖传来空响，下方似乎是空的……或许该探查一下地面结构？'});
@@ -2631,12 +2635,12 @@ function ch1Start() {
     showDialogue('沈砚', '墙缝中有微弱风声——后面有风道，树根也朝这个方向延伸。', function() {
       addNote('墙缝风道', '外藏道左侧墙缝后有风道，树根向左侧延伸，可以从这边绕行。');
     });
-  }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙缝中传来微弱的风声，侧耳倾听或许能发现后面的通路……', once: true});
+  }, {hsId: 'wall', icon: '🧱', skill: '听风', skillHint: '墙壁上似乎有缝隙，用什么办法能探查墙后的情况……？', once: true});
 
   // 右侧墙缝（需听风，但听不到任何声音）
   addInteractive(1200, 250, 160, 300, '', function() {
     showDialogue('沈砚', '仔细听了听，右侧墙缝后没有任何风声。这面墙是实心的。');
-  }, {hsId: 'wall_right', icon: '🧱', skill: '听风', skillHint: '右侧墙壁也有缝隙，可以听听看是否有风道。'});
+  }, {hsId: 'wall_right', icon: '🧱', skill: '听风', skillHint: '墙壁上似乎有缝隙，用什么办法能探查墙后的情况……？'});
 
   // 左侧树根（正确）
   addInteractive(200, 600, 180, 100, '', function() {
@@ -2671,7 +2675,7 @@ function ch1ShrineFront() {
   G.sceneContent['shrinefront'] = {};
   setBg(LV(1, '神木祠前殿.png'));
   playBGM('shrinefront');
-  showHint('调查神木祠前殿，使用壁画机关找到前往神木主殿的方法');
+  showHint('调查神木祠前殿');
 
   var SF_SCENE = 'shrinefront';
 
@@ -2685,7 +2689,7 @@ function ch1ShrineFront() {
   addInteractive(620, 300, 200, 100, '', function() {
     markContent(SF_SCENE, 'door');
     if (!G.completedPuzzles['mural_order']) {
-      showHint('先点击壁画，修复壁画以寻找伐树之法……');
+      showHint('修复壁画，以寻找伐树之法');
       return;
     }
     showDialogue('沈砚', '被树根缠住的主殿门，需要破解机关才能进入。壁画上似乎记载了伐树的经过……', function() {
@@ -2760,7 +2764,7 @@ function startMuralPuzzle() {
       completePuzzle('mural_order');
       window._closeMural(); // 拼合完成后直接关闭面板，不再回到排序界面
       // 显示完整壁画
-      showFullImage(LV(1, '风雨自合壁画.png'), '壁画拼合完成！', function() {
+      showFullImage(LV(1, '风雨自合壁画.png'), '壁画修复完成', function() {
         showDialogue('沈砚', '壁画顺序正确！单用斧头无法断木，需要先用朱丝困住树神。', function() {
           addNote('神木自合', '壁画显示秦人初次伐树时，风雨骤起，树身伤口会重新合拢。');
           addNote('朱丝破法', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。');
@@ -2771,7 +2775,7 @@ function startMuralPuzzle() {
         });
       });
     } else {
-      showHint('顺序不对……想想伐树的前后逻辑：被砍→复合→鬼语→朱丝→再伐→青牛出水。');
+      showHint('顺序不对……残片所讲述的……似乎是一个【完整连贯】的故事');
     }
   };
 
