@@ -770,7 +770,10 @@ var G = {
   hsSelected: null,           // 当前选中的热区元素
   hsTool: 'select',           // 编辑器工具: 'select' | 'resize'
   hsDragging: false,          // 是否正在拖拽
-  hsDragData: null            // 拖拽数据
+  hsDragData: null,           // 拖拽数据
+  // ===== 开发模式：跳过序章，直接进入第一章（神木祠） =====
+  // 改为 false 即可恢复正常完整流程
+  DEV_SKIP_PROLOGUE: true
 };
 
 // 标记场景内容已发现
@@ -1662,6 +1665,13 @@ function showTitle() {
 }
 
 function startGame() {
+  // ===== 开发模式：跳过序章，直接进入第一章（神木祠） =====
+  // 改为 false 即可恢复正常完整流程
+  if (G.DEV_SKIP_PROLOGUE) {
+    loadChapter(2);
+    return;
+  }
+
   titleScreen.style.display = 'none';
   G.gameStarted = true;
   G.chapter = 1; G.scene = 0; G.lastChapter = 1;
