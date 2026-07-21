@@ -2813,7 +2813,8 @@ function ch1SouthWall() {
   G.currentSceneId = 'southwall'; G._hsIndex = 0;
   clearScene();
   G.sceneContent['southwall'] = {};
-  setBg(LV(1, '神木祠背景图.png'));
+  // 南壁祭灶场景与上一关（神木祠前殿）共用同一张背景
+  setBg(LV(1, '神木祠前殿.png'));
   playBGM('southwall');
   showHint('在南壁祭灶取得朱丝以破神木自合之力');
 
