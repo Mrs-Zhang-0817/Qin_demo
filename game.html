@@ -3010,7 +3010,6 @@ function ch1MainHall() {
     showDialogue('系统', '青铜斧影劈入树身——斧痕不再愈合！神木开始断裂。', function() {
       showDialogue('沈砚', '断木落入中央土台。土台裂开，露出青牛浮雕与黑水声。', function() {
         addNote('神木机关', '按五行生克破解神木：朱丝困灵(火)→青铜断木(金)→木入土台(土)。');
-        // 第一章完成：跳过青牛关与第二章，直接进入第三章
         completePuzzle('green_ox');
         gainItem('断木神斧', '断木神斧', '第一章核心秘宝，可作金属机关钥', true);
         addNote('断木神斧', '文公伐树后获得的秘宝。青牛入水，水德归秦。');
@@ -3020,7 +3019,7 @@ function ch1MainHall() {
             showDialogue('系统', '第一章完成！第二章「玄鸟生秦」已解锁。', function() {
               transitionScene(function() {
                 showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。', function() {
-                  ch3Start();
+                  ch2Start();
                 });
               });
             });
