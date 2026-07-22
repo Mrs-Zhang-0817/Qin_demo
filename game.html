@@ -288,15 +288,18 @@ body {
 /* 技能弹出列表 */
 #skillPopup {
   display: none;
-  flex-direction: column;
-  gap: 3px;
-  background: rgba(11,17,24,0.95);
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 10px;
+  background: rgba(11,17,24,0.96);
   border: 2px solid var(--dark-bronze);
   outline: 1px solid var(--verdigris);
   outline-offset: -3px;
-  padding: 8px;
-  box-shadow: 0 0 16px rgba(0,0,0,0.6);
+  padding: 12px;
+  box-shadow: 0 0 20px rgba(0,0,0,0.7);
   animation: skillSlideIn 0.2s ease-out;
+  width: 204px;
+  justify-content: center;
 }
 #skillPopup.show { display: flex; }
 @keyframes skillSlideIn {
@@ -304,31 +307,60 @@ body {
   to { opacity: 1; transform: translateY(0); }
 }
 .skill-popup-btn {
-  display: block;
-  padding: 10px 14px;
-  background: rgba(17,17,17,0.7);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  width: 84px;
+  padding: 8px 4px;
+  background: rgba(17,17,17,0.75);
   border: 1px solid var(--dark-bronze);
+  outline: 1px solid transparent;
+  outline-offset: -4px;
   cursor: pointer;
-  transition: all 0.15s;
+  transition: all 0.2s;
   font-family: STKaiti, KaiTi, serif;
-  font-size: 22px;
   color: var(--bronze);
-  letter-spacing: 6px;
   text-align: center;
+}
+.skill-popup-btn .skill-img {
+  width: 56px;
+  height: 56px;
+  object-fit: contain;
+  margin-bottom: 6px;
+  filter: sepia(0.25) drop-shadow(0 0 3px rgba(0,0,0,0.6));
+  transition: all 0.2s;
+}
+.skill-popup-btn .skill-name {
+  font-size: 15px;
+  letter-spacing: 2px;
+  line-height: 1.2;
 }
 .skill-popup-btn:hover {
   border-color: var(--bronze);
-  background: rgba(64,55,34,0.5);
+  outline-color: var(--verdigris);
+  background: rgba(64,55,34,0.55);
   color: var(--silk-bright);
+}
+.skill-popup-btn:hover .skill-img {
+  filter: sepia(0) drop-shadow(0 0 6px rgba(176,138,69,0.35));
+  transform: scale(1.04);
 }
 .skill-popup-btn.active-skill {
   border-color: var(--bronze-bright) !important;
-  background: rgba(64,55,34,0.8) !important;
-  box-shadow: 0 0 12px rgba(176,138,69,0.5) !important;
+  outline-color: var(--verdigris) !important;
+  background: rgba(64,55,34,0.85) !important;
+  box-shadow: 0 0 14px rgba(176,138,69,0.45) !important;
   color: var(--silk-bright) !important;
 }
+.skill-popup-btn.active-skill .skill-img {
+  filter: sepia(0) drop-shadow(0 0 10px rgba(176,138,69,0.55)) !important;
+}
 .skill-popup-btn:disabled {
-  opacity: 0.3; cursor: not-allowed; filter: grayscale(1);
+  opacity: 0.35; cursor: not-allowed; filter: grayscale(1);
+}
+.skill-popup-btn:disabled .skill-img {
+  filter: grayscale(1) brightness(0.7);
 }
 /* 面板分隔线 */
 #left-panel .divider {
@@ -1439,11 +1471,11 @@ function renderSkillPopup() {
   var h = '';
   SKILL_DEFS.forEach(function(s) {
     var owned = G.skills[s.id];
-    if (owned) {
-      h += '<button class="skill-popup-btn owned" data-skill="' + s.id + '" onclick="useSkill(\'' + s.id + '\')" title="' + s.id + ': ' + owned.name + '">' + s.id + '</button>';
-    } else {
-      h += '<button class="skill-popup-btn" data-skill="' + s.id + '" disabled title="未解锁">' + s.id + '</button>';
-    }
+    var tip = owned ? (s.id + ': ' + owned.name) : '未解锁';
+    h += '<button class="skill-popup-btn' + (owned ? ' owned' : '') + '" data-skill="' + s.id + '"' + (owned ? ' onclick="useSkill(\'' + s.id + '\')"' : ' disabled') + ' title="' + tip + '">' +
+           '<img class="skill-img" src="' + s.img + '" alt="' + s.id + '">' +
+           '<span class="skill-name">' + s.id + '</span>' +
+         '</button>';
   });
   popup.innerHTML = h;
   // 如果之前有激活技能，高亮对应按钮
@@ -2006,38 +2038,65 @@ function hideDreamText() {
 function prologueDream() {
   clearScene();
   clearHints();
-  setBg(LV(0, '梦境主背景.png'));
-  showDreamText('黑暗的水面下，黑色的墓门若隐若现。水下的编钟声回荡在梦里，像是在召唤什么。');
+  stopBGM();
+
+  // 梦境笔记统一记录
   addNote('梦境墓门', '黑暗水面下的黑色墓门，每次入梦都会出现。');
+  addNote('北斗倒影', '水面倒影中北斗变为秦篆，但文字模糊无法辨认。');
+  addNote('黑玉残玦震动', '靠近墓门时残玦低鸣，似乎在回应某种力量。');
 
-  setTimeout(function() {
-    hideDreamText();
+  var videos = [LV(0, '视频一.mp4'), LV(0, '视频二.mp4')];
+  var current = 0;
+
+  var video = document.createElement('video');
+  video.id = 'prologue-video';
+  video.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover;z-index:3000;background:#000;cursor:pointer;';
+  video.autoplay = true;
+  video.playsInline = true;
+  video.muted = false;
+
+  function onVideosEnd() {
+    video.remove();
+    skipBtn.remove();
     transitionScene(function() {
-      setBg(LV(0, '梦境分镜1.png'));
-      showDreamText('这扇门……我似乎见过。');
-
-      setTimeout(function() {
-        hideDreamText();
-        transitionScene(function() {
-          setBg(LV(0, '梦境分镜2.png'));
-          showDreamText('北斗七星在倒影中变成了秦篆……但太模糊了，读不清。');
-          addNote('北斗倒影', '水面倒影中北斗变为秦篆，但文字模糊无法辨认。');
-          addNote('黑玉残玦震动', '靠近墓门时残玦低鸣，似乎在回应某种力量。');
-
-          setTimeout(function() {
-            hideDreamText();
-            transitionScene(function() {
-              prologueRestoration();
-              clearHints();
-              showDialogue('沈砚', '从梦境中醒来……又是这个梦', function() {
-                showHint('修复黑水残简，寻找秦陵入口的线索');
-              });
-            });
-          }, 5000);
-        });
-      }, 5000);
+      prologueRestoration();
+      clearHints();
+      showDialogue('沈砚', '从梦境中醒来……又是这个梦', function() {
+        showHint('修复黑水残简，寻找秦陵入口的线索');
+      });
     });
-  }, 5000);
+  }
+
+  function playNext() {
+    if (current >= videos.length) {
+      onVideosEnd();
+      return;
+    }
+    video.src = videos[current];
+    video.play().catch(function(err) { console.log('视频播放失败:', err); });
+    current++;
+  }
+
+  video.addEventListener('ended', playNext);
+  video.addEventListener('error', function() { playNext(); });
+
+  // 点击画面跳过当前视频
+  video.addEventListener('click', function() {
+    if (current >= videos.length) return;
+    video.currentTime = video.duration || 999999;
+  });
+
+  // 跳过全部按钮
+  var skipBtn = document.createElement('button');
+  skipBtn.textContent = '跳过 ▶▶';
+  skipBtn.style.cssText = 'position:absolute;bottom:30px;right:30px;z-index:3001;padding:8px 18px;font-size:16px;letter-spacing:2px;color:var(--silk-bright);background:rgba(11,17,24,0.8);border:1px solid var(--dark-bronze);border-radius:4px;cursor:pointer;font-family:inherit;';
+  skipBtn.onmouseenter = function() { this.style.borderColor = 'var(--bronze)'; };
+  skipBtn.onmouseleave = function() { this.style.borderColor = 'var(--dark-bronze)'; };
+  skipBtn.onclick = function(e) { e.stopPropagation(); onVideosEnd(); };
+
+  $('game').appendChild(video);
+  $('game').appendChild(skipBtn);
+  playNext();
 }
 
 
@@ -2881,11 +2940,11 @@ function ch1SouthWall() {
   backBtn.onclick = function() { transitionScene(function() { ch1ShrineFront(); }); };
   sceneArea.appendChild(backBtn);
 
-  // 碑文热区：需拓印
+  // 碑文热区：需观纹
   addInteractive(100, 130, 435, 300, '', function() {}, {
     hsId: 'tablet',
-    skill: '拓印',
-    skillHint: '碑文被尘土覆盖，看不清字迹。或许需要【拓印】技能来显影。',
+    skill: '观纹',
+    skillHint: '碑文被尘土覆盖，看不清字迹。或许需要【观纹】技能来辨识。',
     once: true,
     onSkill: function() {
       showHint('南火困灵，朱丝缚木');
