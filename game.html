@@ -2328,7 +2328,9 @@ function startSilkPuzzle() {
             addNote('帛书复原', '帛书拼合完成，显示"黑水入陵，玄药不死"八个字。');
             showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
               addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头竟有一枚玉玦形状。');
-              showDialogue('沈砚', '路径尽头有一个一枚玉玦形状的缺口——和我的黑玉残玦完全吻合。', function() {});
+              showDialogue('沈砚', '路径尽头有一个一枚玉玦形状的缺口——和我的黑玉残玦完全吻合。', function() {
+              showHint('【帛书笔记】中或许会有下一步的线索');
+            });
             });
           });
         });
@@ -2943,8 +2945,8 @@ function ch1SouthWall() {
   // 碑文热区：需观纹
   addInteractive(100, 130, 435, 300, '', function() {}, {
     hsId: 'tablet',
-    skill: '观纹',
-    skillHint: '碑文被尘土覆盖，看不清字迹。或许需要【观纹】技能来辨识。',
+    skill: '拓印',
+    skillHint: '碑文被尘土覆盖，看不清字迹。或许有什么方法可以让它更清楚。',
     once: true,
     onSkill: function() {
       showHint('南火困灵，朱丝缚木');
@@ -2957,7 +2959,7 @@ function ch1SouthWall() {
   addInteractive(700, 288, 460, 316, '', function() {}, {
     hsId: 'ash',
     skill: '观纹',
-    skillHint: '香灰上似乎有某种纹理……但肉眼难以看清。或许【观纹】技能可以辨识。',
+    skillHint: '香灰内似乎有什么东西……但肉眼难以看清。或许有办法可以更加仔细地辨别。',
     once: true,
     onSkill: function() {
       showFullImage(LV(1, '南壁祭灶 (2)出现红线.png'), '', function() {
