@@ -3111,7 +3111,22 @@ function ch3Start() {
     }
     showDialogue('沈砚', '地面黑水线被六种不同刻度打断。残简记载："同书、同轨、同量，则兵归一。"', function() {
       addNote('残简提示', '同书、同轨、同量，则兵归一。');
-      transitionScene(function() { ch3Measure(); });
+      completePuzzle('measure');
+      completePuzzle('track');
+      completePuzzle('tiger');
+      gainItem('青铜虎符', '青铜虎符', '控制兵俑阵列方向', true);
+      gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true);
+      showDialogue('系统', '六国兵俑全部转向黑水旗，齐声跪拜！十二金人残片龛打开。', function() {
+        showDialogue('沈砚', '六国文字、车轨、尺度各不相同。可在这里，它们都被迫归于同一条黑水线。', function() {
+          addNote('六合同风', '六国兵俑归一。"六合同风，玄水归一"——水银地宫入口开启。');
+          G.chapterUnlocked[4] = true;
+          showDialogue('系统', '第三章完成！第四章已解锁。', function() {
+            showDialogue('沈砚', '这座陵墓记住的不是战争，而是统一之后的秩序。', function() {
+              transitionScene(function() { ch4Start(); });
+            });
+          });
+        });
+      });
     });
   }, {hsId: 'slip', icon: '📏'});
 }
