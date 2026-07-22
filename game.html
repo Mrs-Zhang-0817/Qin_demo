@@ -3054,7 +3054,7 @@ function ch1GreenOx() {
               showDialogue('系统', '第一章完成！第二章「玄鸟生秦」已解锁。', function() {
                 transitionScene(function() {
                   showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。', function() {
-                    showChapterPanel();
+                    ch2Start();
                   });
                 });
               });
@@ -3332,9 +3332,9 @@ function ch4BlackPool() {
           showDialogue('沈砚', '水银不是为了防盗才流在这里。它在替这座陵墓记住天下的形状。', function() {
             showDialogue('沈砚', '百川江河，最终都被引向同一个黑色的北方。', function() {
               showDialogue('沈砚', '如果水银是秦陵的江河，那么不死药也许不是药。它更像是这套机关的心脏。', function() {
-                showDialogue('系统', '第五章完成！第六章「秦王墓室」已解锁。', function() {
+                showDialogue('系统', '第四章完成！第五章「方士丹室」已解锁。', function() {
                   G.chapterUnlocked[6] = true;
-                  transitionScene(function() { showChapterPanel(); });
+                  transitionScene(function() { ch5Start(); });
                 });
               });
             });
@@ -3518,7 +3518,7 @@ function ch2End() {
   showDialogue('沈砚', '玄鸟生秦——原来秦陵记下的，不只是帝王，还有一族自玄水而起的来历。', function() {
     G.chapterUnlocked[3] = true;
     showDialogue('系统', '第二章完成！第三章「六国兵俑阵」已解锁。', function() {
-      transitionScene(function() { showChapterPanel(); });
+      transitionScene(function() { ch3Start(); });
     });
   });
 }
@@ -3629,7 +3629,7 @@ function ch5End() {
   showDialogue('沈砚', '所谓不死药，也许从来不是药，而是这套以"玄水"为名的秩序的心脏。', function() {
     G.chapterUnlocked[7] = true;
     showDialogue('系统', '第五章完成！第六章「秦王墓室」已解锁。', function() {
-      transitionScene(function() { showChapterPanel(); });
+      transitionScene(function() { ch6Start(); });
     });
   });
 }
