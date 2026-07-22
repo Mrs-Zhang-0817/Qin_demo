@@ -298,10 +298,17 @@ body {
   padding: 12px;
   box-shadow: 0 0 20px rgba(0,0,0,0.7);
   animation: skillSlideIn 0.2s ease-out;
-  width: 204px;
+  width: 220px;
+  max-height: 420px;
+  overflow-y: auto;
   justify-content: center;
+  align-content: flex-start;
 }
 #skillPopup.show { display: flex; }
+#skillPopup::-webkit-scrollbar { width: 6px; }
+#skillPopup::-webkit-scrollbar-track { background: rgba(17,17,17,0.5); }
+#skillPopup::-webkit-scrollbar-thumb { background: var(--dark-bronze); border-radius: 3px; }
+#skillPopup::-webkit-scrollbar-thumb:hover { background: var(--bronze); }
 @keyframes skillSlideIn {
   from { opacity: 0; transform: translateY(-6px); }
   to { opacity: 1; transform: translateY(0); }
@@ -562,17 +569,20 @@ body {
   letter-spacing: 20px; margin-bottom: 70px; font-family: FangSong, STFangsong, serif;
 }
 #title-screen .title-menu { display: flex; flex-direction: column; gap: 20px; align-items: center; }
-#title-screen .qin-title-btn {
+.qin-title-btn {
   background: transparent; border: 2px solid var(--dark-bronze); color: var(--bronze-bright);
-  font-size: 23px; padding: 14px 80px; cursor: pointer;
-  font-family: STKaiti, KaiTi, serif; letter-spacing: 10px;
+  font-size: 20px; padding: 10px 40px; cursor: pointer;
+  font-family: STKaiti, KaiTi, serif; letter-spacing: 6px;
   transition: all 0.3s;
   outline: 1px solid transparent; outline-offset: -5px;
 }
-#title-screen .qin-title-btn:hover {
+.qin-title-btn:hover {
   background: rgba(64,55,34,0.25); border-color: var(--bronze-bright);
   color: var(--silk-bright); box-shadow: 0 0 24px rgba(154,123,69,0.2);
   outline-color: var(--verdigris);
+}
+#title-screen .title-menu .qin-title-btn {
+  font-size: 23px; padding: 14px 80px; letter-spacing: 10px;
 }
 #title-screen .water-effect {
   position: absolute; bottom: 0; width: 100%; height: 140px;
@@ -868,7 +878,6 @@ var BGM_MAP = {
   'greenox':              '祠堂探索.ogg',
   // 第三 / 四章 + 第二 / 五 / 六章 - 地宫
   'ch3start':             '地宫探索.ogg',
-  'ch3writing':           '地宫探索.ogg',
   'ch3measure':           '地宫探索.ogg',
   'ch3track':             '地宫探索.ogg',
   'ch3tiger':             '地宫探索.ogg',
@@ -1307,9 +1316,9 @@ function renderRisk() {
 }
 
 // ==================== 自动提示系统(3秒自动消失) ====================
-function showHint(text) {
+function showHint(text, persistent) {
   if (!text) return;
-  G.hintQueue.push(text);
+  G.hintQueue.push({text: text, persistent: !!persistent});
   processHintQueue();
 }
 function processHintQueue() {
@@ -1323,17 +1332,22 @@ function processHintQueue() {
     }, 500);
     return;
   }
-  var text = G.hintQueue.shift();
-  hintEl.textContent = text;
+  var item = G.hintQueue.shift();
+  hintEl.textContent = item.text;
   hintEl.classList.add('show', 'flash');
   setTimeout(function() { hintEl.classList.remove('flash'); }, 500);
 
-  G.hintTimer = setTimeout(function() {
-    hintEl.classList.remove('show');
+  if (item.persistent) {
+    // 持久提示：不设置自动消失定时器
     G.hintTimer = null;
-    // 显示下一个提示
-    setTimeout(function() { processHintQueue(); }, 400);
-  }, 2500);
+  } else {
+    G.hintTimer = setTimeout(function() {
+      hintEl.classList.remove('show');
+      G.hintTimer = null;
+      // 显示下一个提示
+      setTimeout(function() { processHintQueue(); }, 400);
+    }, 2500);
+  }
 }
 
 // ==================== 全屏图片查看器 ====================
@@ -1754,7 +1768,7 @@ function showChapterSelect() {
     {n: 1, t: '序章：黑水残简', d: '修复残简，破解黑水门，获得黑水玉玦', unlocked: true},
     {n: 2, t: '第一章：文公伐树', d: '探索神木祠，破解五行机关，获得断木神斧', unlocked: G.chapterUnlocked[2]},
     {n: 5, t: '第二章：玄鸟生秦', d: '拓印铭文，拼出秦族起源谱系，令玄鸟投影指路', unlocked: G.chapterUnlocked[5]},
-    {n: 3, t: '第三章：六国兵俑阵', d: '统一文字度量车轨，让兵俑归一', unlocked: G.chapterUnlocked[3]},
+    {n: 3, t: '第三章：六国兵俑阵', d: '统一度量车轨，让兵俑归一', unlocked: G.chapterUnlocked[3]},
     {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗星图', unlocked: G.chapterUnlocked[4]},
     {n: 6, t: '第五章：方士丹室', d: '辨别不死药真伪，取得方士丹匣机关钥', unlocked: G.chapterUnlocked[6]},
     {n: 7, t: '第六章：秦王墓室', d: '万流归秦，面对取药、封药、毁药的最终抉择', unlocked: G.chapterUnlocked[7]}
@@ -1821,7 +1835,7 @@ function loadChapter(n) {
     gainItem('黑水玉玦', '黑水玉玦', '水德机关秘宝', true);
     gainItem('断木神斧', '断木神斧', '第一章核心秘宝', true);
     gainItem('青铜虎符', '青铜虎符', '控制兵俑', true);
-    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','writing','measure','track','tiger'].forEach(function(p) { completePuzzle(p); });
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','measure','track','tiger'].forEach(function(p) { completePuzzle(p); });
     unlockSkill('听风', '判断墙体空腔与风道');
     unlockSkill('探土', '判断地面结构与承重');
     unlockSkill('辨伪', '判断六国残片与秦制标准的差异');
@@ -1842,7 +1856,7 @@ function loadChapter(n) {
     gainItem('断木神斧', '断木神斧', '第一章核心秘宝', true);
     gainItem('青铜虎符', '青铜虎符', '控制兵俑', true);
     gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
-    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','writing','measure','track','tiger'].forEach(function(p) { completePuzzle(p); });
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','measure','track','tiger'].forEach(function(p) { completePuzzle(p); });
     unlockSkill('听风', '判断墙体空腔与风道');
     unlockSkill('探土', '判断地面结构与承重');
     unlockSkill('辨伪', '判断铭文器物真假');
@@ -1856,7 +1870,7 @@ function loadChapter(n) {
     gainItem('玄鸟骨简', '玄鸟骨简', '第二章秘宝，秦族起源线索', true);
     gainItem('方士丹匣', '方士丹匣', '第五章秘宝，含机关钥', true);
     gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true);
-    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','writing','measure','track','tiger','pill_fake','lockbox_key','wan_liu_gui_qin'].forEach(function(p) { completePuzzle(p); });
+    ['silk_puzzle','jade_dev','north_clean','black_gate','mural_order','green_ox','xuanniao_lineage','xuanniao_projection','measure','track','tiger','pill_fake','lockbox_key','wan_liu_gui_qin'].forEach(function(p) { completePuzzle(p); });
     unlockSkill('听风', '判断墙体空腔与风道');
     unlockSkill('探土', '判断地面结构与承重');
     unlockSkill('辨伪', '判断铭文器物真假');
@@ -1876,7 +1890,7 @@ function showChapterPanel() {
     {n: 1, t: '序章：黑水残简', d: '修复残简，破解黑水门', scene: 'restoration'},
     {n: 2, t: '第一章：文公伐树', d: '探索神木祠，破解五行机关', scene: 'shrine'},
     {n: 5, t: '第二章：玄鸟生秦', d: '拓印铭文，拼出秦族起源谱系', scene: 'ch2tomb'},
-    {n: 3, t: '第三章：六国兵俑阵', d: '统一文字度量车轨', scene: 'ch3start'},
+    {n: 3, t: '第三章：六国兵俑阵', d: '统一度量车轨', scene: 'ch3start'},
     {n: 4, t: '第四章：水银江河', d: '操控水银流向，点亮北斗', scene: 'ch4start'},
     {n: 6, t: '第五章：方士丹室', d: '辨别不死药真伪，取得机关钥', scene: 'ch5room'},
     {n: 7, t: '第六章：秦王墓室', d: '万流归秦，最终抉择', scene: 'ch6tomb'}
@@ -2061,7 +2075,7 @@ function prologueDream() {
     transitionScene(function() {
       prologueRestoration();
       clearHints();
-      showDialogue('沈砚', '从梦境中醒来……又是这个梦', function() {
+      showDialogue('沈砚', '醒了……又是这个梦……', function() {
         showHint('修复黑水残简，寻找秦陵入口的线索');
       });
     });
@@ -2180,6 +2194,7 @@ function prologueRestoration() {
 
   // 窗户热区（始终保留）
   addInteractive(830, 60, 110, 220, '', function() {
+    clearHints(); // 点击窗户后清除持久提示
     if (G.completedPuzzles['silk_puzzle'] && !G.completedPuzzles['jade_dev']) {
       // 切换视角：雨水窗边氛围全屏展示
       transitionScene(function() {
@@ -2329,7 +2344,7 @@ function startSilkPuzzle() {
             showDialogue('沈砚', '帛书上的残图显示了一条路径：从地表旧祠出发，沿折线通往地下……', function() {
               addNote('路线图', '帛书残图指示旧祠位置，路径折向地下，尽头竟有一枚玉玦形状。');
               showDialogue('沈砚', '路径尽头有一个一枚玉玦形状的缺口——和我的黑玉残玦完全吻合。', function() {
-              showHint('【帛书笔记】中或许会有下一步的线索');
+              showHint('【帛书笔记】中或许会有下一步的线索', true);
             });
             });
           });
@@ -2830,16 +2845,18 @@ function ch1ShrineFront() {
     });
   }, {hsId: 'door', icon: '🚪'});
 
-  if (G.completedPuzzles['mural_order'] && !G.inventory['朱丝']) {
-    addInteractive(620, 420, 150, 50, '', function() {
+  // 南壁祭灶入口（初始常驻热区）
+  addInteractive(620, 420, 150, 50, '', function() {
+    if (!G.completedPuzzles['mural_order']) {
+      showHint('壁画尚未修复，先去调查壁画寻找前往南壁的方法');
+      return;
+    }
+    if (!G.inventory['朱丝']) {
       transitionScene(function() { ch1SouthWall(); });
-    }, {hsId: 'south_door', icon: '🔥'});
-  }
-  if (G.inventory['朱丝']) {
-    addInteractive(620, 420, 150, 50, '', function() {
+    } else {
       transitionScene(function() { ch1MainHall(); });
-    }, {hsId: 'south_door', icon: '🌳'});
-  }
+    }
+  }, {hsId: 'south_door', icon: '🔥'});
 }
 
 function startMuralPuzzle() {
@@ -2901,8 +2918,9 @@ function startMuralPuzzle() {
         showDialogue('沈砚', '壁画显示，秦人初次伐树时，风雨骤起，树身伤口会重新合拢。单靠斧头无法断木。', function() {
           showDialogue('沈砚', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。', function() {
             addNote('神木自合', '壁画显示秦人初次伐树时，风雨骤起，树身伤口会重新合拢。');
-          addNote('朱丝破法', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。');
-            ch1SouthWall();
+            addNote('朱丝破法', '病者夜闻鬼语，得知披发并以朱丝绕树，可使树神受困。');
+            // 回到前殿，让玩家点击南壁热区再进入
+            showHint('壁画已修复。去南壁祭灶取得朱丝以破神木自合之力。');
           });
         });
       });
@@ -2985,37 +3003,32 @@ function ch1MainHall() {
   clearScene();
   setBg(LV(1, '神木祠背景图.png'));
   playBGM('mainhall');
-  showHint('按五行生克破解神木机关：朱丝困灵(火)→青铜断木(金)→木入土台(土)');
+  showHint('神木机关：以五行生克破解神木');
 
-  var steps = {fire: false, gold: false, earth: false};
-  function checkAllDone() { if (steps.fire && steps.gold && steps.earth) { setTimeout(function() { ch1GreenOx(); }, 1200); } }
-
-  addInteractive(560, 350, 80, 80, '', function() {
-    if (G.inventory['朱丝'] && !steps.fire) {
-      steps.fire = true;
-      showDialogue('沈砚', '将朱丝绕在神木南侧火纹上，点亮火纹。红线沿树皮发亮，树身停止蠕动了！', function() { checkAllDone(); });
-    } else if (steps.fire) { showDialogue('沈砚', '火纹已经点亮，朱丝正束缚着树神。'); }
-    else { showDialogue('沈砚', '需要朱丝才能激活这个火纹。'); }
-  }, {hsId: 'fire_seal', icon: '🔥'});
-
-  addInteractive(100, 300, 100, 100, '', function() {
-    if (steps.fire && !steps.gold) {
-      steps.gold = true;
-      showDialogue('系统', '青铜斧影劈入树身——斧痕不再愈合！神木开始断裂。', function() {
-        checkAllDone();
-      });
-    } else if (!steps.fire) { showDialogue('沈砚', '青铜斧痕出现后迅速合拢……必须先困住树神。'); }
-    else if (steps.gold) { showDialogue('沈砚', '斧痕已落下，神木正在断裂。'); }
-  }, {hsId: 'axe', icon: '🪓'});
-
-  addInteractive(350, 420, 150, 80, '', function() {
-    if (steps.gold && !steps.earth) {
-      steps.earth = true;
+  // 直接进入对话推演机关破解全过程
+  showDialogue('沈砚', '将朱丝绕在神木南侧火纹上，点亮火纹。红线沿树皮发亮，树身停止蠕动了！', function() {
+    showDialogue('系统', '青铜斧影劈入树身——斧痕不再愈合！神木开始断裂。', function() {
       showDialogue('沈砚', '断木落入中央土台。土台裂开，露出青牛浮雕与黑水声。', function() {
-        checkAllDone();
+        addNote('神木机关', '按五行生克破解神木：朱丝困灵(火)→青铜断木(金)→木入土台(土)。');
+        // 第一章完成：跳过青牛关与第二章，直接进入第三章
+        completePuzzle('green_ox');
+        gainItem('断木神斧', '断木神斧', '第一章核心秘宝，可作金属机关钥', true);
+        addNote('断木神斧', '文公伐树后获得的秘宝。青牛入水，水德归秦。');
+        showDialogue('沈砚', '秦文公伐树，树断而青牛入水。可这座祠真正记下的，是教后来者如何读懂秦陵的规则。', function() {
+          showDialogue('沈砚', '墙上浮现秦篆："持玦者已归其一，玄鸟当启其二。"', function() {
+            G.chapterUnlocked[5] = true;
+            showDialogue('系统', '第一章完成！第二章「玄鸟生秦」已解锁。', function() {
+              transitionScene(function() {
+                showDialogue('沈砚', '而它……黑玉残玦，像是早就知道我会走到这里。', function() {
+                  ch3Start();
+                });
+              });
+            });
+          });
+        });
       });
-    } else if (!steps.gold) { showDialogue('沈砚', '土台轻响但不开启……需要先让神木断裂。'); }
-  }, {hsId: 'earth_plat', icon: '⛰', skill: '探土', skillHint: '土台隐约发出沉闷的声响……探查一下它的承重结构或许有发现。'});
+    });
+  });
 }
 
 function ch1GreenOx() {
@@ -3099,11 +3112,7 @@ function ch3Start() {
     }
     showDialogue('沈砚', '地面黑水线被六种不同刻度打断。残简记载："同书、同轨、同量，则兵归一。"', function() {
       addNote('残简提示', '同书、同轨、同量，则兵归一。');
-      completePuzzle('writing');
-      addNote('六合同风', '书同文完成。六国文字统一为秦小篆，黑水线恢复。');
-      showDialogue('沈砚', '"六合同风，玄水归一"——六国文字已统一为秦小篆，第一段黑水线恢复。', function() {
-        transitionScene(function() { ch3Measure(); });
-      });
+      transitionScene(function() { ch3Measure(); });
     });
   }, {hsId: 'slip', icon: '📏'});
 }
@@ -3185,7 +3194,7 @@ function ch3TigerTally() {
       triggerBtn.style.fontFamily = 'STKaiti, KaiTi, serif'; triggerBtn.style.letterSpacing = '3px';
       triggerBtn.textContent = '按顺序触发：韩→赵→魏→楚→燕→齐';
       triggerBtn.onclick = function() {
-        if (step < 6) { showHint(order[step]+'国兵俑转向中央黑水旗！('+(step+1)+'/6)'); step++; if (step >= 6) { completePuzzle('tiger'); gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true); showDialogue('系统', '六国兵俑全部转向黑水旗，齐声跪拜！十二金人残片龛打开。', function() { showDialogue('沈砚', '六国文字、车轨、尺度各不相同。可在这里，它们都被迫归于同一条黑水线。', function() { addNote('六合同风', '六国兵俑归一。"六合同风，玄水归一"——水银地宫入口开启。'); G.chapterUnlocked[4] = true; showDialogue('系统', '第三章完成！第四章已解锁。', function() { showDialogue('沈砚', '这座陵墓记住的不是战争，而是统一之后的秩序。', function() { transitionScene(function() { showChapterPanel(); }); }); }); }); }); } }
+        if (step < 6) { showHint(order[step]+'国兵俑转向中央黑水旗！('+(step+1)+'/6)'); step++; if (step >= 6) { completePuzzle('tiger'); gainItem('十二金人残片', '十二金人残片', '终局隐藏条件收集物', true); showDialogue('系统', '六国兵俑全部转向黑水旗，齐声跪拜！十二金人残片龛打开。', function() { showDialogue('沈砚', '六国文字、车轨、尺度各不相同。可在这里，它们都被迫归于同一条黑水线。', function() { addNote('六合同风', '六国兵俑归一。"六合同风，玄水归一"——水银地宫入口开启。'); G.chapterUnlocked[4] = true; showDialogue('系统', '第三章完成！第四章已解锁。', function() { showDialogue('沈砚', '这座陵墓记住的不是战争，而是统一之后的秩序。', function() { transitionScene(function() { ch4Start(); }); }); }); }); }); } }
       };
       sceneArea.appendChild(triggerBtn);
     });
@@ -3324,7 +3333,7 @@ function ch4BlackPool() {
           showDialogue('沈砚', '水银不是为了防盗才流在这里。它在替这座陵墓记住天下的形状。', function() {
             showDialogue('沈砚', '百川江河，最终都被引向同一个黑色的北方。', function() {
               showDialogue('沈砚', '如果水银是秦陵的江河，那么不死药也许不是药。它更像是这套机关的心脏。', function() {
-                showDialogue('系统', '第四章完成！第五章「方士丹室」已解锁。', function() {
+                showDialogue('系统', '第五章完成！第六章「秦王墓室」已解锁。', function() {
                   G.chapterUnlocked[6] = true;
                   transitionScene(function() { showChapterPanel(); });
                 });
@@ -3355,7 +3364,7 @@ function ch2Start() {
   // 玄鸟壁画（拓印）
   addInteractive(120, 120, 260, 240, '', function() {
     markContent(C2, 'mural');
-    showDialogue('沈砚', '壁画上玄鸟展翅，自空中衔下一枚金卵，落于女修面前。这是秦族"玄鸟陨卵"的图腾。', function() {
+    showDialogue('沈砚', '玄鸟展翅，自空中衔下一枚金卵，落于女修面前。这是秦族"玄鸟陨卵"的图腾。', function() {
       showDialogue('沈砚', '秦人自认玄鸟之后——天命所归，以水德承统，皆由此起。', function() {
         addNote('玄鸟传说', '玄鸟衔卵而生秦族始祖。秦以玄鸟为天命象征，与"玄水"同源。');
       });
