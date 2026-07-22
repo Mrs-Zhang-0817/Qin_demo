@@ -3099,72 +3099,16 @@ function ch3Start() {
     }
     showDialogue('沈砚', '地面黑水线被六种不同刻度打断。残简记载："同书、同轨、同量，则兵归一。"', function() {
       addNote('残简提示', '同书、同轨、同量，则兵归一。');
-      transitionScene(function() { ch3Writing(); });
+      completePuzzle('writing');
+      addNote('六合同风', '书同文完成。六国文字统一为秦小篆，黑水线恢复。');
+      showDialogue('沈砚', '"六合同风，玄水归一"——六国文字已统一为秦小篆，第一段黑水线恢复。', function() {
+        transitionScene(function() { ch3Measure(); });
+      });
     });
   }, {hsId: 'slip', icon: '📏'});
 }
 
-function ch3Writing() {
-  G.scene = 1;
-  G.currentSceneId = 'ch3writing'; G._hsIndex = 0;
-  clearScene(); setBg(LV(3, '主背景4.png'));
-  playBGM('ch3writing');
-  showHint('书同文：选择秦小篆组成"六合同风，玄水归一"');
-  var selectedChars = [];
-  var correct = ['六','合','同','风','玄','水','归','一'];
-  var options = ['六','合','同','风','玄','水','归','一','火','山','木','金'];
 
-  function renderWriting() {
-    var oldBtns = document.querySelectorAll('.write-btn');
-    for (var i = 0; i < oldBtns.length; i++) oldBtns[i].remove();
-    var positions = [{x:100,y:200},{x:200,y:200},{x:300,y:200},{x:400,y:200},{x:500,y:200},{x:600,y:200},{x:700,y:200},{x:800,y:200}];
-    positions.forEach(function(p, i) {
-      var hsId = 'write_' + i;
-      var pos = getHotspotPos(G.currentSceneId, hsId, p.x, p.y, 68, 68);
-      var btn = document.createElement('div');
-      btn.className = 'interactive write-btn';
-      btn.style.left = pos.x + 'px'; btn.style.top = pos.y + 'px';
-      btn.style.width = pos.w + 'px'; btn.style.height = pos.h + 'px';
-      btn.style.border = '2px solid var(--dark-bronze)';
-      btn.style.display = 'flex'; btn.style.alignItems = 'center'; btn.style.justifyContent = 'center';
-      btn.style.fontSize = '25px'; btn.style.color = 'var(--bronze-bright)';
-      btn.style.background = 'rgba(17,17,17,0.8)'; btn.style.cursor = 'pointer';
-      btn.style.fontFamily = 'STKaiti, KaiTi, serif';
-      btn.dataset.hsId = hsId;
-      btn.dataset.hsScene = G.currentSceneId;
-      btn.textContent = selectedChars[i] || '?';
-      (function(idx) {
-        btn.onclick = function() {
-          var opts = document.createElement('div'); opts.className = 'qin-panel';
-          opts.style.cssText = 'width:auto;max-width:700px;height:auto;max-height:70%;padding:24px;position:absolute;top:30%;left:50%;transform:translate(-50%,-30%);z-index:4000';
-          var h = '<h3 style="font-size:25px;color:var(--bronze-bright);margin-bottom:16px;text-align:center;letter-spacing:4px">选择秦小篆字</h3><div style="display:flex;gap:8px;flex-wrap:wrap;justify-content:center">';
-          options.forEach(function(c) { h += '<button class="qin-btn" style="padding:8px 20px;font-size:20px" onclick="this.parentElement.parentElement.remove();selectedChars[' + idx + ']=\'' + c + '\';renderWriting();checkWriting()">' + c + '</button>'; });
-          h += '</div><button class="close-btn" style="margin-top:16px" onclick="this.parentElement.remove()">取消</button>';
-          opts.innerHTML = h; $('game').appendChild(opts);
-        };
-      })(i);
-      sceneArea.appendChild(btn);
-    });
-    if (!document.querySelector('.write-hint')) {
-      var hint = document.createElement('div');
-      hint.className = 'write-hint';
-      hint.style.cssText = 'position:absolute;bottom:100px;left:50%;transform:translateX(-50%);color:var(--bronze);font-size:18px;letter-spacing:3px;font-family:STKaiti,KaiTi,serif';
-      hint.textContent = '目标句子：六合同风，玄水归一';
-      sceneArea.appendChild(hint);
-    }
-  }
-  window.checkWriting = function() {
-    if (selectedChars.length === 8 && selectedChars.join(',') === correct.join(',')) {
-      completePuzzle('writing');
-      showDialogue('沈砚', '"六合同风，玄水归一"——六条浅槽灰尘震落，第一段黑水线恢复！', function() {
-        addNote('六合同风', '书同文完成。六国文字统一为秦小篆，黑水线恢复。');
-        transitionScene(function() { ch3Measure(); });
-      });
-    }
-  };
-  window.renderWriting = renderWriting;
-  renderWriting();
-}
 
 function ch3Measure() {
   G.scene = 2; clearScene(); setBg(LV(3, '主背景4.png'));
@@ -3502,11 +3446,10 @@ function startXuanniaoLineage() {
   window._checkGene = function() {
     if (current.join(',') === correct.join(',')) {
       completePuzzle('xuanniao_lineage');
-      showDialogue('沈砚', '谱系正确！玄鸟石像应声展翅——天命所归，水德将启。', function() {
-        addNote('秦族谱系', '玄鸟陨卵→女修吞卵→大业初生→大费佐舜。秦族以玄鸟为天命，以水德承统。');
-        window._closeGene();
-        ch2Projection();
-      });
+      window._closeGene();
+      showHint('谱系正确！玄鸟石像应声展翅——天命所归，水德将启。');
+      addNote('秦族谱系', '玄鸟陨卵→女修吞卵→大业初生→大费佐舜。秦族以玄鸟为天命，以水德承统。');
+      setTimeout(function() { ch2Projection(); }, 1600);
     } else {
       showHint('顺序不对……玄鸟先陨卵，才有女修吞卵，其后大业、大费相承。');
     }
