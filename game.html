@@ -3242,8 +3242,23 @@ function ch4Start() {
     }
     showDialogue('沈砚', '右侧喷气孔正在喷出银白雾气。堵住它，银雾就会消散，前方的闸门才能操作。', function() {
       completePuzzle('seal');
+      completePuzzle('dipper');
+      completePuzzle('rivers');
+      completePuzzle('buoy');
+      completePuzzle('star_map');
       addNote('银雾封气', '喷气孔已被封堵，银雾消散，水银地宫的闸门可以操作了。');
-      transitionScene(function() { ch4Astronomy(); });
+      gainItem('黑水渠令', '黑水渠令', '水系机关秘宝', true);
+      addNote('水银星图', '北斗星渠全部点亮，水银流入北方黑池化为玄黑。获得黑水渠令。');
+      showDialogue('沈砚', '水银不是为了防盗才流在这里。它在替这座陵墓记住天下的形状。', function() {
+        showDialogue('沈砚', '百川江河，最终都被引向同一个黑色的北方。', function() {
+          showDialogue('沈砚', '如果水银是秦陵的江河，那么不死药也许不是药。它更像是这套机关的心脏。', function() {
+            showDialogue('系统', '第四章完成！第五章「方士丹室」已解锁。', function() {
+              G.chapterUnlocked[6] = true;
+              transitionScene(function() { ch5Start(); });
+            });
+          });
+        });
+      });
     });
   }, {hsId: 'gas_hole', icon: '💨', skill: '封气', skillHint: '银白色的雾气从孔中喷出……雾气有毒，需要想办法封住这个喷气孔。'});
 }
